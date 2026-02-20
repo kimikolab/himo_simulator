@@ -47,6 +47,7 @@ default flags = {
     "confession_rejected": False,
     "met_misaki_this_weekend": False,
     "misaki_sunday_morning": False,
+    "misaki_tonight": False,
 }
 
 # 1日ごとにリセットされるフラグ
@@ -105,7 +106,10 @@ default stats = {
     "times_met": 0,
     "times_asked_money": 0,
     "lies_told": 0,
-    "optimistic_choices": 0
+    "optimistic_choices": 0,
+    "pachinko_wins": 0,
+    "pachinko_losses": 0,
+    "pachinko_profit": 0,
 }
 
 # ヒモ適性診断

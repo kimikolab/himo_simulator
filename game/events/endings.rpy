@@ -158,6 +158,21 @@ label show_himo_aptitude_result:
     "働くことを避けた: [himo_aptitude['avoided_work']]回"
     "美咲を気遣った: [himo_aptitude['showed_concern']]回"
 
+    # v2.2: パチンコ結果表示
+    python:
+        _pachinko_total = stats["pachinko_wins"] + stats["pachinko_losses"]
+
+    if _pachinko_total > 0:
+        "---- パチンコ成績 ----"
+        "勝率: [stats['pachinko_wins']]勝 [stats['pachinko_losses']]敗"
+        python:
+            _profit = stats["pachinko_profit"]
+            if _profit >= 0:
+                _profit_str = "+" + "{:,}".format(_profit)
+            else:
+                _profit_str = "{:,}".format(_profit)
+        "収支: ¥[_profit_str]"
+
     "プレイありがとうございました"
 
     return

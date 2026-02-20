@@ -119,14 +119,39 @@ label misaki_date_request:
         himo "あ、そっか"
         return
 
+    # v2.3: 約束なし当日誘いの成否判定
+    if not flags.get("misaki_tonight", False):
+        python:
+            _trust = misaki["trust"]
+            if _trust >= 70:
+                _success_rate = 0.70
+            elif _trust >= 50:
+                _success_rate = 0.50
+            else:
+                _success_rate = 0.0
+            _can_meet = renpy.random.random() < _success_rate
+
+        if _trust < 50:
+            misaki_c "急に言われても...今日は難しいかな"
+            himo "そっか、しゃーない"
+            "（事前に約束しておかないとダメか）"
+            $ change_trust(-1)
+            return
+
+        if not _can_meet:
+            misaki_c "ごめん、今日はもう予定入っちゃってて"
+            himo "そっか、また今度"
+            $ change_trust(-1)
+            return
+
+    # 成功 → デートへ
     if game_date["time"] == "night":
-        misaki_c "今から？いいよ"
         call misaki_date
         return
     else:
         misaki_c "夜なら空いてるよ"
+        $ flags["misaki_tonight"] = True
         himo "了解〜"
-        $ daily_flags["date_planned_tonight"] = True
         return
 
 
@@ -170,6 +195,7 @@ label misaki_date:
 
     $ misaki["met_today"] = True
     $ stats["times_met"] += 1
+    $ reset_contact()
     $ change_stamina(-15)
     $ daily_flags["ate_today"] = True
 
@@ -186,8 +212,8 @@ label misaki_date:
             misaki_c "あ、ごめん！嫌味じゃなくて"
             himo "いやいや、わかってるって"
 
-            $ change_trust(3)
-            $ change_dependence(3)
+            $ change_trust(5)
+            $ change_dependence(1)
             $ himo_aptitude["showed_concern"] += 1
 
         "美咲を励ます":
@@ -198,8 +224,8 @@ label misaki_date:
             misaki_c "...ありがとう"
             himo "お、効いた効いた"
 
-            $ change_trust(5)
-            $ change_dependence(4)
+            $ change_trust(8)
+            $ change_dependence(2)
             $ himo_aptitude["showed_concern"] += 2
 
         "自分の話（ポジティブに）":
@@ -480,6 +506,7 @@ label M02_answer:
     "なんか、今日はよく眠れそうな気がした。"
 
     $ misaki_events["M02_done"] = True
+    $ reset_contact()
     $ change_stamina(10)
     return
 
@@ -535,6 +562,8 @@ label M03_go:
     himo "（...こういう生活、普通に悪くない）"
 
     "料理をしてもらって、一緒に食べた。"
+    $ misaki["met_today"] = True
+    $ reset_contact()
     $ daily_flags["ate_today"] = True
 
     misaki_c "どうだった？"
@@ -555,7 +584,11 @@ label M03_go:
             $ change_cleanliness(20)
             $ himo_aptitude["easy_choices"] += 1
 
-            "翌朝、美咲はスーツを着て出勤していった。"
+            if is_weekend():
+                "翌朝、美咲はまだ隣で寝ていた。"
+                "休日の朝。静かだ。"
+            else:
+                "翌朝、美咲はスーツを着て出勤していった。"
             "俺は昼まで美咲の部屋で寝ていた。"
             himo "...これ、完全にヒモじゃん"
             himo "まあいっか"
@@ -712,6 +745,7 @@ label misaki_stress_call:
     menu:
         "出る？"
         "出る":
+            $ reset_contact()
             misaki_c "...ごめん、こんな時間に"
             himo "どした？"
             misaki_c "今日ちょっとしんどくて。声聞きたくなった"
@@ -850,11 +884,13 @@ label misaki_broken_promise:
 label misaki_room_visit:
     "美咲の部屋に来た。"
 
-    # v2.1: 曜日による外見描写
+    # v2.3: 曜日による外見描写
     if is_weekend():
         "部屋着の美咲。リラックスした雰囲気。"
+        "休日の夜、特別な時間が流れる。"
     else:
         "スーツを脱いだばかりの美咲。少し疲れた様子。"
+        "残業明けでも、笑顔を見せてくれた。"
 
     # ランダムで会話バリエーション
     python:
@@ -871,20 +907,21 @@ label misaki_room_visit:
         himo "疲れてる？"
         misaki_c "ちょっとね...でも嬉しい"
 
+    # v2.3: 共通パスで確実にセット
+    $ misaki["met_today"] = True
+    $ reset_contact()
     $ daily_flags["ate_today"] = True
 
     menu:
         "何をする？"
         "ご飯を食べる（美咲の手料理）":
             "一緒にご飯を食べた。"
-            $ misaki["met_today"] = True
             $ change_trust(3)
             $ change_dependence(3)
             $ change_stamina(15)
 
         "泊まる":
             "今日も泊まらせてもらった。"
-            $ misaki["met_today"] = True
             $ location_flags["staying_at_misaki"] = True
             $ change_trust(2)
             $ change_dependence(5)
@@ -923,6 +960,8 @@ label misaki_sunday_morning_scene:
     $ change_stamina(20)
     $ change_trust(3)
     $ change_dependence(5)
+    $ reset_contact()
+    $ misaki["met_today"] = True
     $ daily_flags["ate_today"] = True
 
     return

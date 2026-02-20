@@ -43,26 +43,30 @@ init python:
 
     def change_dependence(amount):
         global misaki
+
+        # v2.2: 逓減は増加時のみ適用
+        if amount > 0:
+            depend = misaki["dependence"]
+            # 逓減処理（v2.2強化版）
+            if depend >= 60:
+                amount = int(amount * 0.3)
+            elif depend >= 40:
+                amount = int(amount * 0.5)
+
         old = misaki["dependence"]
-        depend = old
-
-        # 収穫逓減（v2.0追加）
-        if depend >= 70:
-            amount = int(amount * 0.4)
-        elif depend >= 50:
-            amount = int(amount * 0.7)
-
         misaki["dependence"] = clamp(misaki["dependence"] + amount, 0, 100)
         update_misaki_stage()
 
         if old < 100 <= misaki["dependence"]:
             renpy.notify("美咲: 「ずっと一緒にいたい」")
 
-        # マイルストーンを超えたらキューに追加（v2.0追加）
-        # renpy.call() はPython関数内から直接呼べないためキュー方式
+        # マイルストーンを超えたらキューに追加（v2.2: 重複防止フラグ追加）
         for threshold in [DEPEND_MILD, DEPEND_MEDIUM, DEPEND_HEAVY]:
             if old < threshold <= misaki["dependence"]:
-                _pending_events.append(("misaki_dependence_milestone", threshold))
+                flag_key = "depend_milestone_" + str(threshold)
+                if not flags.get(flag_key, False):
+                    flags[flag_key] = True
+                    _pending_events.append(("misaki_dependence_milestone", threshold))
 
     def reset_contact():
         global misaki
@@ -136,17 +140,17 @@ init python:
         # 成功時はストリークリセット
         money_refused_streak = 0
 
-        # 金額（v2.0下方修正）
+        # 金額（v2.2上方修正）
         amounts = {
-            "small": (1500, 3000),
-            "medium": (3000, 6000),
-            "large": (5000, 10000)
+            "small": (2000, 4000),
+            "medium": (4000, 7000),
+            "large": (6000, 12000)
         }
         min_amt, max_amt = amounts[amount_type]
         amount = random.randint(min_amt, max_amt)
 
         change_trust(-3)
-        change_dependence(8)
+        change_dependence(2)
         change_money(amount, "美咲")
 
         if stats["times_asked_money"] >= 3:

@@ -146,6 +146,9 @@ label afternoon_street:
 
             $ change_money(-300)
 
+        "パチンコに行く":
+            call pachinko_event
+
         "求人情報を見る":
             call check_job_hint
 
@@ -261,5 +264,115 @@ label random_expense_event:
     else:
         himo "やばい、財布..."
         himo "...あった。よかった"
+
+    return
+
+
+# ========================================
+# Phase 2 v2.2: パチンコシステム
+# ========================================
+
+label pachinko_event:
+    scene bg_placeholder
+
+    "繁華街のパチンコ店に入った。"
+    "平日昼間でも、それなりに人がいる。"
+    himo "まあ、ちょっとだけな"
+
+    # 掛け金選択
+    menu:
+        "いくら賭ける？"
+
+        "1,000円":
+            $ pachinko_bet = 1000
+
+        "3,000円":
+            $ pachinko_bet = 3000
+
+        "5,000円" if can_afford(5000):
+            $ pachinko_bet = 5000
+
+    # 所持金チェック
+    if not can_afford(pachinko_bet):
+        himo "...財布の中身が足りない"
+        himo "やめとくか"
+        return
+
+    $ change_money(-pachinko_bet)
+
+    "台に向かった。"
+
+    # 長丁場判定（20%）
+    python:
+        is_long_session = renpy.random.random() < 0.20
+
+    if is_long_session:
+        "なんか、ハマってしまった。"
+        himo "もうちょっとだけ..."
+        himo "あ、もうちょっとだけ..."
+        "気づいたら夕方になっていた。"
+
+        # 夜のターンも消費
+        $ advance_time()
+
+        # 美咲との約束チェック
+        if flags.get("misaki_tonight", False):
+            "スマホを見ると、美咲からのLINEが溜まっていた。"
+            "'今日会う約束だったよね？'"
+            "'どこにいるの？'"
+            himo "...やばい"
+            $ change_trust(-8)
+            $ change_dependence(5)
+            $ add_suspicion("contact_delay")
+            "長丁場のせいで、約束を破ってしまった。"
+        else:
+            "気づいたら夕方になっていたが、今日は特に約束もなかった。"
+            himo "...まあいっか"
+    else:
+        "1〜2時間で切り上げた。"
+
+    # 結果抽選
+    python:
+        roll = renpy.random.random()
+        if roll < 0.20:
+            pachinko_result = "win"
+            multiplier = renpy.random.uniform(2.0, 5.0)
+            pachinko_gain = int(pachinko_bet * multiplier)
+        elif roll < 0.50:
+            pachinko_result = "draw"
+            pachinko_gain = pachinko_bet
+        else:
+            pachinko_result = "loss"
+            pachinko_gain = 0
+
+    if pachinko_result == "win":
+        "大当たりが来た。"
+        himo "よっしゃ！"
+        "¥[pachinko_gain:,]を獲得した。"
+        $ change_money(pachinko_gain)
+        $ stats["pachinko_wins"] += 1
+        $ stats["pachinko_profit"] += pachinko_gain - pachinko_bet
+        $ himo_aptitude["easy_choices"] += 1
+
+    elif pachinko_result == "draw":
+        "なんとかプラマイゼロで終わった。"
+        himo "まあ、負けなかっただけいいか"
+        $ change_money(pachinko_gain)
+
+    else:
+        "全部飲まれた。"
+        himo "...まあしゃーない"
+
+        if player["money"] < 3000:
+            "（残り少ない...）"
+            "（明日の飯代、大丈夫かな）"
+            himo "まあ何とかなるっしょ"
+
+        $ stats["pachinko_losses"] += 1
+        $ stats["pachinko_profit"] -= pachinko_bet
+        $ himo_aptitude["easy_choices"] += 1
+
+    # スタミナ消費
+    $ change_stamina(-20)
 
     return

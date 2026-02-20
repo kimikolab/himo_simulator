@@ -86,9 +86,9 @@ init python:
         if game_date["day"] == DOUBT_EVENT_DAY and not flags["doubt_event_done"]:
             _pending_events.append(("misaki_doubt_event", None))
 
-        # ランダム出費イベント（20%の確率）
+        # ランダム出費イベント（v2.2: 12%に下げた）
         import random
-        if random.random() < 0.20:
+        if random.random() < 0.12:
             _pending_events.append(("random_expense_event", None))
 
 
@@ -120,8 +120,12 @@ init python:
         """美咲の自発的連絡をキューに追加（renpy.call回避）"""
         import random
 
+        # v2.3修正: last_contactが3未満、または当日会っているなら何もしない
+        if misaki["last_contact"] < 3 or misaki["met_today"]:
+            return
+
         # 3日以上連絡なし → 美咲からLINE
-        if misaki["last_contact"] >= 3 and random.random() < 0.6:
+        if random.random() < 0.6:
             _pending_events.append(("misaki_check_in", None))
 
         # ストレス状態のとき低確率で電話（信頼40以上）

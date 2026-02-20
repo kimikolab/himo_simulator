@@ -27,6 +27,7 @@ screen status_bar():
 label start:
     call intro_scene
     $ misaki_events["M01_done"] = True
+    $ flags["misaki_tonight"] = True
 
     if not flags["tutorial_done"]:
         call tutorial
@@ -168,6 +169,13 @@ label afternoon_actions:
 label night_actions:
     "――夜、21時――"
 
+    # v2.3: 約束がある夜は美咲一択
+    if flags.get("misaki_tonight", False):
+        "今夜は美咲と約束がある。"
+        $ flags["misaki_tonight"] = False
+        call misaki_date
+        return
+
     if is_weekend():
         himo "週末の夜か。自由だな〜"
     else:
@@ -177,11 +185,8 @@ label night_actions:
     menu:
         "【[game_date['day']]日目([get_weekday_string()])・夜】何をする？"
 
-        "美咲と会う（約束してる）" if not misaki["met_today"] and (game_date["day"] == 1 or daily_flags.get("date_planned_tonight", False)):
-            call misaki_meet_planned
-
         # Phase 2: M-02 終電後の電話
-        "美咲と電話する" if (misaki_events["M02_unlocked"] and not misaki_events["M02_done"] and not daily_flags["date_planned_tonight"]):
+        "美咲と電話する" if (misaki_events["M02_unlocked"] and not misaki_events["M02_done"]):
             call misaki_event_M02
 
         # Phase 2: M-03 週末の部屋（初回イベント）
@@ -196,7 +201,7 @@ label night_actions:
         "美咲の部屋に行く" if (misaki["stage"] >= STAGE_CLOSE and misaki_events["M03_done"] and not is_weekend() and not misaki["met_today"]):
             call misaki_room_visit
 
-        "美咲を誘う" if (not misaki["met_today"] and not daily_flags["date_planned_tonight"]):
+        "美咲を誘う" if (not misaki["met_today"]):
             call misaki_date_request
 
         "美咲に連絡する":
