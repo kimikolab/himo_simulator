@@ -41,11 +41,6 @@ init python:
         misaki["trust"] = clamp(misaki["trust"] + amount, 0, 100)
         update_misaki_stage()
 
-        if misaki["stage"] > old_stage:
-            stage_names = {2: "友達", 3: "いい雰囲気", 4: "恋人"}
-            if misaki["stage"] in stage_names:
-                renpy.notify("美咲との関係が「" + stage_names[misaki["stage"]] + "」になった")
-
     def change_dependence(amount):
         global misaki
         old = misaki["dependence"]
@@ -89,11 +84,21 @@ init python:
         else:
             misaki["stage"] = STAGE_ACQUAINTANCE
 
-        # 恋人ステージ移行時に告白イベント（v2.0追加）
-        # renpy.call() はPython関数内から直接呼べないためキュー方式
+        # STAGE_DATING移行処理（v2.1修正: 再表示防止）
         if old_stage < STAGE_DATING and misaki["stage"] == STAGE_DATING:
             if not flags.get("confession_done", False):
+                # 告白イベント未実施なら発火
                 _pending_events.append(("misaki_confession", None))
+            elif flags.get("confession_accepted", False):
+                # 告白を受け入れていた場合のみテロップ表示
+                renpy.notify("美咲との関係: 恋人")
+            # confession_done済みで受け入れていない場合はテロップなし
+
+        # それ以外のステージ上昇通知
+        elif misaki["stage"] > old_stage:
+            stage_names = {2: "友達", 3: "いい雰囲気"}
+            if misaki["stage"] in stage_names:
+                renpy.notify("美咲との関係が「" + stage_names[misaki["stage"]] + "」になった")
 
     def request_money_from_misaki(amount_type="small"):
         global stats, suspicion_count, himo_aptitude, money_refused_streak
@@ -107,12 +112,12 @@ init python:
 
         import random
 
-        # ムード補正（v2.1緩和）
+        # ムード補正（v2.1再調整）
         mood_modifier = {
             "good":     1.2,
             "normal":   1.0,
-            "tired":    0.8,
-            "stressed": 0.5,
+            "tired":    0.75,
+            "stressed": 0.4,
         }
         modifier = mood_modifier.get(misaki_mood["today_mood"], 1.0)
 

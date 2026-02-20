@@ -28,13 +28,23 @@ init python:
         global location_flags, misaki_events, misaki_streak
         global weekend_promised, _game_over
 
+        # v2.1: 日曜朝シーン処理（土曜宿泊フラグが立っていれば翌朝に実行）
+        if flags.get("misaki_sunday_morning", False):
+            location_flags["staying_at_misaki"] = True
+            flags["misaki_sunday_morning"] = False
+            _pending_events.append(("misaki_sunday_morning_scene", None))
+
         # 食事ペナルティチェック（リセット前に判定）
         if not daily_flags["ate_today"]:
             _pending_events.append(("hunger_penalty", None))
 
-        # 週末の約束チェック（met_todayリセット前に判定）
-        if weekend_promised and is_weekend() and not misaki["met_today"]:
-            _pending_events.append(("misaki_broken_promise", None))
+        # 週末の約束チェック（v2.1修正: 月曜になったタイミングで判定）
+        if game_date["weekday"] == 0:   # 現在日曜 → 翌日が月曜
+            if weekend_promised:
+                if not flags.get("met_misaki_this_weekend", False):
+                    _pending_events.append(("misaki_broken_promise", None))
+                flags["met_misaki_this_weekend"] = False
+                weekend_promised = False
 
         # 連続会った日数リセット（met_todayリセット前に判定）
         if not misaki["met_today"]:

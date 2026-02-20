@@ -159,10 +159,14 @@ label misaki_date:
         misaki_c "...あれ、ヒモ太郎、ちょっと疲れてる？"
 
     if game_date["day"] > 1:
-        "スーツ姿の美咲。ちょっと疲れてそう。"
-        himo "お疲れ〜。残業？"
-        misaki_c "うん、今日も遅かった..."
-        himo "大変だな〜"
+        if is_weekend():
+            "私服の美咲。普段より表情が柔らかい。"
+        else:
+            "スーツ姿の美咲。少し疲れた顔をしている。"
+        himo "お疲れ〜"
+        if not is_weekend():
+            misaki_c "うん、今日も遅かった..."
+            himo "大変だな〜"
 
     $ misaki["met_today"] = True
     $ stats["times_met"] += 1
@@ -260,14 +264,18 @@ label misaki_date:
     if not flags["first_date"]:
         $ flags["first_date"] = True
 
-    # 連続デートリスク（v2.0追加）
+    # v2.1: 週末に会った記録
+    if is_weekend():
+        $ flags["met_misaki_this_weekend"] = True
+
+    # 連続デートリスク（v2.1: しきい値緩和）
     $ misaki_streak += 1
-    if misaki_streak >= 5:
+    if misaki_streak >= 7:
         misaki_c "ねえ、ヒモ太郎って私のこと好き？"
         himo "...え"
         "なんか、重くなってきた気がする。"
         $ change_dependence(12)
-    elif misaki_streak >= 3:
+    elif misaki_streak >= 4:
         "美咲: 「最近毎日会ってるね...」"
         $ change_dependence(8)
 
@@ -742,6 +750,9 @@ label misaki_stress_call:
 
 label misaki_dependence_milestone(threshold):
     if threshold == DEPEND_MILD:
+        # v2.1: 当日会っている or まだ一度も会ってない場合はスキップ
+        if misaki["met_today"] or stats["times_met"] == 0:
+            return
         "翌朝、美咲からLINEが来ていた。"
         "'昨日どこにいたの？ 連絡してよ'"
         himo "...あれ、急に？"
@@ -839,6 +850,12 @@ label misaki_broken_promise:
 label misaki_room_visit:
     "美咲の部屋に来た。"
 
+    # v2.1: 曜日による外見描写
+    if is_weekend():
+        "部屋着の美咲。リラックスした雰囲気。"
+    else:
+        "スーツを脱いだばかりの美咲。少し疲れた様子。"
+
     # ランダムで会話バリエーション
     python:
         _room_scene = renpy.random.choice(["cooking", "tv", "tired"])
@@ -875,7 +892,41 @@ label misaki_room_visit:
             $ change_cleanliness(20)
             $ himo_aptitude["easy_choices"] += 1
 
+            # v2.1: 土曜宿泊の場合、翌日曜のフラグを立てる
+            if is_weekend() and game_date["weekday"] == 6:
+                $ flags["misaki_sunday_morning"] = True
+
+    # v2.1: 週末に会った記録
+    if is_weekend():
+        $ flags["met_misaki_this_weekend"] = True
+
     return
+
+# v2.1: 土曜宿泊後の日曜朝シーン
+label misaki_sunday_morning_scene:
+    scene bg_placeholder
+    "目が覚めると、美咲の部屋だった。"
+    "カーテンの隙間から日差しが入ってくる。"
+    "休日の朝。"
+
+    misaki_c "おはよう。コーヒー飲む？"
+    himo "...いただきます"
+
+    "キッチンで美咲がコーヒーを淹れている音が聞こえる。"
+    "こういう朝も、悪くないな。"
+
+    misaki_c "昨日泊まってくれて、よかった"
+    himo "俺も"
+
+    "少し照れくさいけど、本当のことだった。"
+
+    $ change_stamina(20)
+    $ change_trust(3)
+    $ change_dependence(5)
+    $ daily_flags["ate_today"] = True
+
+    return
+
 
 label misaki_confession:
     scene bg_placeholder

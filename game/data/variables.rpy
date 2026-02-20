@@ -45,6 +45,8 @@ default flags = {
     "confession_accepted": False,
     "confession_ambiguous": False,
     "confession_rejected": False,
+    "met_misaki_this_weekend": False,
+    "misaki_sunday_morning": False,
 }
 
 # 1日ごとにリセットされるフラグ
