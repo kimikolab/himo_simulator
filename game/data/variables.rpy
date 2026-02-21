@@ -73,6 +73,9 @@ default flags = {
     "misaki_tonight": False,
     "kana_tonight": False,
     "game_ended": False,
+    "morning_consumed": False,
+    "afternoon_consumed": False,
+    "nanpa_unlocked": False,
 }
 
 # 1日ごとにリセットされるフラグ
@@ -81,7 +84,8 @@ default daily_flags = {
     "ignored_today": False,
     "date_planned_tonight": False,
     "cooked_today": False,
-    "ate_today": False              # 食事チェック用
+    "ate_today": False,             # 食事チェック用
+    "ignored_kana_today": False
 }
 
 # 美咲イベント進行フラグ（Phase 2追加）

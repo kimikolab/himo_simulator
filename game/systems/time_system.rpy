@@ -68,6 +68,7 @@ init python:
         daily_flags["ignored_today"] = False
         daily_flags["date_planned_tonight"] = False
         daily_flags["ate_today"] = False
+        daily_flags["ignored_kana_today"] = False
 
         # 宿泊リセット
         location_flags["staying_at_misaki"] = False
@@ -87,6 +88,10 @@ init python:
 
         # 美咲からの自発的連絡（キュー方式）
         queue_misaki_initiative()
+
+        # Phase 3: カナからの自発的連絡
+        if kana_flags["met"]:
+            check_kana_initiative()
 
         # 美咲イベントアンロック
         check_misaki_event_unlock()

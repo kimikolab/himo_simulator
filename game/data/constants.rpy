@@ -43,3 +43,6 @@ define DEPEND_HEAVY  = 80   # 行動制限
 
 # カナ関連定数（Phase 3追加）
 define KANA_CHARM_CAP = 70        # カナ魅力値上限
+
+# デバッグモード（リリース前に False に変更）
+define DEBUG_MODE = True

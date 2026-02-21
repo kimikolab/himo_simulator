@@ -1,6 +1,80 @@
 # kana_events.rpy
 # カナルート イベント（Phase 3）
 
+init python:
+    def check_kana_initiative():
+        import random
+        global kana
+
+        # last_contactが2以上かつ当日未接触で発火
+        if kana["last_contact"] < 2:
+            return
+        if kana["met_today"]:
+            return
+
+        # 依存度が高いほど頻繁に来る
+        depend = kana["dependence"]
+        if depend >= 60:
+            fire_rate = 0.60
+        elif depend >= 30:
+            fire_rate = 0.40
+        else:
+            fire_rate = 0.25
+
+        if random.random() < fire_rate:
+            _pending_events.append(("kana_initiative_event", None))
+
+
+# ========================================
+# カナの自発的連絡
+# ========================================
+
+label kana_initiative_event:
+    python:
+        import random
+        kana_msgs = [
+            ("暇〜。ヒモ太郎も暇？", "casual"),
+            ("今日会える？", "meetup"),
+            ("なんかいいことあった？", "check"),
+            ("ご飯行かない？", "food"),
+        ]
+        # 依存度が高いと「会いたい」系が増える
+        if kana["dependence"] >= 50:
+            kana_msgs += [
+                ("会いたい", "needy"),
+                ("今どこにいる？", "location"),
+            ]
+        kana_msg, kana_msg_type = random.choice(kana_msgs)
+
+    "カナからLINEが来た。"
+    kana_c "[kana_msg]"
+
+    menu:
+        "返信する":
+            if kana_msg_type in ["meetup", "food", "needy"]:
+                menu:
+                    "今夜会おう":
+                        $ flags["kana_tonight"] = True
+                        $ kana["last_contact"] = 0
+                        $ change_trust_kana(2)
+                    "今日は無理":
+                        himo "今日はちょっと"
+                        kana_c "そっか〜"
+                        $ change_trust_kana(-1)
+                        $ kana["last_contact"] = 0
+            else:
+                himo "まあまあかな"
+                kana_c "そっか〜"
+                $ kana["last_contact"] = 0
+                $ change_trust_kana(2)
+
+        "既読スルーする":
+            "既読スルーした。"
+            $ change_trust_kana(-2)
+
+    return
+
+
 # ========================================
 # K-01: ナンパの成功
 # ========================================
@@ -92,6 +166,41 @@ label kana_visit:
 
 
 # ========================================
+# カナへの連絡
+# ========================================
+
+label contact_kana:
+    $ kana["last_contact"] = 0
+
+    "カナにLINEを送った..."
+
+    if kana["trust"] >= 40:
+        "すぐに返信が来た。"
+    elif kana["trust"] >= 20:
+        "しばらくして返信が来た。"
+    else:
+        "既読スルーされた..."
+        $ change_trust_kana(-1)
+        $ daily_flags["ignored_kana_today"] = True
+        return
+
+    menu:
+        kana_c "なに？"
+
+        "雑談する":
+            kana_c "暇〜。ヒモ太郎も暇？"
+            himo "暇だよ"
+            kana_c "じゃあ会おう"
+            $ flags["kana_tonight"] = True
+            $ change_trust_kana(3)
+
+        "今日会いたいと言う":
+            call kana_date_request
+
+    return
+
+
+# ========================================
 # カナデート誘い・デート
 # ========================================
 
@@ -111,7 +220,9 @@ label kana_date_request:
         if trust >= 50:
             success_rate = 0.90
         elif trust >= 35:
-            success_rate = 0.70
+            success_rate = 0.75
+        elif trust >= 20:
+            success_rate = 0.65
         elif trust >= 15:
             success_rate = 0.50
         else:

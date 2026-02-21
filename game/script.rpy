@@ -47,6 +47,7 @@ label main_loop:
 
     scene bg_placeholder
     show screen status_bar
+    show screen debug_overlay
 
     if game_date["time"] == "morning":
         call morning_actions
@@ -56,6 +57,7 @@ label main_loop:
         call night_actions
 
     hide screen status_bar
+    hide screen debug_overlay
 
     # 遅延イベントキュー処理（アクション中に発生したイベント）
     call process_pending_events
@@ -81,6 +83,14 @@ label process_pending_events:
 
 
 label morning_actions:
+    # v1.1追加: 強制朝イベントのチェック
+    call check_forced_morning_event
+
+    # 強制イベントが発生してターンが消費された場合は通常行動をスキップ
+    if flags.get("morning_consumed", False):
+        $ flags["morning_consumed"] = False
+        return
+
     "――朝、10時――"
 
     if is_weekend():
@@ -142,6 +152,10 @@ label afternoon_actions:
 
         "美咲に連絡する" if game_date["day"] > 1:
             call contact_misaki
+
+        # Phase 3: カナに連絡する
+        "カナに連絡する" if kana_flags["met"]:
+            call contact_kana
 
         # Phase 3: カナの部屋に行く（昼・Stage 2以上）
         "カナの部屋に行く" if (kana_flags["met"] and kana["stage"] >= 2):

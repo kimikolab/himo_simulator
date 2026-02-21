@@ -1539,27 +1539,54 @@ screen status_bar():
         padding (15, 8)
         background "#000000aa"
 
-        hbox:
-            spacing 30
+        vbox:
+            spacing 4
 
-            text "[game_date['day']]日目" size 24
-            text get_time_string() size 24
+            # 1行目: 基本情報
+            hbox:
+                spacing 25
+                text "[game_date['day']]日目" size 24
+                text get_time_string() size 24
+                text "所持金: ¥[player['money']:,]" size 24 color "#FFD700"
 
-            text "所持金: ¥[player['money']:,]" size 24 color "#FFD700"
-            text "信頼: [misaki['trust']]" size 22 color "#87CEEB"
-            text "依存: [misaki['dependence']]" size 22 color "#FF69B4"
+                if player["stamina"] < 30:
+                    text "[[疲労]]" size 20 color "#ff6b6b"
+                if player["cleanliness"] < 30:
+                    text "[[不潔]]" size 20 color "#4ecdc4"
+                if not daily_flags["ate_today"] and game_date["time"] == "night":
+                    text "[[空腹]]" size 20 color "#ffaa00"
 
-            # Phase 3: カナパラメータ表示
-            if kana_flags["met"]:
-                text "カナ信頼: [kana[trust]]" size 20 color "#ffe066"
-                text "カナ依存: [kana[dependence]]" size 20 color "#ffaa44"
+            # 2行目: キャラクターパラメータ
+            hbox:
+                spacing 25
+                text "美咲 信頼:[misaki['trust']] 依存:[misaki['dependence']]" size 20 color "#ffb7c5"
 
-            # v2.6追加: 警告アイコン
-            if player["stamina"] < 30:
-                text "[[疲労]]" size 20 color "#ff6b6b"
+                if kana_flags["met"]:
+                    text "カナ 信頼:[kana['trust']] 依存:[kana['dependence']]" size 20 color "#ffe066"
 
-            if player["cleanliness"] < 30:
-                text "[[不潔]]" size 20 color "#4ecdc4"
+
+## Debug Overlay（デバッグ表示）スクリーン ##############################################
+
+screen debug_overlay():
+    if DEBUG_MODE:
+        frame:
+            xalign 1.0
+            yalign 0.0
+            padding (10, 10)
+            background "#00000099"
+
+            vbox:
+                spacing 3
+                text "=== DEBUG ===" size 15 color "#ff4444"
+                text "体力: [player['stamina']]" size 13 color "#ffffff"
+                text "清潔感: [player['cleanliness']]" size 13 color "#ffffff"
+                text "魅力: [player['charm']]" size 13 color "#ffffff"
+                text "食事済: [daily_flags['ate_today']]" size 13 color "#ffffff"
+                text "美咲streak: [misaki['last_contact']]" size 13 color "#ffb7c5"
+
+                if kana_flags["met"]:
+                    text "カナstreak: [kana['last_contact']]" size 13 color "#ffe066"
+                    text "SNSリスク: [kana_flags['sns_risk']]" size 13 color "#ffe066"
 
 
 ## Status Detail（詳細ステータス）スクリーン ###########################################

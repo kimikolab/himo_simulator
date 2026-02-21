@@ -79,8 +79,242 @@ label moment_of_doubt:
     return
 
 
+# ========================================
+# Phase 3 v1.1: 強制朝イベント
+# ========================================
+
+label check_forced_morning_event:
+
+    # イベント1: 日曜朝・美咲宅でイチャイチャして昼になる
+    if flags.get("misaki_sunday_morning", False):
+        $ flags["misaki_sunday_morning"] = False
+        call misaki_sunday_morning_icha
+        $ flags["morning_consumed"] = True
+        return
+
+    # イベント2: 疲労MAX → 昼まで寝てしまう
+    if player["stamina"] <= 10:
+        call event_oversleep
+        $ flags["morning_consumed"] = True
+        return
+
+    # イベント3: 美咲 or カナから朝の電話（依存度が高い場合）
+    python:
+        import random
+        phone_call_chance = False
+
+        if misaki["dependence"] >= 70 and misaki["last_contact"] >= 2:
+            if random.random() < 0.30:
+                phone_call_chance = "misaki"
+
+        if kana_flags["met"] and kana["dependence"] >= 50 and kana["last_contact"] >= 2:
+            if random.random() < 0.25:
+                phone_call_chance = "kana"
+
+    if phone_call_chance == "misaki":
+        call morning_phone_misaki
+    elif phone_call_chance == "kana":
+        call morning_phone_kana
+
+    return
+
+
+label misaki_sunday_morning_icha:
+    scene bg_placeholder
+
+    "日曜の朝。美咲の部屋。"
+    "カーテン越しに柔らかい光が差し込んでいた。"
+
+    misaki_c "...おはよう"
+    himo "おう、おはよ"
+
+    "美咲がくっついてきた。"
+    misaki_c "今日、どこか行く？"
+    himo "どうしよっか"
+
+    "結局、昼まで部屋でゆっくりした。"
+
+    $ change_stamina(20)
+    $ change_trust(5)
+    $ change_dependence(8)
+    $ reset_contact()
+    $ daily_flags["ate_today"] = True
+
+    "気づいたら昼になっていた。"
+    "（朝の時間が消えた）"
+
+    return
+
+
+label event_oversleep:
+    scene bg_placeholder
+
+    "――朝――"
+    "体が重い。"
+    himo "（疲れすぎてる...）"
+    himo "（ちょっとだけ...）"
+
+    "気づいたら昼になっていた。"
+
+    $ change_stamina(30)
+    $ himo_aptitude["easy_choices"] += 1
+
+    himo "やばい、昼じゃん"
+
+    return
+
+
+label morning_phone_misaki:
+    scene bg_placeholder
+
+    "朝から美咲の電話が鳴った。"
+
+    himo "もしもし"
+    misaki_c "おはよう。昨日、連絡なかったから"
+    himo "あ、ごめん寝てた"
+    misaki_c "...そうなんだ"
+
+    "少し沈黙。"
+
+    menu:
+        "フォローする":
+            himo "夜に連絡するから"
+            misaki_c "...うん、待ってる"
+            $ change_trust(3)
+            $ flags["misaki_tonight"] = True
+            $ reset_contact()
+
+        "適当にごまかす":
+            himo "バタバタしててさ〜"
+            misaki_c "...そっか"
+            "美咲は何も言わなかった。"
+            $ add_suspicion("vague_answer")
+            $ reset_contact()
+
+    return
+
+
+label morning_phone_kana:
+    scene bg_placeholder
+
+    "朝から着信。カナだ。"
+
+    himo "もしもし"
+    kana_c "おはよ〜！昨日連絡なかったじゃん"
+    himo "悪い悪い"
+    kana_c "今日どうする？暇？"
+
+    menu:
+        "今日会おう":
+            himo "夜なら"
+            kana_c "やった！じゃあ夜ね"
+            $ flags["kana_tonight"] = True
+            $ kana["last_contact"] = 0
+            $ change_trust_kana(3)
+
+        "今日は無理":
+            himo "今日はちょっと用事あって"
+            kana_c "え〜、また？"
+            $ change_trust_kana(-3)
+            $ kana["last_contact"] = 0
+
+    return
+
+
+# ========================================
+# Phase 3 v1.1: 強制昼イベント
+# ========================================
+
+label check_forced_afternoon_event:
+    python:
+        import random
+
+    # イベント1: ナンパ解禁トリガー（カナ未出会い・魅力35以上・5日目以降）
+    if (not kana_flags["met"]
+        and not flags.get("nanpa_unlocked", False)
+        and player["charm"] >= 35
+        and game_date["day"] >= 5):
+        call event_nanpa_unlock
+        return
+
+    # イベント2: 町中でカナと偶然遭遇（カナ出会い済み・信頼50未満・ランダム）
+    if (kana_flags["met"]
+        and kana["trust"] < 50
+        and not kana["met_today"]
+        and random.random() < 0.15):
+        call event_kana_encounter
+        $ flags["afternoon_consumed"] = True
+        return
+
+    return
+
+
+label event_nanpa_unlock:
+    "街を歩いていると、前を歩く男が女の子に声をかけていた。"
+    "...ナンパだ。"
+
+    "女の子は笑顔で立ち止まった。"
+    "連絡先を交換している。"
+
+    himo "..."
+    himo "（俺でも、できるかな）"
+
+    $ flags["nanpa_unlocked"] = True
+
+    "なんか、やってみたくなった。"
+    "ナンパができるようになった。"
+
+    # そのままナンパを試みるか選択
+    menu:
+        "試してみる":
+            call nanpa_event
+
+        "今日はやめとく":
+            himo "まあ、今日はいいか"
+
+    return
+
+
+label event_kana_encounter:
+    scene bg_placeholder
+
+    "街を歩いていると、見覚えのある顔が目に入った。"
+    "カナだ。"
+
+    kana_c "あ、ヒモ太郎！なにしてんの？"
+    himo "散歩"
+    kana_c "暇人じゃん。一緒にいていい？"
+
+    "断る理由もないので、そのままカナと合流した。"
+
+    $ kana["met_today"] = True
+    $ kana["last_contact"] = 0
+
+    # カナの恩恵（食事）
+    kana_c "お腹減った。なんか食べよ"
+    "近くのカフェに入った。"
+    "カナがおごってくれた。"
+
+    $ change_stamina(15)
+    $ change_trust_kana(8)
+    $ change_dependence_kana(4)
+    $ daily_flags["ate_today"] = True
+
+    "思わぬ形でカナと過ごすことになった。"
+    "（昼の時間が消費された）"
+
+    return
+
+
 label afternoon_street:
     scene bg_placeholder
+
+    # v1.1追加: 昼の強制イベントチェック
+    call check_forced_afternoon_event
+
+    if flags.get("afternoon_consumed", False):
+        $ flags["afternoon_consumed"] = False
+        return
 
     "街に出た。"
 
@@ -96,60 +330,15 @@ label afternoon_street:
         himo "俺は自由でいいわ〜"
 
     menu:
-        "何をする？"
+        "【街】何をする？"
 
-        "カフェで休憩":
-            # v2.6追加: 所持金チェック
-            if not can_afford(500):
-                himo "...財布の中身が足りない"
-                jump afternoon_street
-
-            "カフェに入った。"
-
-            himo "平日昼のカフェ、最高"
-
-            "周りはノーパソ開いてる人とか打ち合わせとか。"
-
-            himo "みんな働いてんな〜"
-            himo "俺はコーヒー飲むだけ！楽勝！"
-
-            "...500円か。ちょっと痛いな。"
-
-            $ change_money(-500)
-            $ change_stamina(10)
-            $ himo_aptitude["easy_choices"] += 1
-
-        "服を見る":
-            # v2.6追加: 所持金チェック
-            if not can_afford(3000):
-                himo "...欲しいけど、今は無理だな"
-                jump afternoon_street
-
-            "服屋に入った。"
-
-            himo "ちょっといい服買っとくか"
-
-            $ change_money(-3000)
-            $ change_charm(5)
-
-            himo "おっ、いい感じ"
-
-        "100円ショップに行く":
-            # v2.6追加: 所持金チェック
-            if not can_afford(300):
-                himo "100円ショップすら厳しいとか..."
-                jump afternoon_street
-
-            "100円ショップをぶらぶら。"
-
-            himo "100円で色々買えるの、最高だな"
-
-            $ change_money(-300)
+        "買い物をする":
+            call shopping_event
 
         "パチンコに行く":
             call pachinko_event
 
-        "ナンパしてみる" if not kana_flags["met"]:
+        "ナンパしてみる" if (flags["nanpa_unlocked"] and not kana_flags["met"]):
             call nanpa_event
 
         "求人情報を見る":
@@ -197,6 +386,30 @@ label nanpa_event:
     "振り返ったのは、明るそうな女の子だった。"
 
     jump k01_nanpa_success
+
+
+label shopping_event:
+    scene bg_placeholder
+    "街の店を見て回った。"
+
+    menu:
+        "何を買う？"
+
+        "服を見る":
+            if not can_afford(3000):
+                himo "...欲しいけど、今は無理だな"
+                return
+
+            "服屋に入った。"
+            himo "ちょっといい服買っとくか"
+            $ change_money(-3000)
+            $ change_charm(5)
+            himo "おっ、いい感じ"
+
+        "何も買わない":
+            himo "まあ、今日はいいか"
+
+    return
 
 
 label check_job_hint:
