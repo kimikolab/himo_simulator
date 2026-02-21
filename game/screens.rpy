@@ -1549,6 +1549,11 @@ screen status_bar():
             text "信頼: [misaki['trust']]" size 22 color "#87CEEB"
             text "依存: [misaki['dependence']]" size 22 color "#FF69B4"
 
+            # Phase 3: カナパラメータ表示
+            if kana_flags["met"]:
+                text "カナ信頼: [kana[trust]]" size 20 color "#ffe066"
+                text "カナ依存: [kana[dependence]]" size 20 color "#ffaa44"
+
             # v2.6追加: 警告アイコン
             if player["stamina"] < 30:
                 text "[[疲労]]" size 20 color "#ff6b6b"
@@ -1571,7 +1576,7 @@ screen status_detail():
         xalign 0.5
         yalign 0.5
         xsize 700
-        ysize 620
+        ysize 800
         padding (30, 30)
 
         vbox:
@@ -1597,6 +1602,19 @@ screen status_detail():
                 stage_name = stage_names.get(misaki["stage"], "???")
 
             text "関係: [stage_name]" size 22
+
+            if kana_flags["met"]:
+                null height 10
+
+                text "■カナとの関係" size 28
+                text "信頼度: [kana['trust']]" size 22
+                text "依存度: [kana['dependence']]" size 22
+
+                python:
+                    kana_stage_names = {0: "未出会い", 1: "知り合い", 2: "友達", 3: "いい雰囲気", 4: "恋人"}
+                    kana_stage_name = kana_stage_names.get(kana["stage"], "???")
+
+                text "関係: [kana_stage_name]" size 22
 
             null height 10
 

@@ -30,6 +30,29 @@ default misaki = {
     "met_today": False
 }
 
+# カナの情報（Phase 3追加）
+default kana = {
+    "name": "桜井カナ",
+    "age": 21,
+    "trust": 0,
+    "dependence": 0,
+    "stage": 0,
+    "last_contact": 0,
+    "met_today": False,
+}
+
+# カナ関連フラグ（Phase 3追加）
+default kana_flags = {
+    "met": False,
+    "k01_done": False,
+    "k02_done": False,
+    "k03_done": False,
+    "k04_done": False,
+    "k05_done": False,
+    "sns_risk": 0,
+    "room_key": False,
+}
+
 # 違和感カウント
 default suspicion_count = 0
 
@@ -48,6 +71,8 @@ default flags = {
     "met_misaki_this_weekend": False,
     "misaki_sunday_morning": False,
     "misaki_tonight": False,
+    "kana_tonight": False,
+    "game_ended": False,
 }
 
 # 1日ごとにリセットされるフラグ
@@ -74,7 +99,8 @@ default misaki_events = {
 # 場所フラグ（Phase 2追加）
 default location_flags = {
     "misaki_room_unlocked": False,
-    "staying_at_misaki": False
+    "staying_at_misaki": False,
+    "staying_at_kana": False
 }
 
 # 月次管理（Phase 2追加）

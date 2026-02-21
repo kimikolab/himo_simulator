@@ -140,11 +140,11 @@ init python:
         # 成功時はストリークリセット
         money_refused_streak = 0
 
-        # 金額（v2.2上方修正）
+        # 金額（v2.4上方修正）
         amounts = {
-            "small": (2000, 4000),
-            "medium": (4000, 7000),
-            "large": (6000, 12000)
+            "small": (3000, 6000),
+            "medium": (6000, 10000),
+            "large": (9000, 15000)
         }
         min_amt, max_amt = amounts[amount_type]
         amount = random.randint(min_amt, max_amt)
@@ -159,6 +159,52 @@ init python:
                 renpy.notify("美咲: 「...お金、大丈夫？」")
 
         return True, amount, "成功"
+
+    # ========================================
+    # Phase 3: カナ用パラメータ関数
+    # ========================================
+
+    def change_trust_kana(amount):
+        global kana
+        old_stage = kana["stage"]
+        kana["trust"] = clamp(kana["trust"] + amount, 0, 100)
+        update_kana_stage()
+
+        if kana["stage"] > old_stage:
+            stage_names = {2: "友達", 3: "いい雰囲気", 4: "恋人"}
+            if kana["stage"] in stage_names:
+                renpy.notify("カナとの関係が「" + stage_names[kana["stage"]] + "」になった")
+
+    def change_dependence_kana(amount):
+        global kana
+        if amount > 0:
+            depend = kana["dependence"]
+            if depend >= 60:
+                amount = int(amount * 0.3)
+            elif depend >= 40:
+                amount = int(amount * 0.5)
+
+        old = kana["dependence"]
+        kana["dependence"] = clamp(kana["dependence"] + amount, 0, 100)
+
+        if old < 100 <= kana["dependence"]:
+            renpy.notify("カナ: 「ヒモ太郎のことしか考えられない」")
+
+    def update_kana_stage():
+        global kana
+        trust  = kana["trust"]
+        depend = kana["dependence"]
+
+        if trust >= 70 and depend >= 50:
+            kana["stage"] = STAGE_DATING
+        elif trust >= 50:
+            kana["stage"] = STAGE_CLOSE
+        elif trust >= 35:
+            kana["stage"] = STAGE_FRIEND
+        elif trust > 0:
+            kana["stage"] = STAGE_ACQUAINTANCE
+        else:
+            kana["stage"] = 0
 
     def add_suspicion(reason):
         global suspicion_count

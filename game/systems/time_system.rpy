@@ -3,7 +3,7 @@
 
 init python:
     def advance_time():
-        global game_date, player, misaki
+        global game_date, player, misaki, kana
 
         if game_date["time"] == "morning":
             game_date["time"] = "afternoon"
@@ -17,6 +17,10 @@ init python:
         player["stamina"] = max(0, player["stamina"] - STAMINA_DECAY_PER_TURN)
         player["cleanliness"] = max(0, player["cleanliness"] - CLEANLINESS_DECAY_PER_TURN)
         misaki["last_contact"] += 1
+
+        # Phase 3: カナの連絡間隔も増加
+        if kana_flags["met"]:
+            kana["last_contact"] += 1
 
         # 体力低下イベント（キュー方式）
         if player["stamina"] <= 15:
@@ -55,14 +59,19 @@ init python:
         game_date["weekday"] = (game_date["weekday"] + 1) % 7
         misaki["met_today"] = False
 
+        # Phase 3: カナの日次リセット
+        if kana_flags["met"]:
+            kana["met_today"] = False
+
         # daily_flags リセット
         daily_flags["asked_money_today"] = False
         daily_flags["ignored_today"] = False
         daily_flags["date_planned_tonight"] = False
         daily_flags["ate_today"] = False
 
-        # 美咲宅宿泊リセット
+        # 宿泊リセット
         location_flags["staying_at_misaki"] = False
+        location_flags["staying_at_kana"] = False
 
         # 美咲ムード更新
         update_misaki_mood()
@@ -179,6 +188,9 @@ label hunger_penalty:
 
 # 体力低下イベント
 label event_low_stamina:
+    # v2.4修正: エンディング後はスタミナ警告を表示しない
+    if flags.get("game_ended", False):
+        return
     "（体が重い...）"
     "（疲れすぎてる。少し休まないと）"
     return

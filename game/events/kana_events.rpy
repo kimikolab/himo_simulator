@@ -1,0 +1,283 @@
+# kana_events.rpy
+# カナルート イベント（Phase 3）
+
+# ========================================
+# K-01: ナンパの成功
+# ========================================
+
+label k01_nanpa_success:
+    scene bg_placeholder
+
+    kana_c "え、なに？ナンパ？"
+    himo "まあ...そんな感じです"
+    kana_c "あはは、正直じゃん"
+
+    "屈託のない笑顔だった。"
+    "なんか、美咲とは全然違うタイプだな。"
+
+    kana_c "カナ。桜井カナ。大学3年"
+    himo "ヒモ太郎。25歳"
+    kana_c "無職？笑"
+    himo "...まあ"
+    kana_c "いいじゃん、自由で"
+
+    "連絡先を交換した。"
+
+    $ kana["trust"] = 15
+    $ kana["dependence"] = 0
+    $ kana["stage"] = 1
+    $ kana_flags["met"] = True
+    $ kana_flags["k01_done"] = True
+
+    "こうして、カナと知り合った。"
+    "美咲とは全然違う空気。"
+    himo "...なんか、新鮮だな"
+
+    return
+
+
+# ========================================
+# カナ宅訪問
+# ========================================
+
+label kana_visit:
+    scene bg_placeholder
+
+    "カナの部屋に来た。"
+
+    if game_date["time"] == "afternoon":
+        "昼間から部屋に来られるのは、カナならでは。"
+        kana_c "来た来た！暇だったんだよね〜"
+    else:
+        kana_c "いらっしゃい"
+
+    # 食事
+    if not daily_flags["ate_today"]:
+        kana_c "ごはん食べた？なんか作るよ"
+
+        menu:
+            "食べていく":
+                "カナが料理を作ってくれた。"
+                kana_c "たいしたもんじゃないけど"
+                himo "いや、うまい"
+                $ change_stamina(20)
+                $ daily_flags["ate_today"] = True
+                $ change_trust_kana(3)
+
+            "いい、気にしないで":
+                himo "大丈夫、気にしないで"
+                kana_c "そう？遠慮しなくていいのに"
+
+    # シャワー
+    if player["cleanliness"] < 50:
+        kana_c "シャワー使う？タオルあるよ"
+
+        menu:
+            "借りる":
+                "シャワーを借りた。"
+                $ change_cleanliness(30)
+                $ change_trust_kana(2)
+
+            "いい":
+                pass
+
+    # 魅力値微増（上限70）
+    if player["charm"] < KANA_CHARM_CAP:
+        $ change_charm(1)
+
+    $ kana["met_today"] = True
+    $ kana["last_contact"] = 0
+
+    return
+
+
+# ========================================
+# カナデート誘い・デート
+# ========================================
+
+label kana_date_request:
+    if daily_flags.get("ignored_kana_today", False):
+        himo "今日はやめとこう"
+        return
+
+    if kana["met_today"]:
+        kana_c "今日もう会ったじゃん"
+        return
+
+    python:
+        import random
+        trust = kana["trust"]
+        # カナは美咲より会いやすい（暇な大学生）
+        if trust >= 50:
+            success_rate = 0.90
+        elif trust >= 35:
+            success_rate = 0.70
+        elif trust >= 15:
+            success_rate = 0.50
+        else:
+            success_rate = 0.30
+
+        can_meet = random.random() < success_rate
+
+    if not can_meet:
+        kana_c "今日はちょっと〜、バイトあるんだよね"
+        himo "そっか"
+        return
+
+    if game_date["time"] == "night":
+        call kana_date
+    else:
+        kana_c "夜なら大丈夫だよ"
+        $ flags["kana_tonight"] = True
+        himo "了解"
+
+    return
+
+
+label kana_date:
+    scene bg_placeholder
+
+    "カナと会った。"
+    kana_c "ヒモ太郎〜！"
+
+    "いつも元気だな。"
+
+    $ kana["met_today"] = True
+    $ kana["last_contact"] = 0
+    $ change_stamina(-10)
+
+    # 魅力値微増（上限70）
+    if player["charm"] < KANA_CHARM_CAP:
+        $ change_charm(1)
+
+    menu:
+        "何を話す？"
+
+        "カナの話を聞く":
+            kana_c "最近さ、TikTokにハマってて〜"
+            himo "へー"
+            kana_c "フォロワー増えてきた！"
+            himo "すごいじゃん"
+            "あんまりよくわからないけど、楽しそうだった。"
+            $ change_trust_kana(5)
+            $ change_dependence_kana(3)
+
+        "一緒にいるだけ":
+            "特に何も話さなかった。"
+            "でも、それでいい空気だった。"
+            $ change_trust_kana(3)
+            $ change_dependence_kana(2)
+
+        "自分の話をする":
+            himo "最近暇でさ〜"
+            kana_c "いいじゃん、一緒に暇しよ"
+            "カナはこういうのを責めない。"
+            $ change_trust_kana(4)
+            $ change_dependence_kana(3)
+            $ himo_aptitude["easy_choices"] += 1
+
+    # 食事（ate_todayが未設定なら）
+    if not daily_flags["ate_today"]:
+        kana_c "ごはん、どっか行く？"
+        himo "いいな"
+        "カナが安い定食屋に連れて行ってくれた。"
+        "割り勘だったが、安かった。"
+        $ change_money(-600)
+        $ change_stamina(15)
+        $ daily_flags["ate_today"] = True
+
+    return
+
+
+# ========================================
+# K-02: インスタのストーリー
+# ========================================
+
+label k02_insta_story:
+    scene bg_placeholder
+
+    "スマホを見ていると、カナのインスタのストーリーが上がっていた。"
+    "今いる場所の写真。"
+    "...繁華街だ。美咲と会うことが多いエリア。"
+
+    himo "（あ、これまずいかも）"
+    himo "（美咲に見られたら...）"
+
+    "カナはインスタのフォロワーが5万人いる。"
+    "誰でも見られる。"
+
+    menu:
+        "どうする？"
+
+        "気にしない":
+            himo "まあ、バレないだろ"
+            $ kana_flags["sns_risk"] += 5
+            $ himo_aptitude["easy_choices"] += 1
+
+        "カナに非公開にしてもらうよう頼む":
+            himo "（でも、なんて言えば...）"
+            himo "（怪しまれるか）"
+            "結局、何も言えなかった。"
+            $ kana_flags["sns_risk"] += 3
+
+        "自分のアカウントを非公開にする":
+            himo "とりあえず、俺のアカウントを非公開にしておくか"
+            "応急処置程度だが、気休めにはなる。"
+            $ kana_flags["sns_risk"] += 1
+
+    "SNS経由でバレるリスクが、じわじわ高まっている気がした。"
+
+    $ kana_flags["k02_done"] = True
+    return
+
+
+# ========================================
+# K-03: お金ない自慢
+# ========================================
+
+label k03_money_talk:
+    scene bg_placeholder
+
+    "カナと話していると、突然こんなことを言い出した。"
+
+    kana_c "ねえ、今月マジで金ないんだけど"
+    himo "え"
+    kana_c "仕送り使い果たしてさ〜、バイトも先月サボりすぎて"
+    kana_c "笑えるよね"
+
+    "笑えない。"
+    himo "（美咲と真逆だな）"
+
+    menu:
+        "大変だな（同情する）":
+            himo "それは大変だな"
+            kana_c "でしょ〜。ヒモ太郎も金ないんだっけ？"
+            himo "俺も大概だよ"
+            kana_c "じゃあ二人で貧乏同盟だ！"
+            "なんか、妙な連帯感が生まれた。"
+            $ change_trust_kana(8)
+            $ change_dependence_kana(5)
+
+        "少し渡す（1000円）" if can_afford(1000):
+            himo "ちょっとだけど"
+            kana_c "え、いいの？！"
+            himo "まあ、俺も余裕ないけど"
+            kana_c "ありがと〜！好きだわヒモ太郎"
+            $ change_money(-1000)
+            $ change_trust_kana(15)
+            $ change_dependence_kana(10)
+
+        "俺も金ない（正直に言う）":
+            himo "俺も同じ状況だよ"
+            kana_c "え、マジで？！"
+            kana_c "じゃあどうやって生きてんの？"
+            himo "...なんとかなってる"
+            kana_c "謎すぎる。でもなんかウケる"
+            $ change_trust_kana(10)
+            $ himo_aptitude["honest_moments"] += 1
+
+    "カナとお金の話をした。"
+    "美咲とのお金の話とは、全然違う空気だった。"
+
+    $ kana_flags["k03_done"] = True
+    return

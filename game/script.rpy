@@ -143,6 +143,18 @@ label afternoon_actions:
         "美咲に連絡する" if game_date["day"] > 1:
             call contact_misaki
 
+        # Phase 3: カナの部屋に行く（昼・Stage 2以上）
+        "カナの部屋に行く" if (kana_flags["met"] and kana["stage"] >= 2):
+            call kana_visit
+
+            # K-02トリガー（信頼20以上・未発生）
+            if kana["trust"] >= 20 and not kana_flags["k02_done"]:
+                call k02_insta_story
+
+            # K-03トリガー（信頼35以上・未発生）
+            if kana["trust"] >= 35 and not kana_flags["k03_done"]:
+                call k03_money_talk
+
         "コンビニで昼飯を買う（500円）":
             if not can_afford(500):
                 himo "...財布が軽すぎる"
@@ -169,11 +181,27 @@ label afternoon_actions:
 label night_actions:
     "――夜、21時――"
 
-    # v2.3: 約束がある夜は美咲一択
+    # v2.3: 約束がある夜の処理
+    if flags.get("misaki_tonight", False) and flags.get("kana_tonight", False):
+        # 両方と約束がある場合（ダブルブッキング）はWeek 8で実装
+        # 暫定: 美咲を優先
+        "今夜は美咲と約束がある。"
+        $ flags["misaki_tonight"] = False
+        $ flags["kana_tonight"] = False
+        $ change_trust_kana(-5)
+        call misaki_date
+        return
+
     if flags.get("misaki_tonight", False):
         "今夜は美咲と約束がある。"
         $ flags["misaki_tonight"] = False
         call misaki_date
+        return
+
+    if flags.get("kana_tonight", False):
+        "今夜はカナと約束がある。"
+        $ flags["kana_tonight"] = False
+        call kana_date
         return
 
     if is_weekend():
@@ -203,6 +231,10 @@ label night_actions:
 
         "美咲を誘う" if (not misaki["met_today"]):
             call misaki_date_request
+
+        # Phase 3: カナを誘う
+        "カナを誘う" if (kana_flags["met"] and not kana["met_today"]):
+            call kana_date_request
 
         "美咲に連絡する":
             call contact_misaki

@@ -149,6 +149,9 @@ label afternoon_street:
         "パチンコに行く":
             call pachinko_event
 
+        "ナンパしてみる" if not kana_flags["met"]:
+            call nanpa_event
+
         "求人情報を見る":
             call check_job_hint
 
@@ -156,6 +159,44 @@ label afternoon_street:
             himo "帰るか"
 
     return
+
+
+# ========================================
+# Phase 3: ナンパシステム
+# ========================================
+
+label nanpa_event:
+    scene bg_placeholder
+
+    "繁華街をぶらぶらしていた。"
+
+    python:
+        import random
+        charm = player["charm"]
+        if charm >= 70:
+            success_rate = 0.60
+        elif charm >= 50:
+            success_rate = 0.40
+        elif charm >= 35:
+            success_rate = 0.25
+        else:
+            success_rate = 0.10
+
+        nanpa_success = random.random() < success_rate
+
+    if not nanpa_success:
+        "声をかけてみたが、うまくいかなかった。"
+        himo "...まあ、そんなもんか"
+        $ change_stamina(-5)
+        return
+
+    # 成功
+    "前を歩く女の子に声をかけた。"
+    himo "あの、ちょっといいですか"
+
+    "振り返ったのは、明るそうな女の子だった。"
+
+    jump k01_nanpa_success
 
 
 label check_job_hint:

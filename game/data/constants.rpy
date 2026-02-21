@@ -40,3 +40,6 @@ define M05_EARLIEST_DAY = 20
 define DEPEND_MILD   = 40   # 軽い干渉開始
 define DEPEND_MEDIUM = 60   # 約束の強制
 define DEPEND_HEAVY  = 80   # 行動制限
+
+# カナ関連定数（Phase 3追加）
+define KANA_CHARM_CAP = 70        # カナ魅力値上限

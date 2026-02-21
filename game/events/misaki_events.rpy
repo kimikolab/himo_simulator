@@ -119,28 +119,31 @@ label misaki_date_request:
         himo "あ、そっか"
         return
 
-    # v2.3: 約束なし当日誘いの成否判定
+    # v2.4修正: 約束なし当日誘いの成功率段階変化（緩和版）
     if not flags.get("misaki_tonight", False):
         python:
             _trust = misaki["trust"]
             if _trust >= 70:
-                _success_rate = 0.70
+                _success_rate = 0.85
             elif _trust >= 50:
-                _success_rate = 0.50
+                _success_rate = 0.65
+            elif _trust >= 35:
+                _success_rate = 0.40
             else:
-                _success_rate = 0.0
+                _success_rate = 0.20   # 信頼35未満でも20%で会える
+
             _can_meet = renpy.random.random() < _success_rate
 
-        if _trust < 50:
-            misaki_c "急に言われても...今日は難しいかな"
-            himo "そっか、しゃーない"
-            "（事前に約束しておかないとダメか）"
-            $ change_trust(-1)
-            return
-
         if not _can_meet:
-            misaki_c "ごめん、今日はもう予定入っちゃってて"
-            himo "そっか、また今度"
+            # 信頼度に応じた断り方
+            if misaki["trust"] < 35:
+                misaki_c "急に言われても...今日はちょっと難しいかな"
+                himo "そっか、しゃーない"
+                "（もう少し仲良くなれば会いやすくなるかも）"
+            else:
+                misaki_c "ごめん、今日はもう予定入っちゃってて"
+                himo "そっか、また今度"
+
             $ change_trust(-1)
             return
 
@@ -312,6 +315,17 @@ label misaki_money_request:
     if daily_flags.get("asked_money_today", False):
         himo "...さっきもらったばかりだし、今日はやめとこう"
         return
+
+    # v2.4修正: 時間帯に応じたナレーション
+    python:
+        _time_str = {
+            "morning":   "ある朝",
+            "afternoon": "ある昼間",
+            "night":     "ある夜",
+        }
+        _time_text = _time_str.get(game_date["time"], "ある日")
+
+    "[_time_text]、美咲に切り出した。"
 
     himo "実は...お金が厳しくて"
 
@@ -929,8 +943,8 @@ label misaki_room_visit:
             $ change_cleanliness(20)
             $ himo_aptitude["easy_choices"] += 1
 
-            # v2.1: 土曜宿泊の場合、翌日曜のフラグを立てる
-            if is_weekend() and game_date["weekday"] == 6:
+            # v2.4修正: 土曜の「夜」に泊まった場合のみ日曜朝シーンを発動
+            if is_weekend() and game_date["weekday"] == 6 and game_date["time"] == "night":
                 $ flags["misaki_sunday_morning"] = True
 
     # v2.1: 週末に会った記録
