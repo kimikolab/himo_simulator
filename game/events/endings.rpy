@@ -32,6 +32,8 @@ label ending_30days:
 
 label ending_balance_30days:
     $ flags["game_ended"] = True
+    $ log_action("GOOD END")
+    $ export_debug_log()
     scene bg_placeholder with fade
 
     centered "{size=40}エンディング: 新しい関係{/size}"
@@ -57,6 +59,8 @@ label ending_balance_30days:
 
 label ending_himou_30days:
     $ flags["game_ended"] = True
+    $ log_action("GRAY END")
+    $ export_debug_log()
     scene bg_placeholder with fade
 
     centered "{size=40}エンディング: ヒモへの道{/size}"
@@ -81,6 +85,8 @@ label ending_himou_30days:
 
 label ending_unstable_30days:
     $ flags["game_ended"] = True
+    $ log_action("NORMAL END")
+    $ export_debug_log()
     scene bg_placeholder with fade
 
     centered "{size=40}エンディング: 不安定な日々{/size}"
@@ -101,6 +107,8 @@ label ending_unstable_30days:
 
 label ending_bankruptcy_30days:
     $ flags["game_ended"] = True
+    $ log_action("BAD END 破産")
+    $ export_debug_log()
     scene bg_placeholder with fade
 
     centered "{size=40}エンディング: 破滅{/size}"

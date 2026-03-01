@@ -120,15 +120,14 @@ label kana_visit:
     "カナの部屋に来た。"
 
     if game_date["time"] == "afternoon":
-        "昼間から部屋に来られるのは、カナならでは。"
+        "昼間から来られるのは、カナならでは。"
         kana_c "来た来た！暇だったんだよね〜"
     else:
         kana_c "いらっしゃい"
 
-    # 食事
+    # --- 食事（独立チェック）---
     if not daily_flags["ate_today"]:
         kana_c "ごはん食べた？なんか作るよ"
-
         menu:
             "食べていく":
                 "カナが料理を作ってくれた。"
@@ -137,25 +136,22 @@ label kana_visit:
                 $ change_stamina(20)
                 $ daily_flags["ate_today"] = True
                 $ change_trust_kana(3)
-
             "いい、気にしないで":
-                himo "大丈夫、気にしないで"
-                kana_c "そう？遠慮しなくていいのに"
+                himo "大丈夫"
+                kana_c "遠慮しなくていいのに"
 
-    # シャワー
+    # --- シャワー（独立チェック）---
     if player["cleanliness"] < 50:
         kana_c "シャワー使う？タオルあるよ"
-
         menu:
             "借りる":
                 "シャワーを借りた。"
                 $ change_cleanliness(30)
                 $ change_trust_kana(2)
-
             "いい":
                 pass
 
-    # 魅力値微増（上限70）
+    # --- 魅力増加（無条件）---
     if player["charm"] < KANA_CHARM_CAP:
         $ change_charm(1)
 
@@ -246,6 +242,7 @@ label kana_date_request:
 
 
 label kana_date:
+    $ log_action("カナデート")
     scene bg_placeholder
 
     "カナと会った。"

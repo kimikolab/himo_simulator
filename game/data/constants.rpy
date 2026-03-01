@@ -24,6 +24,7 @@ define STAGE_ACQUAINTANCE = 1
 define STAGE_FRIEND = 2
 define STAGE_CLOSE = 3
 define STAGE_DATING = 4
+define STAGE_OSHI = 4          # カナ専用ステージ（美咲のSTAGE_DATINGに相当）
 
 # ゲーム期間（Phase 2: 30日に拡張）
 define GAME_DAYS = 30

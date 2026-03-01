@@ -88,11 +88,13 @@ init python:
         else:
             misaki["stage"] = STAGE_ACQUAINTANCE
 
-        # STAGE_DATING移行処理（v2.1修正: 再表示防止）
+        # STAGE_DATING移行処理（v2.1修正: 再表示防止 / v1.2修正: 夜以外は持ち越し）
         if old_stage < STAGE_DATING and misaki["stage"] == STAGE_DATING:
             if not flags.get("confession_done", False):
-                # 告白イベント未実施なら発火
-                _pending_events.append(("misaki_confession", None))
+                if game_date["time"] == "night":
+                    _pending_events.append(("misaki_confession", None))
+                else:
+                    flags["confession_pending"] = True
             elif flags.get("confession_accepted", False):
                 # 告白を受け入れていた場合のみテロップ表示
                 renpy.notify("美咲との関係: 恋人")
@@ -106,6 +108,10 @@ init python:
 
     def request_money_from_misaki(amount_type="small"):
         global stats, suspicion_count, himo_aptitude, money_refused_streak
+
+        # v1.2追加: 最近会っていないとお金を要求しにくい
+        if misaki["last_contact"] > 1:
+            return False, 0, "最近会っていない"
 
         stats["times_asked_money"] += 1
         himo_aptitude["money_requests"] += 1
@@ -171,9 +177,9 @@ init python:
         update_kana_stage()
 
         if kana["stage"] > old_stage:
-            stage_names = {2: "友達", 3: "いい雰囲気", 4: "恋人"}
-            if kana["stage"] in stage_names:
-                renpy.notify("カナとの関係が「" + stage_names[kana["stage"]] + "」になった")
+            stage_names_kana = {2: "友達", 3: "いい感じ", 4: "推しの人"}
+            if kana["stage"] in stage_names_kana:
+                renpy.notify("カナとの関係が「" + stage_names_kana[kana["stage"]] + "」になった")
 
     def change_dependence_kana(amount):
         global kana
@@ -195,8 +201,8 @@ init python:
         trust  = kana["trust"]
         depend = kana["dependence"]
 
-        if trust >= 70 and depend >= 50:
-            kana["stage"] = STAGE_DATING
+        if trust >= 70 and depend >= 30:
+            kana["stage"] = STAGE_OSHI
         elif trust >= 50:
             kana["stage"] = STAGE_CLOSE
         elif trust >= 35:

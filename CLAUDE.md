@@ -2,6 +2,9 @@
 
 このファイルは、このリポジトリで作業する Claude Code (claude.ai/code) へのガイダンスを提供します。
 
+## GitHubリポジトリURL
+https://github.com/RS-PON/himo_simulator
+
 ## 言語設定
 
 **すべての回答・メッセージは日本語で出力すること。**

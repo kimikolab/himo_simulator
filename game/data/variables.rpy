@@ -65,6 +65,7 @@ default flags = {
     "had_doubt_moment": False,
     "doubt_event_done": False,
     "confession_done":     False,
+    "confession_pending":  False,
     "confession_accepted": False,
     "confession_ambiguous": False,
     "confession_rejected": False,

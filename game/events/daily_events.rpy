@@ -272,6 +272,7 @@ label event_nanpa_unlock:
         "今日はやめとく":
             himo "まあ、今日はいいか"
 
+    $ flags["afternoon_consumed"] = True
     return
 
 
@@ -355,6 +356,7 @@ label afternoon_street:
 # ========================================
 
 label nanpa_event:
+    $ log_action("ナンパ")
     scene bg_placeholder
 
     "繁華街をぶらぶらしていた。"
@@ -527,6 +529,7 @@ label random_expense_event:
 # ========================================
 
 label pachinko_event:
+    $ log_action("パチンコ")
     scene bg_placeholder
 
     "繁華街のパチンコ店に入った。"

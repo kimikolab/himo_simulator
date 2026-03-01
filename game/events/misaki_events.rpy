@@ -170,6 +170,7 @@ label misaki_meet_planned:
 
 
 label misaki_date:
+    $ log_action("美咲デート")
     scene bg_placeholder
 
     if game_date["day"] == 1:
@@ -312,8 +313,14 @@ label misaki_date:
 
 
 label misaki_money_request:
+    $ log_action("美咲にお金要求", "信頼" + str(misaki["trust"]))
     if daily_flags.get("asked_money_today", False):
         himo "...さっきもらったばかりだし、今日はやめとこう"
+        return
+
+    # v1.2追加: 最近会っていない場合
+    if misaki["last_contact"] > 1:
+        himo "（最近会ってもいないし、さすがにお金の話はしにくいな）"
         return
 
     # v2.4修正: 時間帯に応じたナレーション

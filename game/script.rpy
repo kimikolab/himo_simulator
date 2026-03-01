@@ -113,6 +113,9 @@ label morning_actions:
             "美咲にLINEするか。"
             call contact_misaki
 
+        "カナに連絡する" if kana_flags["met"]:
+            call contact_kana
+
         "SNSを見る":
             call check_sns
 
@@ -194,6 +197,11 @@ label afternoon_actions:
 
 label night_actions:
     "――夜、21時――"
+
+    # v1.2: 告白ペンディングチェック（朝・昼にSTAGE_DATING移行した場合、夜に発火）
+    if flags.get("confession_pending", False) and not flags.get("confession_done", False):
+        $ flags["confession_pending"] = False
+        call misaki_confession
 
     # v2.3: 約束がある夜の処理
     if flags.get("misaki_tonight", False) and flags.get("kana_tonight", False):

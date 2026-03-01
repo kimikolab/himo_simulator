@@ -1638,7 +1638,7 @@ screen status_detail():
                 text "依存度: [kana['dependence']]" size 22
 
                 python:
-                    kana_stage_names = {0: "未出会い", 1: "知り合い", 2: "友達", 3: "いい雰囲気", 4: "恋人"}
+                    kana_stage_names = {0: "未出会い", 1: "知り合い", 2: "友達", 3: "いい感じ", 4: "推しの人"}
                     kana_stage_name = kana_stage_names.get(kana["stage"], "???")
 
                 text "関係: [kana_stage_name]" size 22
