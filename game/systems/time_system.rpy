@@ -30,6 +30,9 @@ init python:
         if player["cleanliness"] <= 0:
             _pending_events.append(("event_low_cleanliness", None))
 
+        # v1.4注意: daily_flagsのリセットはadvance_day()のみで行う
+        # ここでdaily_flagsをリセットしてはいけない（同日2回要求バグの原因になる）
+
 
     def advance_day():
         global game_date, misaki, flags, daily_flags
@@ -136,6 +139,10 @@ init python:
 
     def queue_misaki_initiative():
         """美咲の自発的連絡をキューに追加（renpy.call回避）"""
+        # v1.4追加: ゲーム終了後はメッセージを送らない
+        if flags.get("game_ended", False):
+            return
+
         import random
 
         # v2.3修正: last_contactが3未満、または当日会っているなら何もしない

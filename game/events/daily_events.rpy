@@ -289,7 +289,7 @@ label event_kana_encounter:
     "断る理由もないので、そのままカナと合流した。"
 
     $ kana["met_today"] = True
-    $ kana["last_contact"] = 0
+    $ reset_contact_kana()
 
     # カナの恩恵（食事）
     kana_c "お腹減った。なんか食べよ"

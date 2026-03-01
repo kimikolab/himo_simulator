@@ -3,6 +3,10 @@
 
 init python:
     def check_kana_initiative():
+        # v1.4追加: ゲーム終了後はメッセージを送らない
+        if flags.get("game_ended", False):
+            return
+
         import random
         global kana
 
@@ -155,7 +159,7 @@ label kana_visit:
         $ change_charm(1)
 
     $ kana["met_today"] = True
-    $ kana["last_contact"] = 0
+    $ reset_contact_kana()
     $ kana_dates_count += 1
 
     return
@@ -252,7 +256,7 @@ label kana_date:
     "いつも元気だな。"
 
     $ kana["met_today"] = True
-    $ kana["last_contact"] = 0
+    $ reset_contact_kana()
     $ change_stamina(-10)
 
     # 魅力値微増（上限70）

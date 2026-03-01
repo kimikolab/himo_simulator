@@ -69,8 +69,14 @@ init python:
                     _pending_events.append(("misaki_dependence_milestone", threshold))
 
     def reset_contact():
+        """美咲のlast_contactをリセット（実際に会った時のみ呼ぶ）"""
         global misaki
         misaki["last_contact"] = 0
+
+    def reset_contact_kana():
+        """カナのlast_contactをリセット（実際に会った時のみ呼ぶ）"""
+        global kana
+        kana["last_contact"] = 0
 
     def update_misaki_stage():
         global misaki

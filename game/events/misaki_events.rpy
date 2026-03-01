@@ -27,6 +27,8 @@ label contact_misaki:
             return
         misaki_c "どうしたの？"
 
+    # v1.4: お金要求ブロック時にメニューに戻れるようラベル化
+label contact_misaki_menu:
     menu:
         misaki_c "どうしたの？"
 
@@ -38,6 +40,9 @@ label contact_misaki:
             return
         "お金の相談をする" if misaki["trust"] >= 35:
             call misaki_money_request
+            # v1.4: ブロック時はメニューに戻る（ターン消費なし）
+            if _money_request_blocked:
+                jump contact_misaki_menu
             return
         "お金の話をする（真剣に）" if (misaki_events["M05_unlocked"] and not misaki_events["M05_done"]):
             call misaki_event_M05
@@ -313,14 +318,17 @@ label misaki_date:
 
 
 label misaki_money_request:
+    $ _money_request_blocked = False
     $ log_action("美咲にお金要求", "信頼" + str(misaki["trust"]))
     if daily_flags.get("asked_money_today", False):
         himo "...さっきもらったばかりだし、今日はやめとこう"
         return
 
     # v1.2追加: 最近会っていない場合
+    # v1.4修正: ブロック時はターンを消費しない（呼び出し元でメニューに戻す）
     if misaki["last_contact"] > 1:
         himo "（最近会ってもいないし、さすがにお金の話はしにくいな）"
+        $ _money_request_blocked = True
         return
 
     # v2.4修正: 時間帯に応じたナレーション
