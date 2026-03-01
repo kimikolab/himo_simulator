@@ -53,6 +53,9 @@ default kana_flags = {
     "room_key": False,
 }
 
+# カナとのデート回数（v1.3追加: kana_dateとkana_visitを合算）
+default kana_dates_count = 0
+
 # 違和感カウント
 default suspicion_count = 0
 

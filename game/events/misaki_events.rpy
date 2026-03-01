@@ -2,7 +2,7 @@
 # 美咲関連イベント（バランス調整済み）
 
 label contact_misaki:
-    $ reset_contact()
+    # v1.3修正: LINEのみなのでreset_contactを呼ばない
     "美咲にLINEを送った..."
 
     python:

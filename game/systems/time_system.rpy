@@ -26,6 +26,10 @@ init python:
         if player["stamina"] <= 15:
             _pending_events.append(("event_low_stamina", None))
 
+        # v1.3追加: 清潔感ペナルティ
+        if player["cleanliness"] <= 0:
+            _pending_events.append(("event_low_cleanliness", None))
+
 
     def advance_day():
         global game_date, misaki, flags, daily_flags
@@ -198,6 +202,24 @@ label event_low_stamina:
         return
     "（体が重い...）"
     "（疲れすぎてる。少し休まないと）"
+    return
+
+# v1.3追加: 清潔感ペナルティ
+label event_low_cleanliness:
+    if flags.get("game_ended", False):
+        return
+
+    "（体が臭い気がする...）"
+    "（さすがに不潔すぎる）"
+
+    python:
+        # 美咲・カナと会う予定がある日はペナルティ強化
+        if flags.get("misaki_tonight") or flags.get("kana_tonight"):
+            renpy.notify("美咲: 「...ちょっと、大丈夫？」")
+            change_trust(-3)
+        else:
+            change_charm(-2)
+
     return
 
 

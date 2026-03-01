@@ -198,10 +198,32 @@ init python:
 
     def update_kana_stage():
         global kana
+
         trust  = kana["trust"]
         depend = kana["dependence"]
 
-        if trust >= 70 and depend >= 30:
+        # v1.3: Stage 4「推しの人」への到達判定（複数ルート）
+        reached_oshi = False
+        oshi_route   = None
+
+        # ルートA: 会った回数
+        if trust >= 70 and kana_dates_count >= 8:
+            reached_oshi = True
+            oshi_route   = "A"
+
+        # ルートB: SNS公開（カナが積極的に露出）
+        if trust >= 65 and kana_flags.get("sns_risk", 0) >= 15:
+            reached_oshi = True
+            oshi_route   = "B"
+
+        # ルートC: 信頼単独フォールバック
+        if trust >= 80:
+            reached_oshi = True
+            oshi_route   = "C"
+
+        old_stage = kana["stage"]
+
+        if reached_oshi:
             kana["stage"] = STAGE_OSHI
         elif trust >= 50:
             kana["stage"] = STAGE_CLOSE
@@ -212,6 +234,10 @@ init python:
         else:
             kana["stage"] = 0
 
+        # Stage 4到達時の通知・演出
+        if old_stage < STAGE_OSHI and kana["stage"] == STAGE_OSHI:
+            _pending_events.append(("kana_oshi_event", oshi_route))
+
     def add_suspicion(reason):
         global suspicion_count
         suspicion_count += 1
@@ -221,7 +247,8 @@ init python:
             "vague_answer": "美咲: 「...そうなんだ」",
             "too_many_requests": "美咲: 「また？」",
             "avoided_question": "美咲: 「...」",
-            "deflected": ""
+            "deflected": "",
+            "sns_exposure": "美咲: 「...ねえ、これって知り合い？」",
         }
         if reason in messages and messages[reason]:
             renpy.notify(messages[reason])

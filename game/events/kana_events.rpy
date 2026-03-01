@@ -55,17 +55,15 @@ label kana_initiative_event:
                 menu:
                     "今夜会おう":
                         $ flags["kana_tonight"] = True
-                        $ kana["last_contact"] = 0
+                        # v1.3修正: LINEのみなのでlast_contactをリセットしない
                         $ change_trust_kana(2)
                     "今日は無理":
                         himo "今日はちょっと"
                         kana_c "そっか〜"
                         $ change_trust_kana(-1)
-                        $ kana["last_contact"] = 0
             else:
                 himo "まあまあかな"
                 kana_c "そっか〜"
-                $ kana["last_contact"] = 0
                 $ change_trust_kana(2)
 
         "既読スルーする":
@@ -80,6 +78,7 @@ label kana_initiative_event:
 # ========================================
 
 label k01_nanpa_success:
+    $ log_action("カナ出会い K-01")
     scene bg_placeholder
 
     kana_c "え、なに？ナンパ？"
@@ -157,6 +156,7 @@ label kana_visit:
 
     $ kana["met_today"] = True
     $ kana["last_contact"] = 0
+    $ kana_dates_count += 1
 
     return
 
@@ -166,7 +166,7 @@ label kana_visit:
 # ========================================
 
 label contact_kana:
-    $ kana["last_contact"] = 0
+    # v1.3修正: LINEのみなのでlast_contactをリセットしない
 
     "カナにLINEを送った..."
 
@@ -242,7 +242,8 @@ label kana_date_request:
 
 
 label kana_date:
-    $ log_action("カナデート")
+    $ kana_dates_count += 1
+    $ log_action("カナデート", "累計" + str(kana_dates_count) + "回")
     scene bg_placeholder
 
     "カナと会った。"
@@ -388,4 +389,43 @@ label k03_money_talk:
     "美咲とのお金の話とは、全然違う空気だった。"
 
     $ kana_flags["k03_done"] = True
+    return
+
+
+# ========================================
+# v1.3追加: カナ「推しの人」到達イベント（ルート別演出）
+# ========================================
+
+label kana_oshi_event(route):
+    scene bg_placeholder
+
+    if route == "A":
+        "何度も会ううちに、カナとの時間が当たり前になってきた。"
+        kana_c "ヒモ太郎って、なんか特別だよね"
+        himo "そうか？"
+        kana_c "うん。推しって感じ"
+        himo "推し..."
+        "なんか変な感じだけど、悪くない。"
+
+    elif route == "B":
+        "カナのインスタのストーリーに、俺の後ろ姿が映っていた。"
+        "'今日も会ってる人'"
+        "コメントが100件以上ついていた。"
+        kana_c "フォロワーに紹介しちゃった。ヒモ太郎のこと、推しって言っといたから"
+        himo "え"
+        kana_c "ダメだった？"
+        himo "...まあ、いいけど"
+
+        # ルートB: 美咲へのバレリスクが上昇
+        $ kana_flags["sns_risk"] += 10
+        $ add_suspicion("sns_exposure")
+        $ renpy.notify("SNSでの露出が増えた。美咲にバレるリスクが高まっている。")
+
+    elif route == "C":
+        "気づけば、カナのことをよく考えるようになっていた。"
+        kana_c "なんか、最近ヒモ太郎のこと推しって思ってる"
+        himo "は？"
+        kana_c "褒めてるんだけど"
+        himo "...そうか"
+
     return

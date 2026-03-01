@@ -182,14 +182,14 @@ label morning_phone_misaki:
             misaki_c "...うん、待ってる"
             $ change_trust(3)
             $ flags["misaki_tonight"] = True
-            $ reset_contact()
+            # v1.3修正: 電話のみなのでreset_contactを呼ばない
 
         "適当にごまかす":
             himo "バタバタしててさ〜"
             misaki_c "...そっか"
             "美咲は何も言わなかった。"
             $ add_suspicion("vague_answer")
-            $ reset_contact()
+            # v1.3修正: 電話のみなのでreset_contactを呼ばない
 
     return
 
@@ -209,14 +209,14 @@ label morning_phone_kana:
             himo "夜なら"
             kana_c "やった！じゃあ夜ね"
             $ flags["kana_tonight"] = True
-            $ kana["last_contact"] = 0
+            # v1.3修正: 電話のみなのでlast_contactをリセットしない
             $ change_trust_kana(3)
 
         "今日は無理":
             himo "今日はちょっと用事あって"
             kana_c "え〜、また？"
             $ change_trust_kana(-3)
-            $ kana["last_contact"] = 0
+            # v1.3修正: 電話のみなのでlast_contactをリセットしない
 
     return
 
