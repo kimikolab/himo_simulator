@@ -218,11 +218,24 @@ label night_actions:
         call misaki_date
         return
 
-    # 3. カナの約束のみある場合
+    # 3. カナの約束のみある場合（v1.6: 成功率チェック追加）
     if flags.get("kana_tonight") and not flags.get("misaki_tonight"):
         "今夜はカナと約束がある。"
         $ flags["kana_tonight"] = False
-        call kana_date
+        python:
+            import random
+            trust = kana["trust"]
+            if trust >= 50:   success_rate = 0.90
+            elif trust >= 35: success_rate = 0.75
+            elif trust >= 20: success_rate = 0.65
+            else:             success_rate = 0.50
+            kana_shows_up = random.random() < success_rate
+        if kana_shows_up:
+            call kana_date
+        else:
+            kana_c "ごめん、やっぱり今日バイト入っちゃって"
+            himo "そっか、しゃーない"
+            $ change_trust_kana(-2)
         return
 
     # 4. 約束なし → 通常の夜メニュー

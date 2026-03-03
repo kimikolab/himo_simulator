@@ -81,6 +81,12 @@ init python:
         location_flags["staying_at_misaki"] = False
         location_flags["staying_at_kana"] = False
 
+        # v1.6修正: ゲーム終了日を超えたらイベントキューイングをスキップ
+        # (game_endedフラグはエンディングラベルでセットされるため、
+        #  ここではまだFalse。日数で直接判定する)
+        if game_date["day"] > GAME_DAYS:
+            return
+
         # 美咲ムード更新
         update_misaki_mood()
 

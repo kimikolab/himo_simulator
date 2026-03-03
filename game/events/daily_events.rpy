@@ -394,24 +394,21 @@ label nanpa_event:
 
 label shopping_event:
     scene bg_placeholder
-    "街の店を見て回った。"
+    "ショッピングモールをぶらぶらした。"
+    himo "特に買うものもないけど"
 
     menu:
-        "何を買う？"
+        "ウィンドウショッピング":
+            himo "まあ、金ないしな"
+            $ change_stamina(-5)
 
-        "服を見る":
-            if not can_afford(3000):
-                himo "...欲しいけど、今は無理だな"
-                return
-
-            "服屋に入った。"
-            himo "ちょっといい服買っとくか"
+        "服を見る" if can_afford(3000):
             $ change_money(-3000)
             $ change_charm(5)
             himo "おっ、いい感じ"
 
-        "何も買わない":
-            himo "まあ、今日はいいか"
+        "何も買わず帰る":
+            pass
 
     return
 

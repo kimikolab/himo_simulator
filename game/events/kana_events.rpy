@@ -191,8 +191,9 @@ label contact_kana:
             kana_c "暇〜。ヒモ太郎も暇？"
             himo "暇だよ"
             kana_c "じゃあ会おう"
-            # v1.5修正: 成功率チェックを通す（直接フラグを立てない）
-            call kana_date_request
+            # v1.6修正: フラグだけ立てる（成功率チェックは夜に移動）
+            $ flags["kana_tonight"] = True
+            $ change_trust_kana(2)
 
         "今日会いたいと言う":
             call kana_date_request
