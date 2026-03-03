@@ -203,32 +203,32 @@ label night_actions:
         $ flags["confession_pending"] = False
         call misaki_confession
 
-    # v2.3: 約束がある夜の処理
-    if flags.get("misaki_tonight", False) and flags.get("kana_tonight", False):
-        # 両方と約束がある場合（ダブルブッキング）はWeek 8で実装
-        # 暫定: 美咲を優先
+    # v1.5修正: 約束がある夜の処理
+
+    # 1. ダブルブッキングチェックを最初に行う
+    if flags.get("misaki_tonight") and flags.get("kana_tonight"):
+        call double_booking_event
+        # double_booking_event内でどちらかのフラグがFalseになる
+        # その後は通常の2番・3番の処理へ続く
+
+    # 2. 美咲の約束のみある場合
+    if flags.get("misaki_tonight") and not flags.get("kana_tonight"):
         "今夜は美咲と約束がある。"
         $ flags["misaki_tonight"] = False
-        $ flags["kana_tonight"] = False
-        $ change_trust_kana(-5)
         call misaki_date
         return
 
-    if flags.get("misaki_tonight", False):
-        "今夜は美咲と約束がある。"
-        $ flags["misaki_tonight"] = False
-        call misaki_date
-        return
-
-    if flags.get("kana_tonight", False):
+    # 3. カナの約束のみある場合
+    if flags.get("kana_tonight") and not flags.get("misaki_tonight"):
         "今夜はカナと約束がある。"
         $ flags["kana_tonight"] = False
         call kana_date
         return
 
+    # 4. 約束なし → 通常の夜メニュー
     if is_weekend():
         himo "週末の夜か。自由だな〜"
-    else:
+    elif game_date["day"] <= 5:
         "夜9時。サラリーマンは終電心配してる時間。"
         himo "大変だなあ"
 
@@ -273,5 +273,49 @@ label night_actions:
         "風呂入って寝る":
             $ change_cleanliness(50)
             $ change_stamina(50)
+
+    return
+
+
+# ========================================
+# v1.5追加: ダブルブッキングイベント
+# ========================================
+
+label double_booking_event:
+    "スマホを見ると、二つの約束が重なっていることに気づいた。"
+    "美咲とカナ、両方と今夜の約束が入っている。"
+    himo "...やばい"
+
+    menu:
+        "どちらを優先する？"
+
+        "美咲を優先":
+            "カナにLINEを送った。"
+            himo "ごめん、今日急用が入って"
+            kana_c "え〜、そうなんだ。まあいいけど"
+            $ flags["kana_tonight"] = False
+            # misaki_tonightはTrueのまま → 美咲デートへ
+            $ change_trust_kana(-5)
+            $ change_dependence_kana(3)
+
+        "カナを優先":
+            "美咲にLINEを送った。"
+            himo "ごめん、今日急用が入って"
+            misaki_c "...そうなんだ。分かった"
+            $ flags["misaki_tonight"] = False
+            # kana_tonightはTrueのまま → カナデートへ
+            $ change_trust(-8)
+            $ change_dependence(5)
+            $ add_suspicion("contact_delay")
+
+        "両方すっぽかす":
+            himo "...両方に謝るか"
+            "美咲とカナ、両方に言い訳のLINEを送った。"
+            $ flags["misaki_tonight"] = False
+            $ flags["kana_tonight"] = False
+            $ change_trust(-5)
+            $ change_trust_kana(-5)
+            $ himo_aptitude["lies"] += 1
+            # 両方Falseなので通常メニューへ
 
     return

@@ -379,6 +379,7 @@ label nanpa_event:
         "声をかけてみたが、うまくいかなかった。"
         himo "...まあ、そんなもんか"
         $ change_stamina(-5)
+        $ flags["afternoon_consumed"] = True   # v1.5修正: 失敗時も昼ターン消費
         return
 
     # 成功
@@ -387,6 +388,7 @@ label nanpa_event:
 
     "振り返ったのは、明るそうな女の子だった。"
 
+    $ flags["afternoon_consumed"] = True   # v1.5修正: 成功時も昼ターン消費
     jump k01_nanpa_success
 
 
