@@ -172,6 +172,10 @@ label afternoon_actions:
             if kana["trust"] >= 35 and not kana_flags["k03_done"]:
                 call k03_money_talk
 
+            # K-05トリガー（v1.6: 依存度30以上 or デート12回以上・未発生）
+            if (kana["dependence"] >= 30 or kana_dates_count >= 12) and not kana_flags["k05_done"]:
+                call k05_do_you_like_me
+
         "コンビニで昼飯を買う（500円）":
             if not can_afford(500):
                 himo "...財布が軽すぎる"

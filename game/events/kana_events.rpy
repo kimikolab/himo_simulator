@@ -434,3 +434,52 @@ label kana_oshi_event(route):
         himo "...そうか"
 
     return
+
+
+# ========================================
+# K-05: 「俺のこと好き？」
+# ========================================
+
+label k05_do_you_like_me:
+    scene bg_placeholder
+
+    "カナとの時間が増えてきた頃。"
+    "ふと、カナが真顔になった。"
+
+    kana_c "ねえ、ヒモ太郎"
+    kana_c "私のこと、好き？"
+
+    himo "..."
+
+    "急にどうしたんだ。"
+    "カナはいつもの軽い感じじゃなかった。"
+
+    menu:
+        "好きだよ":
+            himo "好きだよ"
+            kana_c "...ほんと？"
+            himo "ほんと"
+            kana_c "へへ、よかった"
+            "なんか、あっさりしてるけど、それがカナらしかった。"
+            $ change_trust_kana(10)
+            $ change_dependence_kana(15)
+            $ flags["k05_accepted"] = True
+
+        "まあ、嫌いじゃない":
+            himo "嫌いじゃないよ"
+            kana_c "なにそれ笑"
+            kana_c "まあいいか"
+            "カナは深く追及しなかった。"
+            $ change_trust_kana(5)
+            $ change_dependence_kana(8)
+            $ flags["k05_ambiguous"] = True
+
+        "正直に言えない":
+            himo "...難しい質問だな"
+            kana_c "なにそれ、ウケる"
+            kana_c "まあ、逃げてるってことは嫌いじゃないってことにしとく"
+            $ change_trust_kana(3)
+            $ change_dependence_kana(5)
+
+    $ kana_flags["k05_done"] = True
+    return

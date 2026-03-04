@@ -191,10 +191,9 @@ init python:
         global kana
         if amount > 0:
             depend = kana["dependence"]
+            # v1.6修正: 逓減は60以上のみ。40-59の逓減を削除
             if depend >= 60:
-                amount = int(amount * 0.3)
-            elif depend >= 40:
-                amount = int(amount * 0.5)
+                amount = int(amount * 0.4)
 
         old = kana["dependence"]
         kana["dependence"] = clamp(kana["dependence"] + amount, 0, 100)

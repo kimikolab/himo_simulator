@@ -77,6 +77,8 @@ default flags = {
     "misaki_tonight": False,
     "kana_tonight": False,
     "game_ended": False,
+    "k05_accepted": False,
+    "k05_ambiguous": False,
     "morning_consumed": False,
     "afternoon_consumed": False,
     "nanpa_unlocked": False,
