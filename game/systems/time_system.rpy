@@ -114,18 +114,16 @@ init python:
             _pending_events.append(("misaki_doubt_event", None))
 
         # ランダム出費イベント（v2.2: 12%に下げた）
-        import random
-        if random.random() < 0.12:
+        if renpy.random.random() < 0.12:
             _pending_events.append(("random_expense_event", None))
 
 
     def update_misaki_mood():
-        import random
         global misaki_mood
 
         if not is_weekend():
             misaki_mood["work_stress"] = clamp(
-                misaki_mood["work_stress"] + random.randint(5, 15), 0, 100
+                misaki_mood["work_stress"] + renpy.random.randint(5, 15), 0, 100
             )
         else:
             misaki_mood["work_stress"] = clamp(
@@ -149,20 +147,18 @@ init python:
         if flags.get("game_ended", False):
             return
 
-        import random
-
         # v2.3修正: last_contactが3未満、または当日会っているなら何もしない
         if misaki["last_contact"] < 3 or misaki["met_today"]:
             return
 
         # 3日以上連絡なし → 美咲からLINE
-        if random.random() < 0.6:
+        if renpy.random.random() < 0.6:
             _pending_events.append(("misaki_check_in", None))
 
         # ストレス状態のとき低確率で電話（信頼40以上）
         if (misaki["trust"] >= 40
                 and misaki_mood["today_mood"] == "stressed"
-                and random.random() < 0.2):
+                and renpy.random.random() < 0.2):
             _pending_events.append(("misaki_stress_call", None))
 
 

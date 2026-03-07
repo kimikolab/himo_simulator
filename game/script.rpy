@@ -39,11 +39,13 @@ label start:
 label main_loop:
     # ゲームオーバーチェック（破産等）
     if _game_over == "bankruptcy":
-        jump ending_bankruptcy_30days
+        call ending_bankruptcy_30days
+        return
 
     # 30日経過チェック
     if game_date["day"] > GAME_DAYS:
-        jump ending_30days
+        call ending_30days
+        return
 
     scene bg_placeholder
     show screen status_bar
@@ -227,13 +229,12 @@ label night_actions:
         "今夜はカナと約束がある。"
         $ flags["kana_tonight"] = False
         python:
-            import random
             trust = kana["trust"]
             if trust >= 50:   success_rate = 0.90
             elif trust >= 35: success_rate = 0.75
             elif trust >= 20: success_rate = 0.65
             else:             success_rate = 0.50
-            kana_shows_up = random.random() < success_rate
+            kana_shows_up = renpy.random.random() < success_rate
         if kana_shows_up:
             call kana_date
         else:

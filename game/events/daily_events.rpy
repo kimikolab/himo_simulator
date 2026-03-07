@@ -100,15 +100,14 @@ label check_forced_morning_event:
 
     # イベント3: 美咲 or カナから朝の電話（依存度が高い場合）
     python:
-        import random
         phone_call_chance = False
 
         if misaki["dependence"] >= 70 and misaki["last_contact"] >= 2:
-            if random.random() < 0.30:
+            if renpy.random.random() < 0.30:
                 phone_call_chance = "misaki"
 
         if kana_flags["met"] and kana["dependence"] >= 50 and kana["last_contact"] >= 2:
-            if random.random() < 0.25:
+            if renpy.random.random() < 0.25:
                 phone_call_chance = "kana"
 
     if phone_call_chance == "misaki":
@@ -226,8 +225,6 @@ label morning_phone_kana:
 # ========================================
 
 label check_forced_afternoon_event:
-    python:
-        import random
 
     # イベント1: ナンパ解禁トリガー（カナ未出会い・魅力35以上・5日目以降）
     if (not kana_flags["met"]
@@ -241,7 +238,7 @@ label check_forced_afternoon_event:
     if (kana_flags["met"]
         and kana["trust"] < 50
         and not kana["met_today"]
-        and random.random() < 0.15):
+        and renpy.random.random() < 0.15):
         call event_kana_encounter
         $ flags["afternoon_consumed"] = True
         return
@@ -362,7 +359,6 @@ label nanpa_event:
     "繁華街をぶらぶらしていた。"
 
     python:
-        import random
         charm = player["charm"]
         if charm >= 70:
             success_rate = 0.60
@@ -373,7 +369,7 @@ label nanpa_event:
         else:
             success_rate = 0.10
 
-        nanpa_success = random.random() < success_rate
+        nanpa_success = renpy.random.random() < success_rate
 
     if not nanpa_success:
         "声をかけてみたが、うまくいかなかった。"

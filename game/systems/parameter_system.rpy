@@ -126,8 +126,6 @@ init python:
         if misaki["trust"] < required[amount_type]:
             return False, 0, "信頼度が足りない"
 
-        import random
-
         # ムード補正（v2.1再調整）
         mood_modifier = {
             "good":     1.2,
@@ -140,7 +138,7 @@ init python:
         # v2.1: 3回連続拒否されたら強制成功（救済措置）
         force_success = money_refused_streak >= 3
 
-        if not force_success and random.random() > modifier:
+        if not force_success and renpy.random.random() > modifier:
             mood_response = {
                 "tired":    "ごめん、今日ちょっと余裕なくて",
                 "stressed": "...今それどころじゃないんだけど",
@@ -159,7 +157,7 @@ init python:
             "large": (9000, 15000)
         }
         min_amt, max_amt = amounts[amount_type]
-        amount = random.randint(min_amt, max_amt)
+        amount = renpy.random.randint(min_amt, max_amt)
 
         change_trust(-3)
         change_dependence(2)

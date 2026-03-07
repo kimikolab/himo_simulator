@@ -7,7 +7,6 @@ init python:
         if flags.get("game_ended", False):
             return
 
-        import random
         global kana
 
         # last_contactが2以上かつ当日未接触で発火
@@ -25,7 +24,7 @@ init python:
         else:
             fire_rate = 0.25
 
-        if random.random() < fire_rate:
+        if renpy.random.random() < fire_rate:
             _pending_events.append(("kana_initiative_event", None))
 
 
@@ -35,7 +34,6 @@ init python:
 
 label kana_initiative_event:
     python:
-        import random
         kana_msgs = [
             ("暇〜。ヒモ太郎も暇？", "casual"),
             ("今日会える？", "meetup"),
@@ -48,7 +46,7 @@ label kana_initiative_event:
                 ("会いたい", "needy"),
                 ("今どこにいる？", "location"),
             ]
-        kana_msg, kana_msg_type = random.choice(kana_msgs)
+        kana_msg, kana_msg_type = renpy.random.choice(kana_msgs)
 
     "カナからLINEが来た。"
     kana_c "[kana_msg]"
@@ -215,7 +213,6 @@ label kana_date_request:
         return
 
     python:
-        import random
         trust = kana["trust"]
         # カナは美咲より会いやすい（暇な大学生）
         if trust >= 50:
@@ -229,7 +226,7 @@ label kana_date_request:
         else:
             success_rate = 0.30
 
-        can_meet = random.random() < success_rate
+        can_meet = renpy.random.random() < success_rate
 
     if not can_meet:
         kana_c "今日はちょっと〜、バイトあるんだよね"
@@ -482,4 +479,57 @@ label k05_do_you_like_me:
             $ change_dependence_kana(5)
 
     $ kana_flags["k05_done"] = True
+
+    # 体験版エンドへ
+    call demo_end_scene
+
+    return
+
+
+# ========================================
+# 体験版エンドシーン
+# ========================================
+
+label demo_end_scene:
+    scene bg_placeholder
+
+    "しばらくして、カナがまた口を開いた。"
+
+    kana_c "...ねえ、ほんとに私だけ？"
+
+    himo "......"
+
+    "なんて答えればいい。"
+
+    kana_c "まあいいけど。"
+    kana_c "あ、そういえばさ"
+    kana_c "麗子さんって人、ヒモ太郎のこと知ってるって言ってたよ？"
+
+    himo "麗子？誰だそれ"
+
+    kana_c "私も知らない。なんか大人っぽい感じの人。"
+    kana_c "ヒモ太郎のこと、「面白い」って言ってたって聞いたけど"
+
+    himo "...誰だよ"
+
+    "心当たりが、ない。"
+    "ないはずなのに、なぜか嫌な予感がした。"
+
+    scene bg_placeholder with fade
+
+    "暗転。"
+
+    centered "「俺のヒモ生活は、まだ始まったばかりだった」"
+
+    pause 2.0
+
+    centered "{size=40}体験版 END{/size}"
+    centered "製品版へ続く"
+
+    pause 1.0
+
+    $ log_action("体験版END")
+    $ export_debug_log()
+    $ flags["game_ended"] = True
+
     return
