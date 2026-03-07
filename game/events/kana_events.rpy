@@ -234,7 +234,7 @@ label kana_date_request:
         return
 
     if game_date["time"] == "night":
-        call kana_date
+        call kana_date_with_location
     else:
         kana_c "夜なら大丈夫だよ"
         $ flags["kana_tonight"] = True

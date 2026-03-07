@@ -45,5 +45,33 @@ define DEPEND_HEAVY  = 80   # 行動制限
 # カナ関連定数（Phase 3追加）
 define KANA_CHARM_CAP = 70        # カナ魅力値上限
 
+# === Phase 4 追加定数 ===
+
+# 疑念度の閾値
+define SUSPICION_PROBE_THRESHOLD = 1     # 探り発生の最低疑念度
+define SUSPICION_SHURABA_THRESHOLD = 3   # 修羅場イベント発生の疑念度
+define SUSPICION_MAX = 100
+
+# 所持金バレリスク閾値
+define MONEY_SUSPICION_THRESHOLD = 30000
+
+# 嘘パズル設定
+define LIE_TIME_LV0 = 5.0
+define LIE_TIME_LV1 = 7.0
+define LIE_TIME_LV2 = 10.0
+
+# バレ度上昇量
+define BARE_CONTRADICTION = 35    # 矛盾回答
+define BARE_SILENCE = 40          # 時間切れ
+define BARE_WEAK = 10             # 弱い回答
+define BARE_PERFECT = 3           # 完璧でも微増
+define BARE_MAX = 100             # バレ確定
+
+# QTE設定
+define QTE_TIME_LIMIT = 12.0
+
+# SNS通知の最大表示数/日
+define SNS_MAX_PER_DAY = 2
+
 # デバッグモード（リリース前に False に変更）
 define DEBUG_MODE = True

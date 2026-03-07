@@ -82,6 +82,17 @@ default flags = {
     "morning_consumed": False,
     "afternoon_consumed": False,
     "nanpa_unlocked": False,
+    # Phase 4: 中盤イベントフラグ
+    "midgame_busymisaki_done": False,
+    "midgame_pachinko_triggered": False,
+    "midgame_doublebooking_done": False,
+    "midgame_sighting_done": False,
+    "midgame_sighting_confronted": False,
+    "midgame_kana_raid_done": False,
+    "midgame_misaki_direct_done": False,
+    "kana_friend_info_obtained": False,
+    "misaki_saturday_promise": False,
+    "qte_failed_badly": False,
 }
 
 # 1日ごとにリセットされるフラグ
@@ -91,7 +102,13 @@ default daily_flags = {
     "date_planned_tonight": False,
     "cooked_today": False,
     "ate_today": False,             # 食事チェック用
-    "ignored_kana_today": False
+    "ignored_kana_today": False,
+    "date_location": None,          # Phase 4: 当日のデート場所
+    "date_with": None,              # Phase 4: 当日誰とデートしたか
+    "sns_shown_today": False,       # Phase 4: SNS通知表示済み
+    "double_booking_checked": False, # Phase 4: ダブルブッキングチェック済み
+    "misaki_wants_tonight": False,  # Phase 4: 美咲が今夜会いたい
+    "kana_wants_tonight": False,    # Phase 4: カナが今夜会いたい
 }
 
 # 美咲イベント進行フラグ（Phase 2追加）
@@ -155,5 +172,25 @@ default himo_aptitude = {
     "lies": 0,
     "honest_moments": 0,
     "avoided_work": 0,
-    "showed_concern": 0
+    "showed_concern": 0,
+    "lie_skill": 0,
+    "intimacy_exp": 0,
 }
+
+# === Phase 4 追加変数 ===
+
+# 疑念度（キャラ別）
+default suspicion = {
+    "misaki": 0,
+    "kana": 0
+}
+
+# 嘘パズル
+default lie_puzzle = {
+    "active": False,
+    "bare_gauge": 0,
+    "previous_answers": [],
+    "time_limit": 5.0,
+    "result": None
+}
+default lie_puzzle_timeout = False

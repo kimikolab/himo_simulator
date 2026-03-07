@@ -307,6 +307,16 @@ label event_kana_encounter:
 label afternoon_street:
     scene bg_placeholder
 
+    # Phase 4追加: パチンコの誘惑チェック
+    if (player["money"] >= 15000
+        and game_date["day"] >= 10
+        and not flags.get("midgame_pachinko_triggered", False)):
+        python:
+            import random
+            _pachinko_tempt = random.random() < 0.25
+        if _pachinko_tempt:
+            call midgame_pachinko_temptation
+
     # v1.1追加: 昼の強制イベントチェック
     call check_forced_afternoon_event
 

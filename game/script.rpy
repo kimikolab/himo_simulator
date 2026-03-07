@@ -89,6 +89,16 @@ label process_pending_events:
 
 
 label morning_actions:
+    # Phase 4追加: SNS受動通知
+    $ check_sns_notification()
+
+    # Phase 4追加: 中盤イベントチェック
+    python:
+        midgame_fired = check_midgame_events()
+
+    if midgame_fired:
+        return
+
     # v1.1追加: 強制朝イベントのチェック
     call check_forced_morning_event
 
@@ -122,9 +132,6 @@ label morning_actions:
         "カナに連絡する" if kana_flags["met"]:
             call contact_kana
 
-        "SNSを見る":
-            call check_sns
-
         "二度寝する":
             "もうちょっと寝よう。"
             himo "これが自由ってやつだ"
@@ -140,6 +147,21 @@ label morning_actions:
 
 
 label afternoon_actions:
+    # Phase 4追加: SNS受動通知（朝に出なかった場合のみ）
+    $ check_sns_notification()
+
+    # Phase 4追加: 中盤イベントチェック
+    python:
+        midgame_fired = check_midgame_events()
+
+    if midgame_fired:
+        return
+
+    # afternoon_consumed チェック（カナ急な呼び出し等で消費された場合）
+    if flags.get("afternoon_consumed", False):
+        $ flags["afternoon_consumed"] = False
+        return
+
     "――昼、14時――"
 
     if is_weekend():
@@ -225,7 +247,7 @@ label night_actions:
     if flags.get("misaki_tonight") and not flags.get("kana_tonight"):
         "今夜は美咲と約束がある。"
         $ flags["misaki_tonight"] = False
-        call misaki_date
+        call misaki_date_with_location
         return
 
     # 3. カナの約束のみある場合（v1.6: 成功率チェック追加）
@@ -240,7 +262,7 @@ label night_actions:
             else:             success_rate = 0.50
             kana_shows_up = renpy.random.random() < success_rate
         if kana_shows_up:
-            call kana_date
+            call kana_date_with_location
         else:
             kana_c "ごめん、やっぱり今日バイト入っちゃって"
             himo "そっか、しゃーない"

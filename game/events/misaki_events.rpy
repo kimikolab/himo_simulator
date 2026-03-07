@@ -154,7 +154,7 @@ label misaki_date_request:
 
     # 成功 → デートへ
     if game_date["time"] == "night":
-        call misaki_date
+        call misaki_date_with_location
         return
     else:
         misaki_c "夜なら空いてるよ"
@@ -170,7 +170,7 @@ label misaki_meet_planned:
         himo "あ、そっか"
         return
 
-    call misaki_date
+    call misaki_date_with_location
     return
 
 
@@ -322,6 +322,11 @@ label misaki_money_request:
     $ log_action("美咲にお金要求", "信頼" + str(misaki["trust"]))
     if daily_flags.get("asked_money_today", False):
         himo "...さっきもらったばかりだし、今日はやめとこう"
+        return
+
+    # Phase 4追加: 所持金バレリスク
+    if player["money"] >= MONEY_SUSPICION_THRESHOLD:
+        call midgame_money_suspicion
         return
 
     # v1.2追加: 最近会っていない場合
