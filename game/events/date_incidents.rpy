@@ -153,7 +153,14 @@ label date_probe(target):
         menu:
             "空いてるよ":
                 misaki_c "じゃあ約束ね！"
-                $ flags["misaki_saturday_promise"] = True
+                # Phase 4 v1.3: 具体的な日付を記録
+                python:
+                    _weekday_idx = game_date["weekday"]
+                    _days_until_saturday = (6 - _weekday_idx) % 7
+                    if _days_until_saturday == 0:
+                        _days_until_saturday = 7  # 今日が土曜なら来週
+                    appointments["misaki"] = game_date["day"] + _days_until_saturday
+                "（来週の土曜に約束した）"
                 "（カナとの予定と被らないよな...?）"
 
             "まだ分からない":

@@ -25,3 +25,4 @@
 /dialogue.txt
 /strings.json
 game/debug_log*.txt
+game/debug_log/debug_log*.txt

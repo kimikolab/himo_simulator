@@ -85,6 +85,16 @@ label moment_of_doubt:
 
 label check_forced_morning_event:
 
+    # Phase 4 v1.3: 前日の約束を破った場合
+    if flags.get("misaki_tonight_broken", False):
+        $ flags["misaki_tonight_broken"] = False
+        "美咲からLINEが来ていた。"
+        misaki_c "昨日、会えるって言ってたよね...？"
+        himo "あ...ごめん"
+        misaki_c "...いいけど"
+        $ change_trust(-5)
+        $ suspicion["misaki"] = min(suspicion["misaki"] + 2, SUSPICION_MAX)
+
     # イベント1: 日曜朝・美咲宅でイチャイチャして昼になる
     if flags.get("misaki_sunday_morning", False):
         $ flags["misaki_sunday_morning"] = False

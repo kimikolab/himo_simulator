@@ -92,6 +92,9 @@ default flags = {
     "midgame_misaki_direct_done": False,
     "kana_friend_info_obtained": False,
     "misaki_saturday_promise": False,
+    "misaki_appointment_kept": False,
+    "kana_appointment_kept": False,
+    "misaki_tonight_broken": False,
     "qte_failed_badly": False,
 }
 
@@ -181,6 +184,12 @@ default himo_aptitude = {
     "showed_concern": 0,
     "lie_skill": 0,
     "intimacy_exp": 0,
+}
+
+# Phase 4 v1.3: 約束日管理
+default appointments = {
+    "misaki": None,    # 約束がある日（整数 or None）
+    "kana": None
 }
 
 # === Phase 4 追加変数 ===

@@ -184,6 +184,10 @@ label afternoon_actions:
         "美咲に連絡する" if game_date["day"] > 1:
             call contact_misaki
 
+        # Phase 4 v1.3: 土日は美咲を昼に誘える
+        "美咲を昼デートに誘う" if (is_weekend() and not misaki["met_today"] and game_date["day"] > 1):
+            call misaki_daytime_date_request
+
         # Phase 3: カナに連絡する
         "カナに連絡する" if kana_flags["met"]:
             call contact_kana
@@ -200,8 +204,8 @@ label afternoon_actions:
             if kana["trust"] >= 35 and not kana_flags["k03_done"]:
                 call k03_money_talk
 
-            # K-05トリガー（v1.6: 依存度30以上 or デート12回以上・未発生）
-            if (kana["dependence"] >= 30 or kana_dates_count >= 12) and not kana_flags["k05_done"]:
+            # K-05トリガー（v1.3: 依存度50以上 + 25日目以降 or デート12回以上 + 25日目以降）
+            if ((kana["dependence"] >= 50 or kana_dates_count >= 12) and game_date["day"] >= 25 and not kana_flags["k05_done"]):
                 call k05_do_you_like_me
 
         "コンビニで昼飯を買う（500円）":
