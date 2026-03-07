@@ -61,6 +61,27 @@ init python:
                 flags["met_misaki_this_weekend"] = False
                 weekend_promised = False
 
+        # Phase 4 v1.3: misaki_tonight 不履行チェック
+        if flags.get("misaki_tonight", False):
+            if not misaki["met_today"]:
+                flags["misaki_tonight_broken"] = True
+            flags["misaki_tonight"] = False
+
+        # Phase 4 v1.3: 約束不履行チェック（日付ベース）
+        _misaki_appt = appointments.get("misaki", None)
+        if _misaki_appt is not None and game_date["day"] >= _misaki_appt:
+            if not flags.get("misaki_appointment_kept", False):
+                _pending_events.append(("misaki_appointment_broken", None))
+            appointments["misaki"] = None
+            flags["misaki_appointment_kept"] = False
+
+        _kana_appt = appointments.get("kana", None)
+        if _kana_appt is not None and game_date["day"] >= _kana_appt:
+            if not flags.get("kana_appointment_kept", False):
+                _pending_events.append(("kana_appointment_broken", None))
+            appointments["kana"] = None
+            flags["kana_appointment_kept"] = False
+
         # 連続会った日数リセット（met_todayリセット前に判定）
         if not misaki["met_today"]:
             misaki_streak = max(0, misaki_streak - 1)

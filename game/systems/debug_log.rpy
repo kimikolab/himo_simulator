@@ -124,8 +124,11 @@ init python:
         content = "\n".join(lines)
 
         try:
-            # Ren'Py の game/ フォルダに書き出す
-            filepath = os.path.join(config.gamedir, filename)
+            # Ren'Py の game/debug_log/ フォルダに書き出す
+            log_dir = os.path.join(config.gamedir, "debug_log")
+            if not os.path.exists(log_dir):
+                os.makedirs(log_dir)
+            filepath = os.path.join(log_dir, filename)
             with open(filepath, "w", encoding="utf-8") as f:
                 f.write(content)
             renpy.notify("ログを出力しました: {}".format(filename))

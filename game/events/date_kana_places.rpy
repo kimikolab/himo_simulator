@@ -48,7 +48,7 @@ label kana_date_cafe:
     "カナがスマホを取り出して写真を撮り始めた。"
     "カナが奢ってくれた。"
 
-    $ change_trust_kana(5)
+    $ change_trust_kana(4)    # v1.3: 5→4
     $ change_dependence_kana(3)
     $ change_stamina(-10)
     $ change_stamina(15)   # カフェの軽食（差し引き+5）
@@ -68,7 +68,7 @@ label kana_date_karaoke:
     "途中で軽く食べた。"
 
     $ change_money(-500)
-    $ change_trust_kana(8)
+    $ change_trust_kana(6)    # v1.3: 8→6
     $ change_dependence_kana(5)
     $ change_stamina(-15)
     $ change_stamina(10)   # 軽食（差し引き-5。はしゃいだので消耗の方が大きい）
@@ -88,7 +88,7 @@ label kana_date_campus:
     "...紹介された。"
     "近くの店でご飯を食べた。カナが奢ってくれた。"
 
-    $ change_trust_kana(8)
+    $ change_trust_kana(6)    # v1.3: 8→6
     $ change_dependence_kana(4)
     $ change_stamina(-10)
     $ change_stamina(20)   # 食事（差し引き+10）
@@ -113,10 +113,10 @@ label kana_date_himo_room:
 
     if player["cleanliness"] >= 50:
         kana_c "意外と綺麗にしてるじゃん"
-        $ change_trust_kana(5)
+        $ change_trust_kana(4)    # v1.3: 5→4
     elif player["cleanliness"] >= 30:
         kana_c "...まあ、男の人の部屋ってこんなもんか"
-        $ change_trust_kana(3)
+        $ change_trust_kana(2)    # v1.3: 3→2
     else:
         kana_c "...汚い"
         $ change_trust_kana(-3)

@@ -16,13 +16,14 @@ init python:
             return
 
         # 依存度が高いほど頻繁に来る
+        # Phase 4 v1.3: 発火率を下方修正
         depend = kana["dependence"]
         if depend >= 60:
-            fire_rate = 0.60
+            fire_rate = 0.45    # 旧: 0.60
         elif depend >= 30:
-            fire_rate = 0.40
+            fire_rate = 0.30    # 旧: 0.40
         else:
-            fire_rate = 0.25
+            fire_rate = 0.15    # 旧: 0.25
 
         if renpy.random.random() < fire_rate:
             _pending_events.append(("kana_initiative_event", None))
@@ -58,15 +59,17 @@ label kana_initiative_event:
                     "今夜会おう":
                         $ flags["kana_tonight"] = True
                         # v1.3修正: LINEのみなのでlast_contactをリセットしない
-                        $ change_trust_kana(2)
+                        $ change_trust_kana(1)    # v1.3: 2→1
                     "今日は無理":
                         himo "今日はちょっと"
                         kana_c "そっか〜"
                         $ change_trust_kana(-1)
+                        $ kana["last_contact"] = 0
             else:
                 himo "まあまあかな"
                 kana_c "そっか〜"
-                $ change_trust_kana(2)
+                $ kana["last_contact"] = 0
+                $ change_trust_kana(1)    # v1.3: 2→1
 
         "既読スルーする":
             "既読スルーした。"

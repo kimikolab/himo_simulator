@@ -113,11 +113,19 @@ label run_lie_puzzle(scenario="generic", target="misaki"):
 
     # 結果判定
     python:
-        result = resolve_lie_puzzle(lie_puzzle["bare_gauge"])
-        lie_puzzle["result"] = result
+        # Phase 4 v1.3: 正直ルートで直接設定された場合はスキップ
+        if lie_puzzle.get("result", None) != "honest":
+            result = resolve_lie_puzzle(lie_puzzle["bare_gauge"])
+            lie_puzzle["result"] = result
+        else:
+            result = "honest"
         lie_puzzle["active"] = False
         # Phase 4 v1.1: 統計カウント
         stats["lie_puzzles_faced"] = stats.get("lie_puzzles_faced", 0) + 1
+
+    # Phase 4 v1.3: 正直ルートは専用処理（lie_puzzle内で既に処理済み）
+    if result == "honest":
+        return
 
     if result == "busted":
         "（完全にバレた...）"
@@ -347,7 +355,9 @@ label lie_puzzle_other_woman(target="misaki"):
             $ change_trust_kana(-15)
             $ himo_aptitude["honest_moments"] += 2
             $ suspicion["kana"] = max(suspicion["kana"] - 10, 0)
-        $ lie_puzzle["bare_gauge"] = 0  # 正直ルートはバレ判定不要
+        # Phase 4 v1.3: 正直ルート専用の結果コードを設定
+        $ lie_puzzle["bare_gauge"] = 0
+        $ lie_puzzle["result"] = "honest"
         return
 
     python:

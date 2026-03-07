@@ -333,9 +333,10 @@ label misaki_money_request:
             return
 
     # v1.2追加: 最近会っていない場合
+    # v1.3修正: 対面（met_today）していない＋last_contact > 1ならブロック
     # v1.4修正: ブロック時はターンを消費しない（呼び出し元でメニューに戻す）
-    if misaki["last_contact"] > 1:
-        himo "（最近会ってもいないし、さすがにお金の話はしにくいな）"
+    if misaki["last_contact"] > 1 and not misaki["met_today"]:
+        himo "（最近会ってないし、いきなりお金の話はしづらいな...）"
         $ _money_request_blocked = True
         return
 
@@ -1053,4 +1054,44 @@ label misaki_confession:
             $ flags["confession_rejected"] = True
 
     $ flags["confession_done"] = True
+    return
+
+
+# ========================================
+# Phase 4 v1.3: 土日昼デート
+# ========================================
+
+label misaki_daytime_date_request:
+    "美咲に昼から会えないか聞いてみた。"
+
+    if not is_weekend():
+        misaki_c "ごめん、今仕事中..."
+        return
+
+    # 既読スルーチェック
+    if daily_flags.get("ignored_today", False):
+        "さっき既読スルーされたばかりだし..."
+        return
+
+    # 成功判定
+    python:
+        _trust = misaki["trust"]
+        if _trust >= 60:
+            _daytime_rate = 0.90
+        elif _trust >= 45:
+            _daytime_rate = 0.75
+        elif _trust >= 30:
+            _daytime_rate = 0.60
+        else:
+            _daytime_rate = 0.40
+        _daytime_success = renpy.random.random() < _daytime_rate
+
+    if _daytime_success:
+        misaki_c "いいよ！今日休みだし"
+        call misaki_date_with_location
+    else:
+        misaki_c "ごめん、今日ちょっと用事あって..."
+        misaki_c "夜なら空くかも"
+        himo "了解〜"
+
     return

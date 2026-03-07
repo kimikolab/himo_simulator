@@ -91,7 +91,8 @@ label midgame_misaki_busy:
             misaki_c "最近、全然連絡くれないなって思って"
             $ change_trust(-5)
             $ suspicion["misaki"] = min(suspicion["misaki"] + 1, SUSPICION_MAX)
-            $ reset_contact()
+            # Phase 4 v1.3: LINEのみなのでlast_contactリセットだけ。met_todayは変更しない
+            $ misaki["last_contact"] = 0
 
         "後で返そう（スルー）":
             "後で返せばいいか。"
@@ -99,6 +100,7 @@ label midgame_misaki_busy:
             $ change_trust(-10)
             $ suspicion["misaki"] = min(suspicion["misaki"] + 2, SUSPICION_MAX)
             $ himo_aptitude["easy_choices"] += 1
+            # Phase 4 v1.3: スルー時はlast_contactもリセットしない
 
     $ flags["midgame_busymisaki_done"] = True
     return
@@ -358,7 +360,15 @@ label midgame_misaki_direct:
     python:
         result = lie_puzzle["result"]
 
-    if result == "busted":
+    # Phase 4 v1.3: 正直ルート専用分岐
+    if result == "honest":
+        "長い沈黙が続いた。"
+        misaki_c "...正直に言ってくれたのは、ありがたい"
+        misaki_c "でも...どうすればいいか、分からない"
+        "美咲は静かに下を向いていた。"
+        # 信頼低下は lie_puzzle 内で処理済み
+
+    elif result == "busted":
         misaki_c "...もういい"
         misaki_c "分かってた。薄々"
         "美咲は静かに泣いていた。"
@@ -369,6 +379,7 @@ label midgame_misaki_direct:
         "美咲は何かを飲み込んだような顔をした。"
         $ change_trust(-10)
     elif result == "safe":
+        # safe は「嘘で乗り切った」場合のみ
         misaki_c "...ごめん、疑って"
         himo "いいって。ちゃんと話してくれてありがとう"
         $ change_trust(5)
@@ -404,4 +415,38 @@ label midgame_money_suspicion:
     "今日のお金の要求は失敗した。"
     # Phase 4 v1.2: asked_money_todayとは別にrefusedフラグを立てる
     $ daily_flags["money_refused_today"] = True
+    return
+
+
+# === Phase 4 v1.3: 約束不履行イベント ===
+
+label misaki_appointment_broken:
+    "美咲からLINEが来ていた。"
+    misaki_c "昨日、約束してたよね...？"
+
+    menu:
+        "ごめん、忘れてた":
+            misaki_c "...そう"
+            $ change_trust(-10)
+            $ suspicion["misaki"] = min(suspicion["misaki"] + 3, SUSPICION_MAX)
+
+        "急用が入って（嘘）":
+            call run_lie_puzzle("double_booking", "misaki")
+
+    return
+
+
+label kana_appointment_broken:
+    "カナからLINEが来ていた。"
+    kana_c "昨日なんで来なかったの？"
+
+    menu:
+        "ごめん":
+            kana_c "もう...許さない"
+            kana_c "...嘘。許す。でも次はないからね"
+            $ change_trust_kana(-8)
+
+        "体調悪くて（嘘）":
+            call run_lie_puzzle("double_booking", "kana")
+
     return

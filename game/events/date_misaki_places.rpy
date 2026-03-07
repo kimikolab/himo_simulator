@@ -34,6 +34,11 @@ label misaki_date_with_location:
     # Phase 4 v1.2: misaki_tonight フラグを消費
     if flags.get("misaki_tonight", False):
         $ flags["misaki_tonight"] = False
+    # Phase 4 v1.3: 約束の履行チェック
+    python:
+        if (appointments.get("misaki", None) is not None
+            and game_date["day"] == appointments["misaki"]):
+            flags["misaki_appointment_kept"] = True
 
     # 探り・地雷・ハプニングの判定
     call check_date_incidents("misaki")
