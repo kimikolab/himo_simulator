@@ -37,6 +37,10 @@ label start:
 
 
 label main_loop:
+    # game_endedチェックを最初に行う
+    if flags.get("game_ended", False):
+        return
+
     # ゲームオーバーチェック（破産等）
     if _game_over == "bankruptcy":
         call ending_bankruptcy_30days
