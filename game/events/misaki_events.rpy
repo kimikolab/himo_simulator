@@ -324,10 +324,13 @@ label misaki_money_request:
         himo "...さっきもらったばかりだし、今日はやめとこう"
         return
 
-    # Phase 4追加: 所持金バレリスク
-    if player["money"] >= MONEY_SUSPICION_THRESHOLD:
-        call midgame_money_suspicion
-        return
+    # Phase 4追加: 所持金バレリスク（v1.2: 60%確率 + money_refused_today分離）
+    if player["money"] >= MONEY_SUSPICION_THRESHOLD and not daily_flags.get("money_refused_today", False):
+        python:
+            _money_sus_trigger = renpy.random.random() < 0.60
+        if _money_sus_trigger:
+            call midgame_money_suspicion
+            return
 
     # v1.2追加: 最近会っていない場合
     # v1.4修正: ブロック時はターンを消費しない（呼び出し元でメニューに戻す）

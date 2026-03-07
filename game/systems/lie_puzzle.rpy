@@ -39,10 +39,10 @@ init python:
         """バレ度に基づいて結果を返す"""
         if bare_gauge >= BARE_MAX:
             return "busted"        # 完全にバレた
-        elif bare_gauge >= 70:
-            return "suspicious"    # 強い疑念
-        elif bare_gauge >= 40:
-            return "uneasy"        # 不穏な空気
+        elif bare_gauge >= 60:
+            return "suspicious"    # 強い疑念（v1.2: 70→60）
+        elif bare_gauge >= 30:
+            return "uneasy"        # 不穏な空気（v1.2: 40→30）
         else:
             return "safe"          # 乗り切った
 

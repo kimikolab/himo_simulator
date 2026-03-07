@@ -109,6 +109,7 @@ default daily_flags = {
     "double_booking_checked": False, # Phase 4: ダブルブッキングチェック済み
     "misaki_wants_tonight": False,  # Phase 4: 美咲が今夜会いたい
     "kana_wants_tonight": False,    # Phase 4: カナが今夜会いたい
+    "money_refused_today": False,   # Phase 4 v1.2: 金銭要求を拒否された
 }
 
 # 美咲イベント進行フラグ（Phase 2追加）

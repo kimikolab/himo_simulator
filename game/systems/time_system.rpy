@@ -87,6 +87,7 @@ init python:
         daily_flags["double_booking_checked"] = False
         daily_flags["misaki_wants_tonight"] = False
         daily_flags["kana_wants_tonight"] = False
+        daily_flags["money_refused_today"] = False
 
         # 宿泊リセット
         location_flags["staying_at_misaki"] = False

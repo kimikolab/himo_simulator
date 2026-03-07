@@ -53,7 +53,7 @@ define SUSPICION_SHURABA_THRESHOLD = 3   # 修羅場イベント発生の疑念�
 define SUSPICION_MAX = 100
 
 # 所持金バレリスク閾値
-define MONEY_SUSPICION_THRESHOLD = 30000
+define MONEY_SUSPICION_THRESHOLD = 40000   # v1.2: 30000→40000
 
 # 嘘パズル設定
 define LIE_TIME_LV0 = 5.0

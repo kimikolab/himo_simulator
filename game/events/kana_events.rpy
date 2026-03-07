@@ -205,6 +205,36 @@ label contact_kana:
         "今日会いたいと言う":
             call kana_date_request
 
+        # Phase 4 v1.2: 新メニュー3つ
+        "写真送って" if kana["trust"] >= 20:
+            himo "なんか写真送ってよ"
+            kana_c "え〜、なに？自撮り？"
+            himo "なんでもいいよ"
+            kana_c "しょうがないな〜"
+            "カナが自撮りを送ってきた。"
+            kana_c "はい、特別だよ？"
+            $ change_charm(2)
+            $ change_trust_kana(2)
+
+        "なんか食べたい" if kana["trust"] >= 30:
+            himo "腹減った〜。なんか食べたい"
+            kana_c "え、私に言う？笑"
+            kana_c "しょうがないな、作ってあげるから来なよ"
+            "カナの部屋で食事をご馳走になった。"
+            $ change_stamina(15)
+            $ daily_flags["ate_today"] = True
+            $ change_trust_kana(3)
+            $ kana["met_today"] = True
+            $ reset_contact_kana()
+
+        "甘える" if kana["trust"] >= 40 and kana["dependence"] >= 20:
+            himo "カナ〜、会いたい〜"
+            kana_c "...なにそれ、キモい"
+            kana_c "...でも嬉しい"
+            $ change_trust_kana(5)
+            $ change_dependence_kana(5)
+            $ flags["kana_tonight"] = True
+
     return
 
 

@@ -316,6 +316,11 @@ label afternoon_street:
         if _pachinko_tempt:
             call midgame_pachinko_temptation
 
+    # Phase 4 v1.2: パチンコに入ったら午後の残りをスキップ
+    if flags.get("afternoon_consumed", False):
+        $ flags["afternoon_consumed"] = False
+        return
+
     # v1.1追加: 昼の強制イベントチェック
     call check_forced_afternoon_event
 

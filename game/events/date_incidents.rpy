@@ -23,6 +23,9 @@ init python:
 
     def should_trigger_landmine():
         """地雷が発生するか判定"""
+        # Phase 4 v1.2: 序盤（9日目以前）は地雷発生しない
+        if game_date["day"] <= 9:
+            return False
         return renpy.random.random() < 0.15  # 15%の固定確率
 
     def should_trigger_happening(target):
@@ -338,9 +341,19 @@ label date_happening(target):
                     if target == "misaki":
                         misaki_c "...カナって誰？"
                         call run_lie_puzzle("other_woman", "misaki")
+                        # Phase 4 v1.2: 嘘パズル後のリアクション
+                        if lie_puzzle["result"] == "safe":
+                            misaki_c "...ごめん、変なこと聞いて"
+                        elif lie_puzzle["result"] == "uneasy":
+                            "美咲は何か言いたそうだったが、黙った。"
                     else:
                         kana_c "...美咲って誰？"
                         call run_lie_puzzle("other_woman", "kana")
+                        # Phase 4 v1.2: 嘘パズル後のリアクション
+                        if lie_puzzle["result"] == "safe":
+                            kana_c "ふーん、まあいいけど"
+                        elif lie_puzzle["result"] == "uneasy":
+                            "カナは少し不機嫌そうだった。"
                 else:
                     "名前は見えなかったようだ。"
 

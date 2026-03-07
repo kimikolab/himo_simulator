@@ -162,6 +162,8 @@ label midgame_pachinko_temptation:
             "誘惑に打ち勝った。"
 
     $ flags["midgame_pachinko_triggered"] = True
+    # Phase 4 v1.2: パチンコに入ったら午後ターン消費
+    $ flags["afternoon_consumed"] = True
     return
 
 
@@ -400,5 +402,6 @@ label midgame_money_suspicion:
             $ himo_aptitude["honest_moments"] += 1
 
     "今日のお金の要求は失敗した。"
-    $ daily_flags["asked_money_today"] = True
+    # Phase 4 v1.2: asked_money_todayとは別にrefusedフラグを立てる
+    $ daily_flags["money_refused_today"] = True
     return
