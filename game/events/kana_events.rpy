@@ -172,15 +172,24 @@ label contact_kana:
 
     "カナにLINEを送った..."
 
-    if kana["trust"] >= 40:
+    # Phase 4 v1.1: 閾値を緩和（旧: 40/20 → 新: 25/10）
+    if kana["trust"] >= 25:
         "すぐに返信が来た。"
-    elif kana["trust"] >= 20:
+    elif kana["trust"] >= 10:
         "しばらくして返信が来た。"
     else:
-        "既読スルーされた..."
-        $ change_trust_kana(-1)
-        $ daily_flags["ignored_kana_today"] = True
-        return
+        # 信頼10未満でも50%の確率で返信あり
+        python:
+            kana_responds = renpy.random.random() < 0.50
+
+        if kana_responds:
+            "...しばらくして返信が来た。"
+        else:
+            "既読スルーされた..."
+            $ change_trust_kana(-1)
+            $ daily_flags["ignored_kana_today"] = True
+            "（でも、LINEを送ったことは覚えてくれてるはず）"
+            return
 
     menu:
         kana_c "なに？"

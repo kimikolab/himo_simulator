@@ -4,7 +4,10 @@
 init python:
     def should_trigger_probe(target):
         """探りが発生するか判定"""
-        import random
+        # Phase 4 v1.1: 序盤（7日目以前）は探り発生しない
+        if game_date["day"] <= 7:
+            return False
+
         sus = suspicion.get(target, 0)
         location = daily_flags.get("date_location", None)
 
@@ -16,19 +19,17 @@ init python:
         if location == "izakaya":
             base_rate += 0.15  # 居酒屋は探り率UP
 
-        return random.random() < base_rate
+        return renpy.random.random() < base_rate
 
     def should_trigger_landmine():
         """地雷が発生するか判定"""
-        import random
-        return random.random() < 0.15  # 15%の固定確率
+        return renpy.random.random() < 0.15  # 15%の固定確率
 
     def should_trigger_happening(target):
         """ハプニングが発生するか判定"""
-        import random
         if not kana_flags["met"]:
             return False
-        return random.random() < 0.20
+        return renpy.random.random() < 0.20
 
 
 label check_date_incidents(target):
@@ -58,8 +59,6 @@ label check_date_incidents(target):
 
 label date_probe(target):
     python:
-        import random
-
         if target == "misaki":
             probes = [
                 ("last_night", "昨日の夜、何してたの？"),
@@ -76,7 +75,7 @@ label date_probe(target):
             if kana["dependence"] >= 40:
                 probes.append(("phone_check", "スマホ見せて〜"))
 
-        probe_key, probe_text = random.choice(probes)
+        probe_key, probe_text = renpy.random.choice(probes)
 
     "ふと、相手が真面目な顔になった。"
 
@@ -87,6 +86,22 @@ label date_probe(target):
 
     # 探りの種類別対応
     if probe_key == "last_night":
+        # Phase 4 v1.1: 前日にもう片方と接触した実績がなければ軽い探りに差し替え
+        python:
+            if target == "misaki":
+                other_recent = kana.get("last_contact", 99) <= 1 if kana_flags["met"] else False
+            else:
+                other_recent = misaki.get("last_contact", 99) <= 1
+
+        if not other_recent:
+            if target == "misaki":
+                misaki_c "最近、楽しそうだね"
+            else:
+                kana_c "最近なんか楽しそうじゃん"
+            himo "そう？"
+            $ suspicion[target] = min(suspicion[target] + 1, SUSPICION_MAX)
+            return
+
         # 前日にもう片方とデートしてたら嘘パズル発動
         if daily_flags.get("date_with", None) is not None:
             call run_lie_puzzle("last_night", target)
@@ -103,8 +118,7 @@ label date_probe(target):
                 "スマホを渡した。"
                 # もう片方からの通知が来るリスク
                 python:
-                    import random
-                    notification_risk = random.random() < 0.30
+                    notification_risk = renpy.random.random() < 0.30
                 if notification_risk:
                     "その瞬間、LINE通知が鳴った。"
                     if target == "misaki":
@@ -176,8 +190,6 @@ label date_probe(target):
 
 label date_landmine(target):
     python:
-        import random
-
         if target == "misaki":
             mines = [
                 "quit_job",     # 仕事辞めれば？
@@ -188,7 +200,7 @@ label date_landmine(target):
                 "followers",    # フォロワー数気にしすぎ
                 "other_guys",   # 他の男と遊んでんの？
             ]
-        mine_key = random.choice(mines)
+        mine_key = renpy.random.choice(mines)
 
     # 地雷選択肢を通常会話に紛れ込ませる
     if mine_key == "quit_job":
@@ -288,8 +300,6 @@ label date_landmine(target):
 
 label date_happening(target):
     python:
-        import random
-
         happenings = ["line_notification", "acquaintance"]
 
         if target == "kana":
@@ -297,7 +307,7 @@ label date_happening(target):
         if target == "misaki":
             happenings.append("receipt")
 
-        happening_key = random.choice(happenings)
+        happening_key = renpy.random.choice(happenings)
 
     if happening_key == "line_notification":
         "デートの最中、スマホが鳴った。"
@@ -323,8 +333,7 @@ label date_happening(target):
             "相手の前で普通に見る":
                 "通知を確認した。"
                 python:
-                    import random
-                    name_visible = random.random() < 0.40
+                    name_visible = renpy.random.random() < 0.40
                 if name_visible:
                     if target == "misaki":
                         misaki_c "...カナって誰？"

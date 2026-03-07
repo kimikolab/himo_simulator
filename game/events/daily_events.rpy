@@ -312,8 +312,7 @@ label afternoon_street:
         and game_date["day"] >= 10
         and not flags.get("midgame_pachinko_triggered", False)):
         python:
-            import random
-            _pachinko_tempt = random.random() < 0.25
+            _pachinko_tempt = renpy.random.random() < 0.25
         if _pachinko_tempt:
             call midgame_pachinko_temptation
 

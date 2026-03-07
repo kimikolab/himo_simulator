@@ -29,7 +29,9 @@ label kana_date_with_location:
     $ kana["met_today"] = True
     $ kana["last_contact"] = 0
     $ daily_flags["date_with"] = "kana"
-    $ daily_flags["ate_today"] = True  # カナとのデートは食事込み
+    # Phase 4 v1.1: ate_today は場所別に設定（部屋以外は食事あり）
+    if daily_flags["date_location"] != "himo_room":
+        $ daily_flags["ate_today"] = True
 
     # 探り・地雷・ハプニングの判定
     call check_date_incidents("kana")
@@ -38,36 +40,45 @@ label kana_date_with_location:
 
 
 label kana_date_cafe:
+    $ stats["date_locations"] = stats.get("date_locations", {})
+    $ stats["date_locations"]["cafe"] = stats["date_locations"].get("cafe", 0) + 1
     "カフェに入った。"
     kana_c "ここインスタ映えする〜"
 
     "カナがスマホを取り出して写真を撮り始めた。"
+    "カナが奢ってくれた。"
 
     $ change_trust_kana(5)
     $ change_dependence_kana(3)
     $ change_stamina(-10)
+    $ change_stamina(15)   # カフェの軽食（差し引き+5）
     $ kana_flags["sns_risk"] = kana_flags.get("sns_risk", 0) + 2
 
     return
 
 
 label kana_date_karaoke:
+    $ stats["date_locations"] = stats.get("date_locations", {})
+    $ stats["date_locations"]["karaoke"] = stats["date_locations"].get("karaoke", 0) + 1
     "カラオケに行った。"
     kana_c "何歌う？"
     himo "適当に"
 
     "盛り上がった。カナの歌が意外と上手い。"
+    "途中で軽く食べた。"
 
     $ change_money(-500)
     $ change_trust_kana(8)
     $ change_dependence_kana(5)
     $ change_stamina(-15)
-    # SNSリスクなし
+    $ change_stamina(10)   # 軽食（差し引き-5。はしゃいだので消耗の方が大きい）
 
     return
 
 
 label kana_date_campus:
+    $ stats["date_locations"] = stats.get("date_locations", {})
+    $ stats["date_locations"]["campus"] = stats["date_locations"].get("campus", 0) + 1
     "カナの大学の近くで会った。"
     kana_c "この辺よく来るんだ〜"
 
@@ -75,17 +86,19 @@ label kana_date_campus:
     kana_c "あ、まりちゃん！紹介するね、ヒモ太郎！"
 
     "...紹介された。"
+    "近くの店でご飯を食べた。カナが奢ってくれた。"
 
     $ change_trust_kana(8)
     $ change_dependence_kana(4)
     $ change_stamina(-10)
+    $ change_stamina(20)   # 食事（差し引き+10）
     $ kana_flags["sns_risk"] = kana_flags.get("sns_risk", 0) + 1
 
     # 情報収集イベント
     if not flags.get("kana_friend_info_obtained", False):
         "友達と少し話す機会があった。"
         "友達「カナってさ、前の彼氏に浮気されてから男性不信なんだよね」"
-        "友達「だからヒモ太郎のこと大事にしてあげてね」"
+        "友達「だからカナのこと大事にしてあげてね」"
         himo "（...なるほど）"
         $ flags["kana_friend_info_obtained"] = True
         "カナの過去を知った。今後の会話で地雷を避けやすくなるかもしれない。"
@@ -94,6 +107,8 @@ label kana_date_campus:
 
 
 label kana_date_himo_room:
+    $ stats["date_locations"] = stats.get("date_locations", {})
+    $ stats["date_locations"]["himo_room"] = stats["date_locations"].get("himo_room", 0) + 1
     "ヒモ太郎の部屋で会うことにした。"
 
     if player["cleanliness"] >= 50:

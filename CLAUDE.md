@@ -109,3 +109,26 @@ flags = {
 - 全ゲーム変数は `variables.rpy` に `default` 文で宣言する
 - スクリーンは `screens.rpy` に定義。`gui.rpy` の値は Ren'Py GUI エディタ経由か慎重に手編集すること
 - インゲームのセリフ・UI文字列はすべて日本語
+
+### ⚠️ pickle制約: `import random` 禁止
+
+**Ren'Pyの `.rpy` ファイルでは `import random` を絶対に使わないこと。** 代わりに `renpy.random` を使う。
+
+- Ren'Pyはセーブ/クイックセーブ時にゲーム状態をpickleでシリアライズする
+- `import random` を使うと、`random` モジュールへの参照がストアに残り `Could not pickle <module 'random'>` エラーになる
+- これは `init python` 内の関数定義でも、label内の `python:` ブロックでも同様に発生する
+- **正しい書き方:**
+  ```python
+  # OK: renpy.random を使う（pickle安全、常に利用可能）
+  renpy.random.random()
+  renpy.random.choice(items)
+  renpy.random.shuffle(items)
+  renpy.random.randint(a, b)
+  ```
+- **禁止:**
+  ```python
+  # NG: pickle エラーの原因になる
+  import random
+  random.random()
+  ```
+- この制約は `random` に限らず、すべての標準ライブラリモジュールの `import` に適用される可能性がある。Ren'Py組み込みの代替があればそちらを優先すること

@@ -85,6 +85,42 @@ init python:
         lines.append("パチンコ収支:     ¥{:,}".format(stats.get("pachinko_profit", 0)))
         lines.append("SNSリスク:        {}".format(kana_flags.get("sns_risk", 0)))
 
+        # Phase 4 v1.1追加情報
+        lines.append("")
+        lines.append("=== Phase 4 追加情報 ===")
+        lines.append("疑念度 美咲/カナ:  {}/{}".format(
+            suspicion.get("misaki", 0), suspicion.get("kana", 0)))
+        lines.append("嘘パズル: {}回挑戦 / {}回バレ".format(
+            stats.get("lie_puzzles_faced", 0), stats.get("lie_puzzles_busted", 0)))
+        lines.append("食事回数: {}/{}日".format(
+            stats.get("meals_eaten", 0), game_date["day"] - 1))
+
+        lines.append("")
+        lines.append("--- 中盤イベント発生状況 ---")
+        midgame_flags = [
+            ("美咲「最近忙しい？」", "midgame_busymisaki_done"),
+            ("ダブルブッキング危機", "midgame_doublebooking_done"),
+            ("目撃情報",             "midgame_sighting_done"),
+            ("目撃→対面修羅場",     "midgame_sighting_confronted"),
+            ("カナ突撃訪問",         "midgame_kana_raid_done"),
+            ("美咲直球質問v2",       "midgame_misaki_direct_done"),
+        ]
+        for label, key in midgame_flags:
+            status = "発生済" if flags.get(key, False) else "未発生"
+            lines.append("{:20} {}".format(label, status))
+
+        lines.append("")
+        lines.append("--- デート場所統計 ---")
+        dl = stats.get("date_locations", {})
+        misaki_locs = "ファミレス{} / 居酒屋{} / 部屋{} / いい店{}".format(
+            dl.get("famires", 0), dl.get("izakaya", 0),
+            dl.get("misaki_room", 0), dl.get("fancy", 0))
+        kana_locs = "カフェ{} / カラオケ{} / 大学{} / 部屋{}".format(
+            dl.get("cafe", 0), dl.get("karaoke", 0),
+            dl.get("campus", 0), dl.get("himo_room", 0))
+        lines.append("美咲: {}".format(misaki_locs))
+        lines.append("カナ: {}".format(kana_locs))
+
         content = "\n".join(lines)
 
         try:

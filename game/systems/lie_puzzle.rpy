@@ -116,9 +116,12 @@ label run_lie_puzzle(scenario="generic", target="misaki"):
         result = resolve_lie_puzzle(lie_puzzle["bare_gauge"])
         lie_puzzle["result"] = result
         lie_puzzle["active"] = False
+        # Phase 4 v1.1: 統計カウント
+        stats["lie_puzzles_faced"] = stats.get("lie_puzzles_faced", 0) + 1
 
     if result == "busted":
         "（完全にバレた...）"
+        $ stats["lie_puzzles_busted"] = stats.get("lie_puzzles_busted", 0) + 1
         if target == "misaki":
             $ change_trust(-20)
             $ suspicion["misaki"] = min(suspicion["misaki"] + 30, SUSPICION_MAX)
@@ -173,8 +176,7 @@ label lie_puzzle_last_night(target="misaki"):
                 {"key": "dog_walk", "text": "犬の散歩してた", "quality": "terrible"},
                 {"key": "space", "text": "宇宙のことを考えてた", "quality": "terrible"},
             ]
-            import random
-            random.shuffle(choices)
+            renpy.random.shuffle(choices)
         elif skill_lv == 1:
             choices += [
                 {"key": "friend", "text": "友達と飲んでた", "quality": "ok"},
@@ -219,8 +221,7 @@ label lie_puzzle_last_night(target="misaki"):
                     {"key": "went_out", "text": "友達と飲んでた", "quality": "contradiction"},
                     {"key": "lent_phone", "text": "スマホ誰かに貸してた", "quality": "terrible"},
                 ]
-                import random
-                random.shuffle(choices2)
+                renpy.random.shuffle(choices2)
             elif skill_lv >= 1:
                 choices2 += [
                     {"key": "half_asleep", "text": "半分寝ぼけてて覚えてない", "quality": "good"},
@@ -260,8 +261,7 @@ label lie_puzzle_last_night(target="misaki"):
                 choices2 += [
                     {"key": "alone", "text": "一人で", "quality": "contradiction"},
                 ]
-                import random
-                random.shuffle(choices2)
+                renpy.random.shuffle(choices2)
             elif skill_lv >= 1:
                 choices2 += [
                     {"key": "specific", "text": "高校の時の健太ってやつ", "quality": "good"},
@@ -312,8 +312,7 @@ label lie_puzzle_other_woman(target="misaki"):
                 {"key": "panic", "text": "な、なんで？", "quality": "terrible"},
                 {"key": "reverse", "text": "お前こそ他にいるんじゃないの？", "quality": "terrible"},
             ]
-            import random
-            random.shuffle(choices)
+            renpy.random.shuffle(choices)
         elif skill_lv >= 1:
             choices += [
                 {"key": "deflect", "text": "なんでそう思うの？", "quality": "good"},
@@ -375,8 +374,7 @@ label lie_puzzle_other_woman(target="misaki"):
             choices2 += [
                 {"key": "nothing", "text": "別に何もないって", "quality": "weak"},
             ]
-            import random
-            random.shuffle(choices2)
+            renpy.random.shuffle(choices2)
         elif skill_lv >= 1:
             choices2 += [
                 {"key": "worry", "text": "心配してくれてるの？ありがとう", "quality": "good"},
@@ -430,8 +428,7 @@ label lie_puzzle_double_booking(target="misaki"):
                 {"key": "work", "text": "バイトの面接", "quality": "terrible"},
                 {"key": "vague", "text": "えーっと...なんか色々", "quality": "terrible"},
             ]
-            import random
-            random.shuffle(choices)
+            renpy.random.shuffle(choices)
         elif skill_lv >= 1:
             choices += [
                 {"key": "friend", "text": "友達に呼ばれてて", "quality": "good"},

@@ -163,6 +163,11 @@ default stats = {
     "pachinko_wins": 0,
     "pachinko_losses": 0,
     "pachinko_profit": 0,
+    # Phase 4 v1.1追加
+    "lie_puzzles_faced": 0,
+    "lie_puzzles_busted": 0,
+    "meals_eaten": 0,
+    "date_locations": {},
 }
 
 # ヒモ適性診断

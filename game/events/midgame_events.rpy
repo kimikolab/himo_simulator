@@ -24,8 +24,7 @@ init python:
             and kana["dependence"] >= 20
             and time == "afternoon"
             and not kana["met_today"]):
-            import random
-            if random.random() < 0.20:
+            if renpy.random.random() < 0.20:
                 _pending_events.append(("midgame_kana_urgent", None))
                 return True
 
@@ -39,8 +38,7 @@ init python:
             and kana["trust"] >= 25
             and time == "afternoon"
             and not daily_flags["double_booking_checked"]):
-            import random
-            if random.random() < 0.30:
+            if renpy.random.random() < 0.30:
                 _pending_events.append(("midgame_double_booking", None))
                 return True
 
@@ -48,8 +46,7 @@ init python:
         if (flags.get("midgame_sighting_done", False)
             and not flags.get("midgame_sighting_confronted", False)
             and time == "night"):
-            import random
-            if random.random() < 0.40:
+            if renpy.random.random() < 0.40:
                 _pending_events.append(("midgame_sighting_confrontation", None))
                 return True
 
@@ -60,8 +57,7 @@ init python:
             and kana["dependence"] >= 40
             and time == "night"
             and not kana["met_today"]):
-            import random
-            if random.random() < 0.20:
+            if renpy.random.random() < 0.20:
                 _pending_events.append(("midgame_kana_raid", None))
                 return True
 
@@ -125,8 +121,7 @@ label midgame_pachinko_temptation:
             himo "まあちょっとだけ..."
 
             python:
-                import random
-                pachinko_result = random.choice(["big_win", "small_win", "lose", "big_lose"])
+                pachinko_result = renpy.random.choice(["big_win", "small_win", "lose", "big_lose"])
 
             if pachinko_result == "big_win":
                 "大当たり！！！"

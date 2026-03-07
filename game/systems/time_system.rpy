@@ -45,6 +45,10 @@ init python:
             flags["misaki_sunday_morning"] = False
             _pending_events.append(("misaki_sunday_morning_scene", None))
 
+        # Phase 4 v1.1: 食事回数カウント（リセット前に判定）
+        if daily_flags.get("ate_today", False):
+            stats["meals_eaten"] = stats.get("meals_eaten", 0) + 1
+
         # 食事ペナルティチェック（リセット前に判定）
         if not daily_flags["ate_today"]:
             _pending_events.append(("hunger_penalty", None))
@@ -76,6 +80,13 @@ init python:
         daily_flags["date_planned_tonight"] = False
         daily_flags["ate_today"] = False
         daily_flags["ignored_kana_today"] = False
+        # Phase 4 daily_flags リセット
+        daily_flags["date_location"] = None
+        daily_flags["date_with"] = None
+        daily_flags["sns_shown_today"] = False
+        daily_flags["double_booking_checked"] = False
+        daily_flags["misaki_wants_tonight"] = False
+        daily_flags["kana_wants_tonight"] = False
 
         # 宿泊リセット
         location_flags["staying_at_misaki"] = False
