@@ -96,8 +96,12 @@ label morning_actions:
     python:
         midgame_fired = check_midgame_events()
 
-    if midgame_fired:
+    # v1.4修正: Trueの場合のみターン消費。"notify"はターン消費せず通常メニューへ
+    if midgame_fired == True:
         return
+
+    # v1.4: notify型イベントはここで先に処理（ターンは消費しない）
+    call process_pending_events
 
     # v1.1追加: 強制朝イベントのチェック
     call check_forced_morning_event
@@ -154,8 +158,12 @@ label afternoon_actions:
     python:
         midgame_fired = check_midgame_events()
 
-    if midgame_fired:
+    # v1.4修正: Trueの場合のみターン消費
+    if midgame_fired == True:
         return
+
+    # v1.4: notify型イベントはここで先に処理
+    call process_pending_events
 
     # afternoon_consumed チェック（カナ急な呼び出し等で消費された場合）
     if flags.get("afternoon_consumed", False):
@@ -254,17 +262,22 @@ label night_actions:
         call misaki_date_with_location
         return
 
-    # 3. カナの約束のみある場合（v1.6: 成功率チェック追加）
+    # 3. カナの約束のみある場合（v1.4: プレイヤー主導なら確定、カナ主導のみドタキャンリスク）
     if flags.get("kana_tonight") and not flags.get("misaki_tonight"):
         "今夜はカナと約束がある。"
         $ flags["kana_tonight"] = False
         python:
-            trust = kana["trust"]
-            if trust >= 50:   success_rate = 0.90
-            elif trust >= 35: success_rate = 0.75
-            elif trust >= 20: success_rate = 0.65
-            else:             success_rate = 0.50
-            kana_shows_up = renpy.random.random() < success_rate
+            source = daily_flags.get("kana_tonight_source", "kana")
+            if source == "player":
+                kana_shows_up = True
+            else:
+                trust = kana["trust"]
+                if trust >= 50:   success_rate = 0.95
+                elif trust >= 35: success_rate = 0.85
+                elif trust >= 20: success_rate = 0.75
+                else:             success_rate = 0.60
+                kana_shows_up = renpy.random.random() < success_rate
+        $ daily_flags["kana_tonight_source"] = None
         if kana_shows_up:
             call kana_date_with_location
         else:

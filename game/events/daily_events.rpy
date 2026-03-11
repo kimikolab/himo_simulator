@@ -218,6 +218,7 @@ label morning_phone_kana:
             himo "夜なら"
             kana_c "やった！じゃあ夜ね"
             $ flags["kana_tonight"] = True
+            $ daily_flags["kana_tonight_source"] = "kana"
             # v1.3修正: 電話のみなのでlast_contactをリセットしない
             $ change_trust_kana(3)
 

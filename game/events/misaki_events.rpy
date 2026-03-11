@@ -299,10 +299,6 @@ label misaki_date:
     if not flags["first_date"]:
         $ flags["first_date"] = True
 
-    # v2.1: 週末に会った記録
-    if is_weekend():
-        $ flags["met_misaki_this_weekend"] = True
-
     # 連続デートリスク（v2.1: しきい値緩和）
     $ misaki_streak += 1
     if misaki_streak >= 7:
@@ -332,11 +328,11 @@ label misaki_money_request:
             call midgame_money_suspicion
             return
 
-    # v1.2追加: 最近会っていない場合
-    # v1.3修正: 対面（met_today）していない＋last_contact > 1ならブロック
-    # v1.4修正: ブロック時はターンを消費しない（呼び出し元でメニューに戻す）
-    if misaki["last_contact"] > 1 and not misaki["met_today"]:
-        himo "（最近会ってないし、いきなりお金の話はしづらいな...）"
+    # v1.4修正: LINEだけでは対面していないので、お金の相談は不自然
+    # last_contact == 0（今日会った）または met_today == True の場合のみ可能
+    if not misaki["met_today"] and misaki["last_contact"] > 0:
+        himo "（最近会ってないし、LINEでいきなりお金の話はしづらいな...）"
+        himo "（まずは会って、それから相談しよう）"
         $ _money_request_blocked = True
         return
 
@@ -838,7 +834,13 @@ label misaki_dependence_milestone(threshold):
             "約束する":
                 himo "おう、会えるよ"
                 misaki_c "よかった。じゃあ土曜ね"
-                $ weekend_promised = True
+                # v1.3.1: appointments に統一
+                python:
+                    _weekday_idx = game_date["weekday"]
+                    _days_until_saturday = (6 - _weekday_idx) % 7
+                    if _days_until_saturday == 0:
+                        _days_until_saturday = 7
+                    appointments["misaki"] = game_date["day"] + _days_until_saturday
                 $ change_dependence(3)
             "曖昧にする":
                 himo "まあ、たぶん..."
@@ -914,7 +916,6 @@ label misaki_broken_promise:
             $ stats["lies_told"] += 1
             $ himo_aptitude["lies"] += 1
 
-    $ weekend_promised = False
     return
 
 
@@ -970,10 +971,6 @@ label misaki_room_visit:
             # v2.4修正: 土曜の「夜」に泊まった場合のみ日曜朝シーンを発動
             if is_weekend() and game_date["weekday"] == 6 and game_date["time"] == "night":
                 $ flags["misaki_sunday_morning"] = True
-
-    # v2.1: 週末に会った記録
-    if is_weekend():
-        $ flags["met_misaki_this_weekend"] = True
 
     return
 

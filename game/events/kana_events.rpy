@@ -58,6 +58,7 @@ label kana_initiative_event:
                 menu:
                     "今夜会おう":
                         $ flags["kana_tonight"] = True
+                        $ daily_flags["kana_tonight_source"] = "kana"
                         # v1.3修正: LINEのみなのでlast_contactをリセットしない
                         $ change_trust_kana(1)    # v1.3: 2→1
                     "今日は無理":
@@ -203,6 +204,7 @@ label contact_kana:
             kana_c "じゃあ会おう"
             # v1.6修正: フラグだけ立てる（成功率チェックは夜に移動）
             $ flags["kana_tonight"] = True
+            $ daily_flags["kana_tonight_source"] = "player"
             $ change_trust_kana(2)
 
         "今日会いたいと言う":
@@ -237,6 +239,7 @@ label contact_kana:
             $ change_trust_kana(5)
             $ change_dependence_kana(5)
             $ flags["kana_tonight"] = True
+            $ daily_flags["kana_tonight_source"] = "player"
 
     return
 
@@ -280,6 +283,7 @@ label kana_date_request:
     else:
         kana_c "夜なら大丈夫だよ"
         $ flags["kana_tonight"] = True
+        $ daily_flags["kana_tonight_source"] = "player"
         himo "了解"
 
     return

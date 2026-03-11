@@ -37,7 +37,7 @@ init python:
     def advance_day():
         global game_date, misaki, flags, daily_flags
         global location_flags, misaki_events, misaki_streak
-        global weekend_promised, _game_over
+        global _game_over
 
         # v2.1: 日曜朝シーン処理（土曜宿泊フラグが立っていれば翌朝に実行）
         if flags.get("misaki_sunday_morning", False):
@@ -53,34 +53,28 @@ init python:
         if not daily_flags["ate_today"]:
             _pending_events.append(("hunger_penalty", None))
 
-        # 週末の約束チェック（v2.1修正: 月曜になったタイミングで判定）
-        if game_date["weekday"] == 0:   # 現在日曜 → 翌日が月曜
-            if weekend_promised:
-                if not flags.get("met_misaki_this_weekend", False):
-                    _pending_events.append(("misaki_broken_promise", None))
-                flags["met_misaki_this_weekend"] = False
-                weekend_promised = False
-
-        # Phase 4 v1.3: misaki_tonight 不履行チェック
+        # v1.3.1: misaki_tonight 不履行チェック（泊まり対応）
         if flags.get("misaki_tonight", False):
-            if not misaki["met_today"]:
+            if not misaki["met_today"] and not location_flags.get("staying_at_misaki", False):
                 flags["misaki_tonight_broken"] = True
             flags["misaki_tonight"] = False
 
-        # Phase 4 v1.3: 約束不履行チェック（日付ベース）
+        # v1.3.1: 約束不履行チェック（appointments一本化、泊まり対応）
         _misaki_appt = appointments.get("misaki", None)
         if _misaki_appt is not None and game_date["day"] >= _misaki_appt:
-            if not flags.get("misaki_appointment_kept", False):
+            if misaki["met_today"] or location_flags.get("staying_at_misaki", False):
+                pass  # 約束を果たした
+            else:
                 _pending_events.append(("misaki_appointment_broken", None))
             appointments["misaki"] = None
-            flags["misaki_appointment_kept"] = False
 
         _kana_appt = appointments.get("kana", None)
         if _kana_appt is not None and game_date["day"] >= _kana_appt:
-            if not flags.get("kana_appointment_kept", False):
+            if kana["met_today"] or location_flags.get("staying_at_kana", False):
+                pass  # 約束を果たした
+            else:
                 _pending_events.append(("kana_appointment_broken", None))
             appointments["kana"] = None
-            flags["kana_appointment_kept"] = False
 
         # 連続会った日数リセット（met_todayリセット前に判定）
         if not misaki["met_today"]:
@@ -109,6 +103,7 @@ init python:
         daily_flags["misaki_wants_tonight"] = False
         daily_flags["kana_wants_tonight"] = False
         daily_flags["money_refused_today"] = False
+        daily_flags["kana_tonight_source"] = None
 
         # 宿泊リセット
         location_flags["staying_at_misaki"] = False
@@ -128,9 +123,10 @@ init python:
             flags["street_unlocked"] = True
             renpy.notify("街に出られるようになった")
 
-        # 月次処理（キュー方式）
-        if game_date["day"] > 1 and (game_date["day"] - 1) % 30 == 0:
-            _pending_events.append(("monthly_billing", None))
+        # 月次処理（体験版30日制ではエンディングで精算するため不要）
+        # 製品版（60日以上）では15日目・45日目等に中間請求を入れる
+        # if game_date["day"] > 1 and (game_date["day"] - 1) % 30 == 0:
+        #     _pending_events.append(("monthly_billing", None))
 
         # 美咲からの自発的連絡（キュー方式）
         queue_misaki_initiative()

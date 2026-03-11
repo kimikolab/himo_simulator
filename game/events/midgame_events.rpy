@@ -3,20 +3,21 @@
 
 init python:
     def check_midgame_events():
-        """main_loopの各ターン開始時に呼び出す"""
+        """main_loopの各ターン開始時に呼び出す
+        戻り値: False=なし, "notify"=ターン消費しない, True=ターン消費する"""
         day = game_date["day"]
         time = game_date["time"]
 
         # --- 中盤前半（9〜15日） ---
 
-        # イベント①: 美咲「最近忙しいの？」
+        # イベント①: 美咲「最近忙しいの？」（LINE系 → ターン消費しない）
         if (day >= 9 and day <= 15
             and not flags.get("midgame_busymisaki_done", False)
             and kana_flags["met"]
             and misaki["last_contact"] >= 3
             and time == "morning"):
             _pending_events.append(("midgame_misaki_busy", None))
-            return True
+            return "notify"
 
         # イベント④: カナからの急な呼び出し
         if (day >= 10 and day <= 20
@@ -30,7 +31,7 @@ init python:
 
         # --- 中盤後半（16〜23日） ---
 
-        # イベント⑤: ダブルブッキング危機
+        # イベント⑤: ダブルブッキング危機（LINE系 → ターン消費しない）
         if (day >= 16 and day <= 25
             and not flags.get("midgame_doublebooking_done", False)
             and kana_flags["met"]
@@ -40,7 +41,7 @@ init python:
             and not daily_flags["double_booking_checked"]):
             if renpy.random.random() < 0.30:
                 _pending_events.append(("midgame_double_booking", None))
-                return True
+                return "notify"
 
         # イベント⑥: 目撃情報 → 修羅場
         if (flags.get("midgame_sighting_done", False)
@@ -91,8 +92,8 @@ label midgame_misaki_busy:
             misaki_c "最近、全然連絡くれないなって思って"
             $ change_trust(-5)
             $ suspicion["misaki"] = min(suspicion["misaki"] + 1, SUSPICION_MAX)
-            # Phase 4 v1.3: LINEのみなのでlast_contactリセットだけ。met_todayは変更しない
-            $ misaki["last_contact"] = 0
+            # v1.4修正: last_contactは1にする（0だと「今日会った」と同等になる）
+            $ misaki["last_contact"] = 1
 
         "後で返そう（スルー）":
             "後で返せばいいか。"
@@ -193,6 +194,7 @@ label midgame_kana_urgent:
             # 昼＋夜を消費
             $ flags["afternoon_consumed"] = True
             $ flags["kana_tonight"] = True
+            $ daily_flags["kana_tonight_source"] = "kana"
 
             "（美咲に連絡する暇がなかった...）"
 
@@ -245,6 +247,7 @@ label midgame_double_booking:
 
             $ daily_flags["misaki_wants_tonight"] = False
             $ flags["kana_tonight"] = True
+            $ daily_flags["kana_tonight_source"] = "kana"
 
             python:
                 result = lie_puzzle["result"]

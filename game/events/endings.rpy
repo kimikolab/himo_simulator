@@ -10,17 +10,31 @@ label day7_ending:
 label ending_30days:
     scene bg_placeholder with fade
     "――30日目、夜――"
+    "スマホに通知が来た。"
+    "『家賃引き落とし: ¥[MONTHLY_RENT:,]』"
+    "『通信費引き落とし: ¥[PHONE_BILL:,]』"
 
     python:
-        can_pay = player["money"] >= 0
+        total_bill = MONTHLY_RENT + PHONE_BILL
+        can_pay = player["money"] >= total_bill
+
+    if can_pay:
+        $ change_money(-total_bill)
+        "合計¥[total_bill:,]が引き落とされた。"
+        "残高: ¥[player['money']:,]"
+        himo "...払えた"
+    else:
+        "残高不足で引き落とせなかった。"
+        himo "...やばい"
+        jump ending_bankruptcy_30days
+
+    # エンディング分岐判定
+    python:
         is_honest = stats["lies_told"] <= 3
         is_dependent = misaki["dependence"] >= 65
         met_often = stats["times_met"] >= 10
         concern_shown = himo_aptitude["showed_concern"] >= 5
         all_misaki_events = (misaki_events["M02_done"] and misaki_events["M03_done"] and misaki_events["M05_done"])
-
-    if not can_pay:
-        jump ending_bankruptcy_30days
 
     if is_honest and met_often and not is_dependent and concern_shown:
         jump ending_balance_30days

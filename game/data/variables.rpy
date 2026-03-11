@@ -72,7 +72,6 @@ default flags = {
     "confession_accepted": False,
     "confession_ambiguous": False,
     "confession_rejected": False,
-    "met_misaki_this_weekend": False,
     "misaki_sunday_morning": False,
     "misaki_tonight": False,
     "kana_tonight": False,
@@ -92,8 +91,6 @@ default flags = {
     "midgame_misaki_direct_done": False,
     "kana_friend_info_obtained": False,
     "misaki_saturday_promise": False,
-    "misaki_appointment_kept": False,
-    "kana_appointment_kept": False,
     "misaki_tonight_broken": False,
     "qte_failed_badly": False,
 }
@@ -113,6 +110,7 @@ default daily_flags = {
     "misaki_wants_tonight": False,  # Phase 4: 美咲が今夜会いたい
     "kana_wants_tonight": False,    # Phase 4: カナが今夜会いたい
     "money_refused_today": False,   # Phase 4 v1.2: 金銭要求を拒否された
+    "kana_tonight_source": None,    # Phase 4 v1.4: "player" or "kana" or None
 }
 
 # 美咲イベント進行フラグ（Phase 2追加）
@@ -148,7 +146,6 @@ default misaki_mood = {
 
 # 美咲イニシアチブ：依存度管理（v2.0追加）
 default misaki_streak    = 0      # 連続で会った日数
-default weekend_promised = False  # 週末の約束フラグ
 default money_refused_streak = 0  # v2.1: 金銭要求連続拒否カウント
 
 # 遅延イベントキュー（renpy.call をPython関数内から安全に呼ぶため）
