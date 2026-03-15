@@ -108,6 +108,7 @@ init python:
         daily_flags["money_refused_today"] = False
         daily_flags["kana_tonight_source"] = None
         daily_flags["misaki_lined_only"] = False
+        daily_flags["misaki_line_last_shown"] = []
 
         # 宿泊リセット
         location_flags["staying_at_misaki"] = False

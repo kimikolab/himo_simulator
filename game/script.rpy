@@ -257,6 +257,14 @@ label night_actions:
 
     # 2. 美咲の約束のみある場合
     if flags.get("misaki_tonight") and not flags.get("kana_tonight"):
+        # v1.6追加: ヒモ太郎の部屋に美咲が来る場合
+        if flags.get("misaki_visit_himo_room", False):
+            "今夜は美咲がうちに来る。"
+            $ flags["misaki_tonight"] = False
+            $ flags["misaki_visit_himo_room"] = False
+            call misaki_visit_himo_room
+            return
+
         "今夜は美咲と約束がある。"
         $ flags["misaki_tonight"] = False
         call misaki_date_with_location

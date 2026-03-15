@@ -85,6 +85,13 @@ label moment_of_doubt:
 
 label check_forced_morning_event:
 
+    # v1.6追加: 美咲がヒモ太郎の部屋に泊まった翌朝
+    if flags.get("misaki_stayed_at_himo", False):
+        $ flags["misaki_stayed_at_himo"] = False
+        call misaki_morning_at_himo_room
+        $ flags["morning_consumed"] = True
+        return
+
     # Phase 4 v1.3: 前日の約束を破った場合
     if flags.get("misaki_tonight_broken", False):
         $ flags["misaki_tonight_broken"] = False
@@ -124,6 +131,35 @@ label check_forced_morning_event:
         call morning_phone_misaki
     elif phone_call_chance == "kana":
         call morning_phone_kana
+
+    return
+
+
+# v1.6追加: 美咲がヒモ太郎の部屋に泊まった翌朝
+label misaki_morning_at_himo_room:
+    scene bg_placeholder
+
+    "朝。隣に美咲がいる。"
+    "いつもは美咲の部屋で目が覚めるのに、今日は逆だ。"
+
+    misaki_c "...おはよう"
+    himo "おう"
+
+    "美咲がキッチンに立った。"
+    misaki_c "何もないね...卵くらいない？"
+    himo "コンビニ行くか"
+    misaki_c "...もう"
+
+    "結局、2人でコンビニに行って朝食を買った。"
+
+    misaki_c "たまにはこういうのもいいね"
+    himo "...そうだな"
+
+    $ change_trust(3)
+    $ change_dependence(3)
+    $ daily_flags["ate_today"] = True
+    $ misaki["met_today"] = True
+    $ reset_contact()
 
     return
 

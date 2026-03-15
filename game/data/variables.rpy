@@ -93,6 +93,8 @@ default flags = {
     "misaki_saturday_promise": False,
     "misaki_tonight_broken": False,
     "qte_failed_badly": False,
+    "misaki_visit_himo_room": False,   # v1.6: ヒモ太郎の部屋に美咲が来る
+    "misaki_stayed_at_himo": False,    # v1.6: 美咲がヒモ太郎の部屋に泊まった
 }
 
 # 1日ごとにリセットされるフラグ
@@ -111,6 +113,7 @@ default daily_flags = {
     "money_refused_today": False,   # Phase 4 v1.2: 金銭要求を拒否された
     "kana_tonight_source": None,    # Phase 4 v1.4: "player" or "kana" or None
     "misaki_lined_only": False,     # Phase 4 v1.4: LINEのみで対面していない
+    "misaki_line_last_shown": [],   # Phase 4 v1.6: 美咲LINE選択肢の前回表示分
 }
 
 # 美咲イベント進行フラグ（Phase 2追加）

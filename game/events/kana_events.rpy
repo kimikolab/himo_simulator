@@ -2,6 +2,25 @@
 # カナルート イベント（Phase 3）
 
 init python:
+    def is_kana_available():
+        """カナが部屋にいるかどうか"""
+        # 土日は基本いる（90%）
+        if is_weekend():
+            return renpy.random.random() < 0.90
+
+        # 平日の時間帯別
+        time = game_date["time"]
+        if time == "morning":
+            # 朝は講義で不在が多い（40%で在宅）
+            return renpy.random.random() < 0.40
+        elif time == "afternoon":
+            # 昼は半々（55%で在宅）
+            return renpy.random.random() < 0.55
+        else:
+            # 夜は大体いる（85%で在宅）
+            return renpy.random.random() < 0.85
+
+
     def check_kana_initiative():
         # v1.4追加: ゲーム終了後はメッセージを送らない
         if flags.get("game_ended", False):
@@ -120,6 +139,37 @@ label k01_nanpa_success:
 # ========================================
 
 label kana_visit:
+    # v1.6追加: 不在チェック
+    python:
+        _kana_home = is_kana_available()
+
+    if not _kana_home:
+        "カナの部屋に行ったが、いなかった。"
+
+        python:
+            _kana_absence_reasons = [
+                "カナからLINEが来た。",
+                "カナからLINEが来た。",
+                "カナからLINEが来た。",
+                "カナからLINEが来た。",
+            ]
+            _kana_absence_msgs = [
+                "今日講義あるんだ〜ごめんね",
+                "友達と遊んでる！また明日ね",
+                "バイト入っちゃった〜",
+                "ちょっと出かけてる！夜なら空くかも",
+            ]
+            _kana_abs_idx = renpy.random.randint(0, len(_kana_absence_msgs) - 1)
+
+        "カナからLINEが来た。"
+        kana_c "[_kana_absence_msgs[_kana_abs_idx]]"
+        himo "しゃーない"
+
+        # 不在でもカナに会いに行った事実は記録
+        $ kana["last_contact"] = 0
+        return
+
+    # カナが在宅 → 既存の訪問処理
     scene bg_placeholder
 
     "カナの部屋に来た。"

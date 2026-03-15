@@ -1,6 +1,42 @@
 # misaki_events.rpy
 # 美咲関連イベント（バランス調整済み）
 
+# v1.6追加: 美咲LINE選択肢のランダム抽選
+init python:
+    def get_misaki_line_choices():
+        """信頼度に応じた美咲LINE選択肢の候補プールからランダム2個を返す"""
+        trust = misaki["trust"]
+        stage = misaki["stage"]
+        pool = []
+
+        if trust >= 40:
+            pool.append("listen_work")
+        if trust >= 50:
+            pool.append("offer_help")
+        if trust >= 55 and stage >= STAGE_CLOSE:
+            pool.append("invite_home")
+        if trust >= 65:
+            pool.append("miss_you")
+        if trust >= 75 and stage >= STAGE_DATING:
+            pool.append("amaeru")
+
+        # 前回表示した選択肢を除外（完全除外ではなく優先度を下げる）
+        last_shown = daily_flags.get("misaki_line_last_shown", [])
+        preferred = [c for c in pool if c not in last_shown]
+
+        if len(preferred) >= 2:
+            selected = renpy.random.sample(preferred, 2)
+        elif len(pool) >= 2:
+            selected = renpy.random.sample(pool, 2)
+        elif len(pool) == 1:
+            selected = pool[:]
+        else:
+            selected = []
+
+        daily_flags["misaki_line_last_shown"] = selected
+        return selected
+
+
 label contact_misaki:
     # v1.3修正: LINEのみなのでreset_contactを呼ばない
     "美咲にLINEを送った..."
@@ -27,15 +63,15 @@ label contact_misaki:
             return
         misaki_c "どうしたの？"
 
-    # v1.4: お金要求ブロック時にメニューに戻れるようラベル化
-    # 注: misaki_lined_only はセットしない。このフラグは美咲の自発的連絡
-    # (check_in/stress_call/midgame_misaki_busy) でのみ使用する。
-    # プレイヤー主導のLINEでは対面要求と同等に扱う。
+    # v1.6追加: ランダム選択肢を決定
+    python:
+        _misaki_extra = get_misaki_line_choices()
 
 label contact_misaki_menu:
     menu:
         misaki_c "どうしたの？"
 
+        # --- 固定枠 ---
         "雑談する":
             call misaki_chat
             return
@@ -52,21 +88,21 @@ label contact_misaki_menu:
             call misaki_event_M05
             return
 
-        # === v1.5追加: 信頼度別の選択肢 ===
+        # --- v1.6修正: ランダム枠（毎回2個まで） ---
 
-        "仕事の愚痴聞くよ" if misaki["trust"] >= 40:
+        "仕事の愚痴聞くよ" if "listen_work" in _misaki_extra:
             call misaki_line_listen_work
 
-        "何か手伝えることある？" if misaki["trust"] >= 50:
+        "何か手伝えることある？" if "offer_help" in _misaki_extra:
             call misaki_line_offer_help
 
-        "今日の夜、うちで飲まない？" if misaki["trust"] >= 55 and misaki["stage"] >= STAGE_CLOSE:
+        "今日の夜、うちで飲まない？" if "invite_home" in _misaki_extra:
             call misaki_line_invite_home
 
-        "声聞きたくなった" if misaki["trust"] >= 65:
+        "声聞きたくなった" if "miss_you" in _misaki_extra:
             call misaki_line_miss_you
 
-        "甘えていい？" if misaki["trust"] >= 75 and misaki["stage"] >= STAGE_DATING:
+        "甘えていい？" if "amaeru" in _misaki_extra:
             call misaki_line_amaeru
 
     return
@@ -343,10 +379,14 @@ label misaki_money_request:
         himo "...さっきもらったばかりだし、今日はやめとこう"
         return
 
-    # Phase 4追加: 所持金バレリスク（v1.2: 60%確率 + money_refused_today分離）
+    # 所持金バレリスク（v1.6: 段階的発動率）
     if player["money"] >= MONEY_SUSPICION_THRESHOLD and not daily_flags.get("money_refused_today", False):
         python:
-            _money_sus_trigger = renpy.random.random() < 0.60
+            excess = player["money"] - MONEY_SUSPICION_THRESHOLD
+            # 超過額に応じて発動率が上がる
+            # ¥40,000ちょうど → 20%、¥50,000 → 35%、¥60,000 → 50%
+            suspicion_rate = min(0.20 + (excess / 40000.0) * 0.60, 0.80)
+            _money_sus_trigger = renpy.random.random() < suspicion_rate
         if _money_sus_trigger:
             call midgame_money_suspicion
             return
@@ -1196,13 +1236,13 @@ label misaki_line_invite_home:
     if invite_success:
         misaki_c "え、いいの？...行く"
         $ flags["misaki_tonight"] = True
-        $ daily_flags["kana_tonight_source"] = None  # 美咲の約束
+        # v1.6追加: ヒモ太郎の部屋に来る専用フラグ
+        $ flags["misaki_visit_himo_room"] = True
         $ change_trust(3)
         $ change_dependence(5)
         "（今夜、美咲がうちに来ることになった）"
-        "（...部屋片付けないと）"
         if player["cleanliness"] < 40:
-            himo "（やばい、部屋汚い）"
+            himo "（やばい、部屋汚い...片付けないと）"
     else:
         misaki_c "ごめん、今日はちょっと..."
         misaki_c "また今度ね"

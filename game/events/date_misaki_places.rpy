@@ -99,6 +99,117 @@ label misaki_date_room:
     return
 
 
+# ========================================
+# v1.6追加: ヒモ太郎の部屋に美咲が来るイベント
+# ========================================
+
+label misaki_visit_himo_room:
+    scene bg_placeholder
+
+    "チャイムが鳴った。"
+    misaki_c "お邪魔します..."
+
+    # 清潔感チェック
+    if player["cleanliness"] >= 60:
+        misaki_c "あ、結構きれいにしてるんだね"
+        himo "まあな"
+        $ change_trust(3)
+    elif player["cleanliness"] >= 35:
+        misaki_c "...男の人の部屋って感じ"
+        himo "悪いな、散らかってて"
+        misaki_c "ううん、大丈夫"
+    else:
+        misaki_c "...ヒモ太郎、ちょっとこれは..."
+        himo "ごめん..."
+        $ change_trust(-5)
+        "美咲が少し引いている。"
+
+    "コンビニで買った缶ビールとつまみを並べた。"
+
+    misaki_c "なんか、こういうの新鮮だね"
+    himo "いつも美咲の部屋ばっかだし"
+    misaki_c "...うん"
+
+    "いつもと違う距離感。"
+    "美咲がリラックスしている気がする。"
+
+    # 会話メニュー
+    menu:
+        "何を話す？"
+
+        "仕事の話を聞く":
+            misaki_c "聞いてくれる？実はさ..."
+            "美咲が仕事の愚痴をこぼし始めた。"
+            "ヒモ太郎の部屋だから、いつもより素が出ている。"
+            misaki_c "こんな話、他の人にはできないんだ"
+            $ change_trust(5)
+            $ change_dependence(4)
+            $ himo_aptitude["showed_concern"] += 1
+
+        "テレビ見ながらだらだら":
+            "適当にテレビをつけて、並んで座った。"
+            misaki_c "...これ、何の番組？"
+            himo "知らん"
+            misaki_c "あはは"
+            "何もしない時間が、不思議と心地よかった。"
+            $ change_trust(3)
+            $ change_dependence(3)
+
+        "美咲の本音を聞く":
+            himo "なあ、美咲"
+            misaki_c "ん？"
+            himo "俺んち来て、どう？"
+            misaki_c "...狭いけど、落ち着く"
+            misaki_c "ヒモ太郎の匂いがするから、かな"
+            himo "......"
+            "なんだか気恥ずかしい。"
+            $ change_trust(6)
+            $ change_dependence(6)
+
+    # 食事判定
+    $ daily_flags["ate_today"] = True
+    $ change_stamina(10)
+
+    # 泊まり判定
+    "夜も更けてきた。"
+
+    if misaki["dependence"] >= 50:
+        misaki_c "...帰りたくないな"
+        menu:
+            "泊まってく？":
+                misaki_c "...いいの？"
+                "美咲が泊まることになった。"
+                $ change_stamina(30)
+                $ change_cleanliness(15)
+                $ change_trust(5)
+                $ change_dependence(8)
+                # 翌朝イベントフラグ
+                $ flags["misaki_stayed_at_himo"] = True
+                $ flags["morning_consumed"] = True
+
+            "送ってくよ":
+                misaki_c "...ありがとう"
+                $ change_trust(2)
+                $ change_dependence(-2)
+    else:
+        misaki_c "そろそろ帰るね"
+        himo "気をつけてな"
+        misaki_c "うん、ありがとう。楽しかった"
+        $ change_trust(3)
+
+    # 共通処理
+    $ misaki["met_today"] = True
+    $ stats["times_met"] += 1
+    $ daily_flags["date_with"] = "misaki"
+    $ daily_flags["date_location"] = "himo_room"
+    $ reset_contact()
+
+    # 探り・ハプニング
+    call check_date_incidents("misaki")
+
+    return
+
+
 label misaki_date_fancy:
     $ stats["date_locations"] = stats.get("date_locations", {})
     $ stats["date_locations"]["fancy"] = stats["date_locations"].get("fancy", 0) + 1
