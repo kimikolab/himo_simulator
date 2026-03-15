@@ -214,6 +214,10 @@ screen choice(items):
         for i in items:
             textbutton i.caption action i.action
 
+    # テスト実行時: 自動でランダム選択
+    if renpy.is_in_test():
+        timer 0.1 action renpy.random.choice(items).action
+
 
 style choice_vbox is vbox
 style choice_button is button
@@ -1582,7 +1586,7 @@ screen debug_overlay():
                 text "清潔感: [player['cleanliness']]" size 13 color "#ffffff"
                 text "魅力: [player['charm']]" size 13 color "#ffffff"
                 text "食事済: [daily_flags['ate_today']]" size 13 color "#ffffff"
-                text "美咲streak: [misaki['last_contact']]" size 13 color "#ffb7c5"
+                text "美咲streak: [misaki_streak] contact: [misaki['last_contact']]" size 13 color "#ffb7c5"
 
                 if kana_flags["met"]:
                     text "カナstreak: [kana['last_contact']]" size 13 color "#ffe066"
@@ -1652,7 +1656,15 @@ screen status_detail():
 
             null height 15
 
-            textbutton "閉じる" action Return() xalign 0.5
+            hbox:
+                xalign 0.5
+                spacing 30
+                textbutton "閉じる" action Return()
+                textbutton "ログ出力" action Function(export_debug_log)
+
+    # テスト実行時: 自動で閉じる
+    if renpy.is_in_test():
+        timer 0.1 action Return()
 
 
 ################################################################################

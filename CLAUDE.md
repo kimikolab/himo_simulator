@@ -30,43 +30,60 @@ npm / make などのビルドコマンドは存在しない。**Ren'Py SDK ラ�
 
 ## 現在の実装状況
 
-**開発初期段階。** フレームワークは設定済みだが、ゲーム本体のロジックは未実装。
+**Phase 4 Step 1 完了。** 30日間のゲームループ、美咲・カナ両ヒロインのイベント、5種エンディング、自動テスト基盤が稼働中。
 
-| ファイル | 状態 |
-|---------|------|
-| `game/options.rpy` | 完了 — ゲーム設定・バージョン・セーブディレクトリ |
-| `game/gui.rpy` | 完了 — UIスタイル・フォント・カラー |
-| `game/screens.rpy` | 完了 — 標準 Ren'Py スクリーン定義 |
-| `game/script.rpy` | **テンプレートのみ** — 実装が必要 |
-
-設計資料（ゲームコードではない）:
-- `game_design_document2.5.md` — ゲーム設計全体仕様
-- `phase1_7days_v2.5.md` — Phase 1 実装仕様（コード例あり）
-
-## 予定ファイル構成
-
-ゲームロジックを実装する際は、`game/` 以下を以下のモジュール構成で整理する:
+### ファイル構成（`game/` 以下）
 
 ```
+game/
+  script.rpy            # メインループ・行動選択メニュー
+  screens.rpy           # UI スクリーン定義
+  options.rpy           # ゲーム設定
+  gui.rpy               # UI スタイル・フォント・カラー
+  test_helpers.rpy      # テスト用ヘルパー関数
+
 data/
-  constants.rpy       # 閾値・ステージ定義・イベントID
-  variables.rpy       # 全ゲーム変数の default 宣言
+  characters.rpy        # キャラクター定義
+  constants.rpy         # 閾値・ステージ定義・イベントID
+  variables.rpy         # 全ゲーム変数の default 宣言
+
 systems/
-  time_system.rpy     # 日時進行・パラメータ減衰ロジック
-  parameter_system.rpy # パラメータ更新・通知処理
+  time_system.rpy       # 日時進行・パラメータ減衰ロジック
+  parameter_system.rpy  # パラメータ更新・通知処理
+  sns_system.rpy        # SNS/LINE システム
+  lie_puzzle.rpy        # 嘘パズルミニゲーム
+  evidence_qte.rpy      # 証拠QTEミニゲーム
+  debug_log.rpy         # デバッグログ出力
+
 events/
-  intro.rpy
-  tutorial.rpy
-  misaki_events.rpy   # 美咲のセリフ・リアクション
-  daily_events.rpy    # 時間帯ごとの行動選択メニュー
-  endings.rpy         # 3エンド＋診断
+  intro.rpy             # オープニング
+  tutorial.rpy          # チュートリアル
+  daily_events.rpy      # 時間帯ごとの日常イベント
+  misaki_events.rpy     # 美咲イベント・リアクション
+  kana_events.rpy       # カナイベント
+  midgame_events.rpy    # 中盤イベント（疑念・修羅場等）
+  date_misaki_places.rpy # 美咲デート場所
+  date_kana_places.rpy  # カナデート場所
+  date_incidents.rpy    # デート中のハプニング
+  endings.rpy           # 5種エンディング＋ヒモ適性診断
+
+tests/
+  smoke_test.rpy        # Layer 1: 通し走行テスト（3シード）
+  system_test.rpy       # Layer 2: パラメータ・フラグ整合性（6テスト）
 ```
+
+### 設計資料（`docs/` 以下）
+- `game_design_document2_6.md` — ゲーム設計全体仕様（最新）
+- `phase_goals.md` — フェーズ別目標
+- `phase4_step1_design.md` — Phase 4 Step 1 設計
+- `autotest_action_plan.md` — 自動テスト実装計画・実施記録
+- `character_economy_and_energy_design.md` — エコノミー・エナジー設計
 
 ## コアゲームシステム
 
 ### 時間システム
-- 7日間サイクル。1日 = 朝 → 午後 → 夜 の3ターン
-- 変数: `current_day`（1〜7）、`current_time`（morning / afternoon / night）
+- 30日間サイクル。1日 = 朝 → 午後 → 夜 の3ターン
+- 変数: `game_date["day"]`（1〜30）、`game_date["time"]`（morning / afternoon / night）
 - 各ターン: パラメータが減衰 → プレイヤーが行動を選択
 
 ### パラメータ
@@ -100,7 +117,12 @@ flags = {
 ```
 
 ### エンディング
-信頼度・依存度のバランス、誠実さ vs 欺瞞の選択、ヒモ適性診断の組み合わせで3種類のエンディングが決定される。
+信頼度・依存度のバランス、誠実さ vs 欺瞞の選択、ヒモ適性診断の組み合わせで5種類のエンディングが決定される:
+- `good` — バランスエンド（理想的な関係）
+- `gray` — ヒモウエンド（依存関係の維持）
+- `normal` — 不安定エンド（中途半端な結末）
+- `bad_bankruptcy` — 破産エンド（お金が尽きた）
+- `demo` — デモ版エンド（カナルート到達時）
 
 ## Ren'Py の規約
 
@@ -132,3 +154,28 @@ flags = {
   random.random()
   ```
 - この制約は `random` に限らず、すべての標準ライブラリモジュールの `import` に適用される可能性がある。Ren'Py組み込みの代替があればそちらを優先すること
+
+## 自動テスト
+
+### テストの実行方法
+1. Ren'Py ランチャーで「Force Recompile」
+2. 「Run Testcases」をクリック
+3. 全9テスト完走まで約10分待つ（`Status: PASSED` で成功）
+
+### テストファイル構成
+- `game/test_helpers.rpy` — テスト用ヘルパー関数
+- `game/tests/smoke_test.rpy` — Layer 1: クラッシュせず完走するか（3シード）
+- `game/tests/system_test.rpy` — Layer 2: パラメータ・フラグの整合性（6テスト）
+
+### テスト運用ルール
+- **バグ修正時**: 修正と同時に `system_test.rpy` にそのバグを検出するテストケースを追加する。回帰テストを自然に育てる
+- **素材追加時**: 立ち絵・背景の `show` 文追加後にスモークテストを実行し、画像ファイル不在エラーを検出する
+- **コード変更後**: 変更の影響範囲が広い場合は全テストを実行してリグレッションがないことを確認する
+
+### Ren'Py testcase構文の注意点
+- Python式には `eval ()` ラッパーが必要: `click until eval (condition)`
+- `assert` のtimeoutの前にカンマ不可: `assert eval (...) timeout 1.0`
+- `click`（引数なし）はランダム座標クリック。メニュー選択には不十分
+- テスト間でゲームは自動リスタートされない。各テストは `click "スタート"` で開始し、メインメニューまで戻って終了する
+- グローバルタイムアウト `_test.timeout` のデフォルトは5秒。長時間テストには `$ _test.timeout = 600` が必要
+- 本編コードへの `renpy.is_in_test()` 分岐は計4箇所（`lie_puzzle.rpy`, `evidence_qte.rpy`, `screens.rpy` の choice/status_detail）

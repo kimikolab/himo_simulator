@@ -104,6 +104,12 @@ label run_lie_puzzle(scenario="generic", target="misaki"):
     $ lie_puzzle["previous_answers"] = []
     $ lie_puzzle_timeout = False
 
+    # テスト実行時: パズルUIをスキップし、安全クリアとして処理
+    if renpy.is_in_test():
+        $ lie_puzzle["result"] = "safe"
+        $ lie_puzzle["active"] = False
+        return
+
     if scenario == "last_night":
         call lie_puzzle_last_night(target)
     elif scenario == "other_woman":

@@ -76,9 +76,12 @@ init python:
                 _pending_events.append(("kana_appointment_broken", None))
             appointments["kana"] = None
 
-        # 連続会った日数リセット（met_todayリセット前に判定）
-        if not misaki["met_today"]:
-            misaki_streak = max(0, misaki_streak - 1)
+        # v1.4修正: met_todayを保存（リセット後にstreak判定で使う）
+        _met_today_prev = misaki["met_today"]
+        _had_line_contact = daily_flags.get("misaki_lined_only", False)
+        # DEBUG
+        log_action("ADVANCE_DAY", "day={} streak={} met={} lined_only={} last_contact={}".format(
+            game_date["day"], misaki_streak, _met_today_prev, _had_line_contact, misaki["last_contact"]))
 
         # ここから日付を進めてリセット処理
         game_date["day"] += 1
@@ -104,6 +107,7 @@ init python:
         daily_flags["kana_wants_tonight"] = False
         daily_flags["money_refused_today"] = False
         daily_flags["kana_tonight_source"] = None
+        daily_flags["misaki_lined_only"] = False
 
         # 宿泊リセット
         location_flags["staying_at_misaki"] = False
@@ -130,6 +134,17 @@ init python:
 
         # 美咲からの自発的連絡（キュー方式）
         queue_misaki_initiative()
+
+        # v1.4修正: streak判定（queue_misaki_initiativeの後に移動）
+        _initiative_contact = daily_flags.get("misaki_lined_only", False)
+        _streak_before = misaki_streak
+        if not _met_today_prev and not _had_line_contact and not _initiative_contact:
+            misaki_streak = max(0, misaki_streak - 1)
+        # DEBUG: streak変動ログ
+        if _streak_before != misaki_streak:
+            log_action("STREAK DOWN", "day={} {}→{} met={} line={} init={}".format(
+                game_date["day"], _streak_before, misaki_streak,
+                _met_today_prev, _had_line_contact, _initiative_contact))
 
         # Phase 3: カナからの自発的連絡
         if kana_flags["met"]:
@@ -183,12 +198,16 @@ init python:
         # 3日以上連絡なし → 美咲からLINE
         if renpy.random.random() < 0.6:
             _pending_events.append(("misaki_check_in", None))
+            daily_flags["misaki_lined_only"] = True
+            log_action("QUEUE_CHECKIN", "day={} lined_only=True streak={}".format(game_date["day"], misaki_streak))
 
         # ストレス状態のとき低確率で電話（信頼40以上）
         if (misaki["trust"] >= 40
                 and misaki_mood["today_mood"] == "stressed"
                 and renpy.random.random() < 0.2):
             _pending_events.append(("misaki_stress_call", None))
+            daily_flags["misaki_lined_only"] = True
+            log_action("QUEUE_STRESSCALL", "day={} lined_only=True streak={}".format(game_date["day"], misaki_streak))
 
 
     def check_misaki_event_unlock():

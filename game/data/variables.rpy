@@ -100,7 +100,6 @@ default daily_flags = {
     "asked_money_today": False,
     "ignored_today": False,
     "date_planned_tonight": False,
-    "cooked_today": False,
     "ate_today": False,             # 食事チェック用
     "ignored_kana_today": False,
     "date_location": None,          # Phase 4: 当日のデート場所
@@ -111,6 +110,7 @@ default daily_flags = {
     "kana_wants_tonight": False,    # Phase 4: カナが今夜会いたい
     "money_refused_today": False,   # Phase 4 v1.2: 金銭要求を拒否された
     "kana_tonight_source": None,    # Phase 4 v1.4: "player" or "kana" or None
+    "misaki_lined_only": False,     # Phase 4 v1.4: LINEのみで対面していない
 }
 
 # 美咲イベント進行フラグ（Phase 2追加）
@@ -153,6 +153,10 @@ default _pending_events = []
 
 # ゲームオーバーフラグ（Python関数内からjumpできないため）
 default _game_over = ""
+
+# エンディング種別記録（テスト・実績・デバッグ用）
+# 値: "good" / "gray" / "normal" / "bad_bankruptcy" / "demo"
+default _ending_type = ""
 
 # 統計
 default stats = {

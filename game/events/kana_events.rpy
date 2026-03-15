@@ -577,5 +577,6 @@ label demo_end_scene:
     $ log_action("体験版END")
     $ export_debug_log()
     $ flags["game_ended"] = True
+    $ _ending_type = "demo"
 
     return

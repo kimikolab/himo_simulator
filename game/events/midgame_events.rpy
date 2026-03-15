@@ -94,6 +94,7 @@ label midgame_misaki_busy:
             $ suspicion["misaki"] = min(suspicion["misaki"] + 1, SUSPICION_MAX)
             # v1.4修正: last_contactは1にする（0だと「今日会った」と同等になる）
             $ misaki["last_contact"] = 1
+            $ daily_flags["misaki_lined_only"] = True
 
         "後で返そう（スルー）":
             "後で返せばいいか。"

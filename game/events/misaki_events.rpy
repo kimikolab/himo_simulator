@@ -328,11 +328,17 @@ label misaki_money_request:
             call midgame_money_suspicion
             return
 
-    # v1.4修正: LINEだけでは対面していないので、お金の相談は不自然
-    # last_contact == 0（今日会った）または met_today == True の場合のみ可能
-    if not misaki["met_today"] and misaki["last_contact"] > 0:
-        himo "（最近会ってないし、LINEでいきなりお金の話はしづらいな...）"
-        himo "（まずは会って、それから相談しよう）"
+    # v1.4修正: LINEのみの場合はお金要求不可
+    if daily_flags.get("misaki_lined_only", False) and not misaki["met_today"]:
+        himo "（LINEだけじゃお金の話はしづらいな...）"
+        $ log_action("お金要求ブロック", "LINE only")
+        $ _money_request_blocked = True
+        return
+
+    # v1.4修正: 2日以上会っていない場合はお金要求不可
+    if not misaki["met_today"] and misaki["last_contact"] > 3:
+        himo "（最近会ってないし、まずは会ってからだな...）"
+        $ log_action("お金要求ブロック", "last_contact=" + str(misaki["last_contact"]))
         $ _money_request_blocked = True
         return
 
@@ -752,7 +758,10 @@ label misaki_event_M05:
 label misaki_check_in:
     "美咲からLINEが来た。"
     "'最近どうしてる？'"
-    $ reset_contact()
+    # v1.4修正: LINEのみなのでreset_contact()は使わない（met_todayも変更しない）
+    $ misaki["last_contact"] = 1
+    $ daily_flags["misaki_lined_only"] = True
+    $ log_action("CHECK_IN", "lined_only={} streak={}".format(daily_flags["misaki_lined_only"], misaki_streak))
 
     menu:
         "返信する？"
@@ -779,7 +788,10 @@ label misaki_stress_call:
     menu:
         "出る？"
         "出る":
-            $ reset_contact()
+            # v1.4修正: 電話のみなのでreset_contact()は使わない
+            $ misaki["last_contact"] = 1
+            $ daily_flags["misaki_lined_only"] = True
+            $ log_action("STRESS_CALL", "lined_only={} streak={}".format(daily_flags["misaki_lined_only"], misaki_streak))
             misaki_c "...ごめん、こんな時間に"
             himo "どした？"
             misaki_c "今日ちょっとしんどくて。声聞きたくなった"

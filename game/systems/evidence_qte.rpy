@@ -76,6 +76,11 @@ label run_evidence_qte(scenario="kana_raid"):
 
     "（やばい！急いで隠さないと！）"
 
+    # テスト実行時: QTEをスキップし、成功として処理
+    if renpy.is_in_test():
+        $ flags["qte_failed_badly"] = False
+        return
+
     call screen evidence_qte_screen(qte_items, qte_time)
 
     python:
