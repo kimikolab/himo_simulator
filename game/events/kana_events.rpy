@@ -526,8 +526,10 @@ label k05_do_you_like_me:
 
     $ kana_flags["k05_done"] = True
 
-    # 体験版エンドへ
-    call demo_end_scene
+    # v1.5修正: ゲーム終了処理を削除。K-05後の余韻テキストを追加
+    "カナとの関係は、新しい段階に入った。"
+    "でも、まだ月末まで日がある。"
+    himo "（...どうなるんだろ、この先）"
 
     return
 

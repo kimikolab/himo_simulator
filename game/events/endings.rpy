@@ -28,20 +28,28 @@ label ending_30days:
         himo "...やばい"
         jump ending_bankruptcy_30days
 
-    # エンディング分岐判定
+    # === v1.5修正: エンディング分岐 ===
     python:
         is_honest = stats["lies_told"] <= 3
         is_dependent = misaki["dependence"] >= 65
         met_often = stats["times_met"] >= 10
         concern_shown = himo_aptitude["showed_concern"] >= 5
-        all_misaki_events = (misaki_events["M02_done"] and misaki_events["M03_done"] and misaki_events["M05_done"])
+        kana_route_done = kana_flags.get("k05_done", False)
 
+    # 優先順位1: カナルート到達 → demo END
+    if kana_route_done:
+        jump ending_demo
+
+    # 優先順位2: GOOD END
     if is_honest and met_often and not is_dependent and concern_shown:
         jump ending_balance_30days
-    elif is_dependent or not is_honest:
+
+    # 優先順位3: GRAY END
+    if is_dependent or not is_honest:
         jump ending_himou_30days
-    else:
-        jump ending_unstable_30days
+
+    # 優先順位4: NORMAL END
+    jump ending_unstable_30days
 
 
 label ending_balance_30days:
@@ -116,6 +124,48 @@ label ending_unstable_30days:
 
     centered "{size=30}NORMAL END{/size}"
     "「不安定な自由が、まだ続く」"
+
+    call show_himo_aptitude_result
+
+    return
+
+
+# === v1.5追加: 体験版END ===
+
+label ending_demo:
+    $ flags["game_ended"] = True
+    $ _ending_type = "demo"
+    $ log_action("demo END")
+    $ export_debug_log()
+    scene bg_placeholder with fade
+
+    centered "{size=40}エンディング: 始まりの予感{/size}"
+
+    "30日が経った。"
+    "家賃は何とか払えた。"
+    "美咲との関係、カナとの関係。"
+    "どちらも、どこへ向かうのか分からない。"
+
+    "ある日、カナがふと言った。"
+
+    kana_c "...ねえ、ほんとに私だけ？"
+    himo "......"
+    kana_c "まあいいけど。あ、そういえばさ"
+    kana_c "麗子さんって人、ヒモ太郎のこと知ってるって言ってたよ？"
+    himo "麗子？誰だそれ"
+    kana_c "私も知らない。なんか大人っぽい感じの人"
+    kana_c "ヒモ太郎のこと、『面白い』って言ってたって聞いたけど"
+
+    "麗子――？"
+    "心当たりはない。"
+    "でも、なぜか気になった。"
+
+    scene bg_placeholder with fade
+
+    "俺のヒモ生活は、まだ始まったばかりだった――"
+
+    centered "{size=30}体験版 END{/size}"
+    centered "製品版へ続く"
 
     call show_himo_aptitude_result
 

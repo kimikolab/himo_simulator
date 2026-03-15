@@ -28,6 +28,10 @@ label contact_misaki:
         misaki_c "どうしたの？"
 
     # v1.4: お金要求ブロック時にメニューに戻れるようラベル化
+    # 注: misaki_lined_only はセットしない。このフラグは美咲の自発的連絡
+    # (check_in/stress_call/midgame_misaki_busy) でのみ使用する。
+    # プレイヤー主導のLINEでは対面要求と同等に扱う。
+
 label contact_misaki_menu:
     menu:
         misaki_c "どうしたの？"
@@ -47,6 +51,25 @@ label contact_misaki_menu:
         "お金の話をする（真剣に）" if (misaki_events["M05_unlocked"] and not misaki_events["M05_done"]):
             call misaki_event_M05
             return
+
+        # === v1.5追加: 信頼度別の選択肢 ===
+
+        "仕事の愚痴聞くよ" if misaki["trust"] >= 40:
+            call misaki_line_listen_work
+
+        "何か手伝えることある？" if misaki["trust"] >= 50:
+            call misaki_line_offer_help
+
+        "今日の夜、うちで飲まない？" if misaki["trust"] >= 55 and misaki["stage"] >= STAGE_CLOSE:
+            call misaki_line_invite_home
+
+        "声聞きたくなった" if misaki["trust"] >= 65:
+            call misaki_line_miss_you
+
+        "甘えていい？" if misaki["trust"] >= 75 and misaki["stage"] >= STAGE_DATING:
+            call misaki_line_amaeru
+
+    return
 
 
 # ステージ別の雑談
@@ -1102,5 +1125,150 @@ label misaki_daytime_date_request:
         misaki_c "ごめん、今日ちょっと用事あって..."
         misaki_c "夜なら空くかも"
         himo "了解〜"
+
+    return
+
+
+# ========================================
+# v1.5追加: 美咲LINE選択肢の各ラベル
+# ========================================
+
+label misaki_line_listen_work:
+    himo "仕事どう？大変？"
+    misaki_c "...聞いてくれるの？"
+    misaki_c "実は最近、上司がさ..."
+
+    "美咲の仕事の愚痴を30分くらい聞いた。"
+
+    misaki_c "ごめんね、愚痴ばっかり"
+    himo "いいって。いつでも聞くよ"
+    misaki_c "...ありがとう"
+
+    $ change_trust(4)
+    $ change_dependence(3)
+    $ himo_aptitude["showed_concern"] += 1
+
+    return
+
+
+label misaki_line_offer_help:
+    himo "なんか手伝えることある？"
+    misaki_c "え、急にどうしたの"
+    himo "いや、なんとなく"
+
+    misaki_c "...じゃあ、週末の買い出し付き合ってくれる？"
+
+    menu:
+        "いいよ":
+            misaki_c "ほんと！？ありがとう"
+            # 次の週末に美咲と約束
+            python:
+                current_day = game_date["day"]
+                weekday_idx = game_date["weekday"]
+                days_until_saturday = (6 - weekday_idx) % 7
+                if days_until_saturday == 0:
+                    days_until_saturday = 7
+                appointments["misaki"] = current_day + days_until_saturday
+            $ change_trust(5)
+            $ change_dependence(4)
+            $ himo_aptitude["showed_concern"] += 1
+            "（週末に約束した）"
+
+        "ちょっと考えさせて":
+            misaki_c "...うん、いいよ"
+            $ change_trust(1)
+
+    return
+
+
+label misaki_line_invite_home:
+    himo "今日の夜さ、うちで飲まない？"
+
+    python:
+        # 信頼度と曜日で成功率変動
+        base_rate = 0.50
+        if misaki["trust"] >= 65:
+            base_rate += 0.20
+        if is_weekend():
+            base_rate += 0.15
+        invite_success = renpy.random.random() < base_rate
+
+    if invite_success:
+        misaki_c "え、いいの？...行く"
+        $ flags["misaki_tonight"] = True
+        $ daily_flags["kana_tonight_source"] = None  # 美咲の約束
+        $ change_trust(3)
+        $ change_dependence(5)
+        "（今夜、美咲がうちに来ることになった）"
+        "（...部屋片付けないと）"
+        if player["cleanliness"] < 40:
+            himo "（やばい、部屋汚い）"
+    else:
+        misaki_c "ごめん、今日はちょっと..."
+        misaki_c "また今度ね"
+        $ change_trust(1)  # 誘ったこと自体は好印象
+
+    return
+
+
+label misaki_line_miss_you:
+    himo "なあ美咲"
+    misaki_c "ん？"
+    himo "声聞きたくなった"
+
+    "少し間があった。"
+
+    misaki_c "...もう、急にそういうこと言う"
+
+    python:
+        if misaki["dependence"] >= 50:
+            # 依存度が高いと嬉しさが先に出る
+            response = "happy"
+        elif renpy.random.random() < 0.7:
+            response = "happy"
+        else:
+            response = "shy"
+
+    if response == "happy":
+        misaki_c "...うれしい"
+        misaki_c "私も、聞きたかった"
+        $ change_trust(5)
+        $ change_dependence(6)
+    else:
+        misaki_c "...恥ずかしいんだけど"
+        $ change_trust(4)
+        $ change_dependence(3)
+
+    $ himo_aptitude["showed_concern"] += 1
+
+    return
+
+
+label misaki_line_amaeru:
+    himo "美咲〜"
+    misaki_c "なに？"
+    himo "甘えていい？"
+
+    misaki_c "...なにそれ"
+
+    "でも、声は嬉しそうだった。"
+
+    misaki_c "...しょうがないな"
+    misaki_c "今夜、来る？"
+
+    menu:
+        "行く":
+            $ flags["misaki_tonight"] = True
+            misaki_c "...待ってる"
+            $ change_trust(6)
+            $ change_dependence(8)
+            # 美咲のテンションが高い → デートの雰囲気が良くなる
+            $ flags["misaki_good_mood_tonight"] = True
+
+        "今日は無理、ごめん":
+            misaki_c "...そっか"
+            "甘えたのに行かない。ちょっと罪悪感。"
+            $ change_trust(-2)
+            $ change_dependence(3)
 
     return
