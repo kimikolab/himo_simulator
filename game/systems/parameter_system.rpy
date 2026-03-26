@@ -166,11 +166,8 @@ init python:
         change_dependence(2)
         change_money(amount, "美咲")
 
-        if stats["times_asked_money"] >= 3:
-            suspicion_count += 1
-            if suspicion_count == 2:
-                renpy.notify("美咲: 「...お金、大丈夫？」")
-                log_notify("美咲: 「...お金、大丈夫？」")
+        # v1.1: 旧テロップシステム削除。週間カウントベースの制御に一本化
+        # （呼び出し元 misaki_money_request で money_request_weekly を参照）
 
         return True, amount, "成功"
 
@@ -246,6 +243,18 @@ init python:
         # Stage 4到達時の通知・演出
         if old_stage < STAGE_OSHI and kana["stage"] == STAGE_OSHI:
             _pending_events.append(("kana_oshi_event", oshi_route))
+
+    # ========================================
+    # Phase 4 Step 2: カナの搾取スコア
+    # ========================================
+
+    def calculate_kana_exploitation():
+        """カナの搾取スコアを計算する。閾値を超えたら疑念イベント発動"""
+        score = 0
+        score += stats.get("kana_benefits_received", 0) * 2
+        score -= stats.get("kana_ena_given", 0) * 3          # ステップ3で値が入る
+        score -= stats.get("kana_gokiragen_success", 0) * 2
+        return score
 
     def add_suspicion(reason):
         global suspicion_count

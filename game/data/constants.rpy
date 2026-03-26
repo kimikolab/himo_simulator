@@ -73,5 +73,32 @@ define QTE_TIME_LIMIT = 12.0
 # SNS通知の最大表示数/日
 define SNS_MAX_PER_DAY = 2
 
+# === 美咲の対面交渉（Phase 4 Step 2）===
+define NEGOTIATION_WEEKLY_LIMIT = 4          # 週4回以上で拒否率大幅UP
+define NEGOTIATION_PENALTY_2ND = 10          # 2回目の成功率ペナルティ（%）
+define NEGOTIATION_PENALTY_3RD = 25          # 3回目の成功率ペナルティ（%）
+
+define NEGOTIATION_AMOUNT_LOW = (5000, 10000)
+define NEGOTIATION_AMOUNT_MID = (10000, 15000)
+define NEGOTIATION_AMOUNT_HIGH = (15000, 30000)
+
+define NEGOTIATION_LOCATION_BONUS = {
+    "famires": 0,      # ファミレス: 補正なし。大額選択不可
+    "izakaya": 15,     # 居酒屋: +15%。翌日疑念+2リスク
+    "misaki_room": 10,  # 美咲の部屋: +10%。依存度影響大
+    "fancy": 20,       # いい店（自腹後）: +20%。信頼減少緩和
+    "himo_room": 5     # ヒモ太郎の部屋: +5%
+}
+
+# === カナの交換経済（Phase 4 Step 2）===
+define KANA_EXPLOITATION_THRESHOLD = 15      # 搾取スコアがこれ以上でカナ版疑念イベント
+define KANA_GOKIRAGEN_TIME_LIMIT = 8.0       # ご機嫌取りQTEの制限時間（秒）
+
+# === カナの泊まり恩恵 ===
+define KANA_STAY_STAMINA = 40
+define KANA_STAY_CLEANLINESS = 30
+define KANA_STAY_DEPENDENCE = 8
+define KANA_STAY_TRUST = 3
+
 # デバッグモード（リリース前に False に変更）
 define DEBUG_MODE = True

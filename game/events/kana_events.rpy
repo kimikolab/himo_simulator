@@ -191,6 +191,7 @@ label kana_visit:
                 $ change_stamina(20)
                 $ daily_flags["ate_today"] = True
                 $ change_trust_kana(3)
+                $ stats["kana_benefits_received"] = stats.get("kana_benefits_received", 0) + 1
             "いい、気にしないで":
                 himo "大丈夫"
                 kana_c "遠慮しなくていいのに"
@@ -203,6 +204,7 @@ label kana_visit:
                 "シャワーを借りた。"
                 $ change_cleanliness(30)
                 $ change_trust_kana(2)
+                $ stats["kana_benefits_received"] = stats.get("kana_benefits_received", 0) + 1
             "いい":
                 pass
 
@@ -631,5 +633,243 @@ label demo_end_scene:
     $ export_debug_log()
     $ flags["game_ended"] = True
     $ _ending_type = "demo"
+
+    return
+
+
+# ========================================
+# Phase 4 Step 2: カナの泊まりイベント
+# ========================================
+
+label kana_stay_offer:
+    # カナデート後に呼ばれる。条件: 夜のデート＋信頼30以上
+    if game_date["time"] != "night" or kana["trust"] < 30:
+        return
+
+    # === v1.1: ヒモ太郎の部屋デートの場合は別ルート ===
+    if daily_flags.get("date_location", "") == "himo_room":
+        call kana_stay_at_himo_room
+        return
+
+    # === 以下、カナの部屋での泊まり（既存）===
+    # 依存度で誘い方が変わる
+    if kana["dependence"] >= 50:
+        kana_c "今日泊まってくよね？"
+        # 依存高: 半強制的
+    elif kana["dependence"] >= 30:
+        kana_c "泊まってく？"
+    else:
+        kana_c "もし良かったら...泊まってく？"
+
+    menu:
+        "泊まる":
+            call kana_stay_event
+            return
+
+        "帰る":
+            call kana_stay_decline
+            return
+
+
+label kana_stay_event:
+    "カナの部屋に泊まることにした。"
+
+    $ stats["kana_stayed_over"] = stats.get("kana_stayed_over", 0) + 1
+    $ stats["kana_benefits_received"] = stats.get("kana_benefits_received", 0) + 1
+
+    # 恩恵
+    $ change_stamina(KANA_STAY_STAMINA)
+    $ change_cleanliness(KANA_STAY_CLEANLINESS)
+    $ change_trust_kana(KANA_STAY_TRUST)
+    $ change_dependence_kana(KANA_STAY_DEPENDENCE)
+    $ daily_flags["ate_today"] = True
+
+    # 泊まりフラグ（翌朝消費用）— location_flags を使う（既存定義と統一）
+    $ location_flags["staying_at_kana"] = True
+
+    # === エナ期待の匂わせ（ステップ3で本格化）===
+    "..."
+    "カナがくっついてきた。"
+
+    # ステップ3ではここでエナマッチが発生する
+    "一緒に過ごした。"
+
+    kana_c "...えへへ"
+
+    "カナが幸せそうに笑った。"
+
+    # 翌朝の演出用フラグ
+    $ flags["kana_morning_after"] = True
+
+    return
+
+
+label kana_stay_decline:
+    # 帰る場合。依存度で反応が変わる
+    if kana["dependence"] >= 60:
+        kana_c "...なんで？"
+        "カナの声が少し震えている。"
+        $ change_trust_kana(-5)
+        $ suspicion["kana"] = suspicion.get("kana", 0) + 2
+
+        # ご機嫌取りQTE発動（依存60以上で断った場合）
+        if not daily_flags.get("kana_mood_resolved", False):
+            call gokiragen_qte_start
+    elif kana["dependence"] >= 30:
+        kana_c "え〜、帰るの？"
+        $ change_trust_kana(-3)
+    else:
+        kana_c "そっか〜"
+        $ change_trust_kana(-1)
+
+    return
+
+
+# ========================================
+# Phase 4 Step 2: カナ版疑念イベント
+# ========================================
+
+label kana_doubt_event:
+    scene bg_placeholder
+
+    "カナと過ごしている時、急にカナが黙り込んだ。"
+
+    kana_c "...ねえ"
+    himo "ん？"
+
+    kana_c "私のこと、都合のいい女だと思ってない？"
+
+    himo "え？"
+
+    kana_c "ご飯も作ったし、泊めてあげたし"
+    kana_c "でもヒモ太郎は...私のこと大事にしてくれてる？"
+
+    "カナの目が潤んでいる。"
+
+    kana_c "前の彼氏もそうだった"
+    kana_c "優しいフリして、利用してただけ"
+
+    kana_c "ヒモ太郎は...違うよね？"
+
+    menu:
+        "何と答える？"
+
+        "正直に認める":
+            himo "...正直に言うと、甘えすぎてた"
+            kana_c "...最低"
+
+            "カナが泣き出した。"
+
+            himo "でも、お前のこと嫌いじゃない。それは本当"
+            kana_c "...嘘"
+            himo "嘘じゃない"
+
+            "長い沈黙。"
+
+            kana_c "...正直に言ってくれたから、許す"
+            kana_c "でも次やったら、もう知らないから"
+
+            $ change_trust_kana(-15)
+            $ suspicion["kana"] = 0     # 疑念リセット
+            $ himo_aptitude["honest_moments"] += 2
+            $ flags["kana_doubt_event_done"] = True
+
+        "ご機嫌取りQTE（3段階・高難度）":
+            call gokiragen_qte_doubt
+            $ flags["kana_doubt_event_done"] = True
+
+        "逆ギレする":
+            himo "はあ？ 俺が何したってんだよ"
+            kana_c "..."
+
+            "カナが黙った。目に涙が溜まっている。"
+
+            kana_c "...最低"
+
+            "カナがスマホを取り出した。"
+
+            $ change_trust_kana(-25)
+            $ kana_flags["sns_risk"] = kana_flags.get("sns_risk", 0) + 10
+            $ flags["kana_doubt_event_done"] = True
+
+            himo "（やばい、SNSに書かれるかも...）"
+
+    return
+
+
+# ========================================
+# Phase 4 Step 2 v1.1: カナがヒモ太郎の部屋に泊まる
+# ========================================
+
+label kana_stay_at_himo_room:
+    # カナがヒモ太郎の部屋に泊まりたがる
+    "夜も更けてきた。"
+
+    if kana["dependence"] >= 50:
+        kana_c "ねえ、今日泊まっていい？ ...っていうか泊まるけど"
+    elif kana["dependence"] >= 30:
+        kana_c "今日泊まっていい？"
+    else:
+        kana_c "...帰るの遅くなっちゃったし、泊まっていい？"
+
+    menu:
+        "いいよ":
+            call kana_stay_at_himo_room_event
+            return
+
+        "今日は帰ってくれ":
+            call kana_stay_at_himo_decline
+            return
+
+
+label kana_stay_at_himo_room_event:
+    himo "いいよ、泊まってけ"
+    kana_c "やった！"
+
+    "カナがヒモ太郎の部屋に泊まることになった。"
+    "狭い部屋に二人。"
+
+    $ stats["kana_stayed_over"] = stats.get("kana_stayed_over", 0) + 1
+    $ stats["kana_stayed_himo_room"] = stats.get("kana_stayed_himo_room", 0) + 1
+    $ stats["kana_benefits_received"] = stats.get("kana_benefits_received", 0) + 1
+
+    # 恩恵（カナの部屋より少ない。自分の部屋なので清潔感回復なし）
+    $ change_stamina(20)
+    $ change_trust_kana(KANA_STAY_TRUST)
+    $ change_dependence_kana(KANA_STAY_DEPENDENCE + 3)   # ヒモ太郎の部屋＝距離が近い→依存UP多め
+
+    # 泊まりフラグ
+    $ flags["kana_at_himo_room"] = True
+
+    # === エナ期待の匂わせ ===
+    "..."
+    "カナがくっついてきた。"
+    "一緒に過ごした。"
+
+    kana_c "...ヒモ太郎の部屋、狭いけど落ち着く"
+
+    # 翌朝演出用フラグ
+    $ flags["kana_himo_room_morning"] = True
+
+    return
+
+
+label kana_stay_at_himo_decline:
+    himo "今日はちょっと..."
+
+    if kana["dependence"] >= 60:
+        kana_c "...なんで？ 嫌なの？"
+        "カナの声が震えている。"
+        $ change_trust_kana(-5)
+        $ suspicion["kana"] = suspicion.get("kana", 0) + 2
+
+        if not daily_flags.get("kana_mood_resolved", False):
+            call gokiragen_qte_start
+    elif kana["dependence"] >= 30:
+        kana_c "え〜...分かった"
+        $ change_trust_kana(-3)
+    else:
+        kana_c "そっか、じゃあ帰るね"
+        $ change_trust_kana(-1)
 
     return

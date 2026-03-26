@@ -85,6 +85,22 @@ label moment_of_doubt:
 
 label check_forced_morning_event:
 
+    # v1.1: カナがヒモ太郎の部屋に泊まった翌朝
+    if flags.get("kana_himo_room_morning", False):
+        $ flags["kana_himo_room_morning"] = False
+        $ flags["kana_at_himo_room"] = False
+        call kana_himo_room_morning_event
+        $ flags["morning_consumed"] = True
+        return
+
+    # Phase 4 Step 2: カナ宅泊まり翌朝
+    if flags.get("kana_morning_after", False):
+        $ flags["kana_morning_after"] = False
+        $ location_flags["staying_at_kana"] = False
+        call kana_morning_after_event
+        $ flags["morning_consumed"] = True
+        return
+
     # v1.6追加: 美咲がヒモ太郎の部屋に泊まった翌朝
     if flags.get("misaki_stayed_at_himo", False):
         $ flags["misaki_stayed_at_himo"] = False
@@ -687,5 +703,68 @@ label pachinko_event:
 
     # スタミナ消費
     $ change_stamina(-20)
+
+    return
+
+
+# ========================================
+# Phase 4 Step 2: カナ泊まり翌朝イベント
+# ========================================
+
+label kana_morning_after_event:
+    scene bg_placeholder
+
+    "カナの部屋で目が覚めた。"
+    "隣でカナがまだ寝ている。"
+
+    kana_c "...んん"
+    kana_c "おはよ..."
+
+    "カナが朝ごはんを作ってくれた。"
+
+    $ daily_flags["ate_today"] = True
+    $ change_stamina(15)   # 追加の朝食回復
+
+    # 匂わせテキスト（ステップ3への伏線）
+    kana_c "...昨日、ありがとう"
+    kana_c "また泊まりに来てね"
+
+    himo "（泊まるたびに『期待』されてる気がする...）"
+    himo "（まあ、今はいっか）"
+
+    "気づいたら昼になっていた。"
+    "（朝の時間が消えた）"
+
+    return
+
+
+# ========================================
+# Phase 4 Step 2 v1.1: カナがヒモ太郎の部屋に泊まった翌朝
+# ========================================
+
+label kana_himo_room_morning_event:
+    scene bg_placeholder
+
+    "自分の部屋で目が覚めた。"
+    "隣でカナが寝ている。"
+
+    kana_c "...んん...おはよ"
+
+    "カナがキッチンに立った。"
+    kana_c "冷蔵庫...何もないじゃん"
+    himo "...すまん"
+    kana_c "しょうがないな〜。コンビニ行ってくるね"
+
+    "カナがコンビニで朝ごはんを買ってきてくれた。"
+
+    $ daily_flags["ate_today"] = True
+    $ change_stamina(10)
+    $ change_trust_kana(2)
+
+    kana_c "ヒモ太郎の部屋、もうちょっと片付けなよ"
+    himo "...はい"
+
+    "気づいたら昼になっていた。"
+    "（朝の時間が消えた）"
 
     return

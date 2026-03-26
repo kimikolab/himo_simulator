@@ -118,6 +118,26 @@ init python:
         lines.append("食事回数: {}/{}日".format(
             stats.get("meals_eaten", 0), game_date["day"] - 1))
 
+        # v1.1: 経済圏統計
+        lines.append("")
+        lines.append("--- 経済圏統計 ---")
+        lines.append("対面交渉: {}/{} (総収入 ¥{:,})".format(
+            stats.get("negotiation_success", 0),
+            stats.get("negotiation_attempts", 0),
+            stats.get("negotiation_total_earned", 0)))
+        lines.append("LINE要求: {}/{}".format(
+            stats.get("line_request_success", 0),
+            stats.get("line_request_attempts", 0)))
+        if kana_flags["met"]:
+            lines.append("カナ泊まり: {}回 (うちヒモ太郎の部屋: {}回)".format(
+                stats.get("kana_stayed_over", 0),
+                stats.get("kana_stayed_himo_room", 0)))
+            lines.append("カナ恩恵受取: {}回".format(stats.get("kana_benefits_received", 0)))
+            lines.append("ご機嫌取りQTE: 成功{} / 失敗{}".format(
+                stats.get("kana_gokiragen_success", 0),
+                stats.get("kana_gokiragen_failed", 0)))
+            lines.append("カナ搾取スコア: {}".format(calculate_kana_exploitation()))
+
         lines.append("")
         lines.append("--- 中盤イベント発生状況 ---")
         midgame_flags = [

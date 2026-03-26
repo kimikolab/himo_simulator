@@ -36,6 +36,10 @@ label kana_date_with_location:
     # 探り・地雷・ハプニングの判定
     call check_date_incidents("kana")
 
+    # === ステップ2追加: 夜デートの場合、泊まり判定 ===
+    if game_date["time"] == "night" and kana["trust"] >= 30:
+        call kana_stay_offer
+
     return
 
 

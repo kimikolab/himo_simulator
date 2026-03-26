@@ -55,10 +55,15 @@ label main_loop:
     show screen status_bar
     show screen debug_overlay
 
+    # v1.1: ターン遷移ログ
+    $ log_action("TURN_START", str(game_date["day"]) + "日" + get_time_string())
+
     if game_date["time"] == "morning":
         call morning_actions
     elif game_date["time"] == "afternoon":
+        $ log_action("AFTERNOON_ENTER")
         call afternoon_actions
+        $ log_action("AFTERNOON_EXIT")
     else:
         call night_actions
 
@@ -89,6 +94,9 @@ label process_pending_events:
 
 
 label morning_actions:
+    # v1.1: 防御クリア（前日から持ち越されないように）
+    $ flags["morning_consumed"] = False
+
     # Phase 4追加: SNS受動通知
     $ check_sns_notification()
 
@@ -151,6 +159,9 @@ label morning_actions:
 
 
 label afternoon_actions:
+    # v1.1: 防御クリア（前ターンから持ち越されないように）
+    $ flags["afternoon_consumed"] = False
+
     # Phase 4追加: SNS受動通知（朝に出なかった場合のみ）
     $ check_sns_notification()
 

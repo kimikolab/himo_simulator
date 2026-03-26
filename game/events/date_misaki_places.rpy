@@ -54,6 +54,17 @@ label misaki_date_famires:
     $ change_stamina(-10)
     $ change_stamina(20)   # 食事による体力回復（差し引き+10）
 
+    # === 対面交渉の切り出しチャンス ===
+    if misaki["trust"] >= 35 and money_request_weekly["count"] < NEGOTIATION_WEEKLY_LIMIT and not daily_flags.get("asked_money_today", False):
+        menu:
+            "会話が落ち着いてきた。"
+
+            "お金の話を切り出す":
+                call misaki_negotiation_start
+
+            "このまま楽しむ":
+                pass
+
     return
 
 
@@ -70,6 +81,17 @@ label misaki_date_izakaya:
     $ change_dependence(5)
     $ change_stamina(-15)
     $ change_stamina(20)   # 食事による体力回復（差し引き+5）
+
+    # === 対面交渉の切り出しチャンス ===
+    if misaki["trust"] >= 35 and money_request_weekly["count"] < NEGOTIATION_WEEKLY_LIMIT and not daily_flags.get("asked_money_today", False):
+        menu:
+            "会話が落ち着いてきた。"
+
+            "お金の話を切り出す":
+                call misaki_negotiation_start
+
+            "このまま楽しむ":
+                pass
 
     return
 
@@ -95,6 +117,17 @@ label misaki_date_room:
         weekday_index = game_date.get("weekday", 0)
         if weekday_index == 6 and game_date["time"] == "night":  # 土曜の夜
             flags["misaki_sunday_morning"] = True
+
+    # === 対面交渉の切り出しチャンス ===
+    if misaki["trust"] >= 35 and money_request_weekly["count"] < NEGOTIATION_WEEKLY_LIMIT and not daily_flags.get("asked_money_today", False):
+        menu:
+            "会話が落ち着いてきた。"
+
+            "お金の話を切り出す":
+                call misaki_negotiation_start
+
+            "このまま楽しむ":
+                pass
 
     return
 
@@ -204,6 +237,17 @@ label misaki_visit_himo_room:
     $ daily_flags["date_location"] = "himo_room"
     $ reset_contact()
 
+    # === 対面交渉の切り出しチャンス ===
+    if misaki["trust"] >= 35 and money_request_weekly["count"] < NEGOTIATION_WEEKLY_LIMIT and not daily_flags.get("asked_money_today", False):
+        menu:
+            "会話が落ち着いてきた。"
+
+            "お金の話を切り出す":
+                call misaki_negotiation_start
+
+            "このまま楽しむ":
+                pass
+
     # 探り・ハプニング
     call check_date_incidents("misaki")
 
@@ -226,5 +270,16 @@ label misaki_date_fancy:
     $ change_dependence(3)
     $ change_stamina(-10)
     $ change_stamina(25)   # いい店なので満足度高い（差し引き+15）
+
+    # === 対面交渉の切り出しチャンス ===
+    if misaki["trust"] >= 35 and money_request_weekly["count"] < NEGOTIATION_WEEKLY_LIMIT and not daily_flags.get("asked_money_today", False):
+        menu:
+            "会話が落ち着いてきた。"
+
+            "お金の話を切り出す":
+                call misaki_negotiation_start
+
+            "このまま楽しむ":
+                pass
 
     return

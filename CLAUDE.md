@@ -178,4 +178,4 @@ flags = {
 - `click`（引数なし）はランダム座標クリック。メニュー選択には不十分
 - テスト間でゲームは自動リスタートされない。各テストは `click "スタート"` で開始し、メインメニューまで戻って終了する
 - グローバルタイムアウト `_test.timeout` のデフォルトは5秒。長時間テストには `$ _test.timeout = 600` が必要
-- 本編コードへの `renpy.is_in_test()` 分岐は計4箇所（`lie_puzzle.rpy`, `evidence_qte.rpy`, `screens.rpy` の choice/status_detail）
+- 本編コードへの `renpy.is_in_test()` 分岐は計6箇所（`lie_puzzle.rpy`, `evidence_qte.rpy`, `screens.rpy` の choice/status_detail, `gokiragen_qte.rpy` の通常版/疑念版）

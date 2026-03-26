@@ -62,6 +62,14 @@ init python:
                 _pending_events.append(("midgame_kana_raid", None))
                 return True
 
+        # === カナ版疑念イベント（Phase 4 Step 2）===
+        if (kana_flags.get("met", False)
+            and not flags.get("kana_doubt_event_done", False)
+            and day >= 15
+            and calculate_kana_exploitation() >= KANA_EXPLOITATION_THRESHOLD):
+            _pending_events.append(("kana_doubt_event", None))
+            return True
+
         # イベント⑧: 美咲の直球質問 ver.2
         if (day >= 18
             and not flags.get("midgame_misaki_direct_done", False)

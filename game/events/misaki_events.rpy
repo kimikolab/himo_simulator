@@ -374,7 +374,6 @@ label misaki_date:
 
 label misaki_money_request:
     $ _money_request_blocked = False
-    $ log_action("美咲にお金要求", "信頼" + str(misaki["trust"]))
     if daily_flags.get("asked_money_today", False):
         himo "...さっきもらったばかりだし、今日はやめとこう"
         return
@@ -383,8 +382,6 @@ label misaki_money_request:
     if player["money"] >= MONEY_SUSPICION_THRESHOLD and not daily_flags.get("money_refused_today", False):
         python:
             excess = player["money"] - MONEY_SUSPICION_THRESHOLD
-            # 超過額に応じて発動率が上がる
-            # ¥40,000ちょうど → 20%、¥50,000 → 35%、¥60,000 → 50%
             suspicion_rate = min(0.20 + (excess / 40000.0) * 0.60, 0.80)
             _money_sus_trigger = renpy.random.random() < suspicion_rate
         if _money_sus_trigger:
@@ -405,6 +402,18 @@ label misaki_money_request:
         $ _money_request_blocked = True
         return
 
+    # v1.1修正: 週間カウント加算をブロックチェック後に移動
+    $ money_request_weekly["count"] += 1
+    $ stats["line_request_attempts"] = stats.get("line_request_attempts", 0) + 1
+    $ log_action("美咲にお金要求", "weekly=" + str(money_request_weekly["count"]) + " 信頼" + str(misaki["trust"]))
+
+    # 週4回以上はLINEでも反応が変わる
+    if money_request_weekly["count"] >= NEGOTIATION_WEEKLY_LIMIT:
+        misaki_c "...最近、お金のことばっかりだね"
+        himo "（ヤバい、頼みすぎた）"
+        $ add_suspicion("too_many_requests")
+        return
+
     # v2.4修正: 時間帯に応じたナレーション
     python:
         _time_str = {
@@ -422,6 +431,8 @@ label misaki_money_request:
         success, amount, msg = request_money_from_misaki("small")
 
     if success:
+        $ log_action("LINE要求_成功", "amount=" + str(amount) + " weekly=" + str(money_request_weekly["count"]))
+        $ stats["line_request_success"] = stats.get("line_request_success", 0) + 1
         misaki_c "...分かった。これ、使って"
         "美咲から¥[amount:,]をもらった。"
         himo "ありがと！助かる〜"
@@ -450,6 +461,7 @@ label misaki_money_request:
                 $ stats["optimistic_choices"] += 1
                 $ himo_aptitude["easy_choices"] += 1
     else:
+        $ log_action("LINE要求_失敗", "weekly=" + str(money_request_weekly["count"]))
         misaki_c "ごめん...今月厳しくて"
         "断られてしまった。"
         himo "そっか、しゃーない"
@@ -1310,5 +1322,287 @@ label misaki_line_amaeru:
             "甘えたのに行かない。ちょっと罪悪感。"
             $ change_trust(-2)
             $ change_dependence(3)
+
+    return
+
+
+# ========================================
+# Phase 4 Step 2: 美咲の対面お金交渉ゲーム
+# ========================================
+
+# 第1段階: 切り出し方
+label misaki_negotiation_start:
+    # 週間カウント加算
+    $ money_request_weekly["count"] += 1
+    $ daily_flags["asked_money_today"] = True
+    $ himo_aptitude["money_requests"] += 1
+    $ stats["negotiation_attempts"] = stats.get("negotiation_attempts", 0) + 1
+
+    # 週間カウントに応じた美咲の反応分岐
+    python:
+        weekly_count = money_request_weekly["count"]
+
+    if weekly_count >= 4:
+        # 4回目以上: 高確率拒否
+        call misaki_negotiation_refuse
+        return
+
+    # 切り出し方の選択
+    menu:
+        "どう切り出す？"
+
+        "「なあ、ちょっとお金の話なんだけど...」":
+            # 直球。成功率低め
+            $ _nego_approach = "direct"
+            $ _nego_base_rate = 40
+            $ change_trust(-3)
+            himo "なあ、ちょっとお金の話なんだけど..."
+
+        "「最近ほんとにヤバくてさ...」":
+            # 泣き落とし。依存度依存
+            $ _nego_approach = "sob"
+            $ _nego_base_rate = 30 + int(misaki["dependence"] * 0.4)
+            himo "最近ほんとにヤバくてさ..."
+
+        "「実はさ、今月の家賃がちょっと...」" if misaki["trust"] >= 50:
+            # 具体的。成功率中
+            $ _nego_approach = "specific"
+            $ _nego_base_rate = 55
+            himo "実はさ、今月の家賃がちょっと..."
+
+        "「美咲に相談したいことがあるんだけど」" if misaki["trust"] >= 50:
+            # 信頼してる感。成功率中〜高
+            $ _nego_approach = "consult"
+            $ _nego_base_rate = 65
+            himo "美咲に相談したいことがあるんだけど"
+
+        "「俺、ちゃんと就活も考えてて。でも今月だけ」" if misaki["trust"] >= 70:
+            # 将来性アピール。成功率高
+            $ _nego_approach = "future"
+            $ _nego_base_rate = 75
+            himo "俺、ちゃんと就活も考えてて。でも今月だけ..."
+
+        "...（やっぱりやめる）":
+            himo "（...やっぱり言えなかった）"
+            # カウントを戻す
+            $ money_request_weekly["count"] -= 1
+            $ daily_flags["asked_money_today"] = False
+            $ himo_aptitude["money_requests"] -= 1
+            $ stats["negotiation_attempts"] = max(0, stats.get("negotiation_attempts", 0) - 1)
+            return
+
+    # v1.1: 開始ログ
+    $ log_action("対面交渉_開始", "approach=" + _nego_approach + " base_rate=" + str(_nego_base_rate) + " weekly=" + str(money_request_weekly["count"]))
+
+    # 第2段階へ
+    call misaki_negotiation_reaction
+    return
+
+
+# 第2段階: 反応を見て押すか引くか
+label misaki_negotiation_reaction:
+    # 成功率計算: ベース + 場所補正 - 週間ペナルティ - 疑念ペナルティ
+    python:
+        location = daily_flags.get("date_location", "famires")
+        location_bonus = NEGOTIATION_LOCATION_BONUS.get(location, 0)
+
+        weekly_count = money_request_weekly["count"]
+        if weekly_count == 2:
+            weekly_penalty = NEGOTIATION_PENALTY_2ND
+        elif weekly_count >= 3:
+            weekly_penalty = NEGOTIATION_PENALTY_3RD
+        else:
+            weekly_penalty = 0
+
+        suspicion_penalty = suspicion.get("misaki", 0) * 3
+
+        _nego_success_rate = _nego_base_rate + location_bonus - weekly_penalty - suspicion_penalty
+        _nego_success_rate = max(5, min(95, _nego_success_rate))
+
+    # v1.1: 判定ログ
+    $ log_action("対面交渉_判定", "rate=" + str(_nego_success_rate) + " loc=" + location + " loc_bonus=" + str(location_bonus) + " weekly_pen=" + str(weekly_penalty) + " susp_pen=" + str(suspicion_penalty))
+
+    # 美咲の反応テキスト（信頼度・週間回数で変化）
+    if misaki["trust"] >= 60 and weekly_count <= 1:
+        # 好反応
+        misaki_c "え、大丈夫？ いくら必要？"
+        $ _nego_reaction = "positive"
+    elif misaki["trust"] >= 40 or weekly_count <= 2:
+        # 微妙な反応
+        if weekly_count >= 2:
+            misaki_c "また...？ ちゃんと仕事探してる？"
+        else:
+            misaki_c "...うん、どうしたの？"
+        $ _nego_reaction = "neutral"
+    else:
+        # 拒否寄り反応
+        misaki_c "...ねえ、私のこと何だと思ってる？"
+        $ _nego_reaction = "negative"
+
+    # 押す/引くの選択
+    menu:
+        "「...」"
+
+        "押す（お金を頼む）" if _nego_reaction != "negative":
+            call misaki_negotiation_amount
+            return
+
+        "控えめに頼む" if _nego_reaction == "positive":
+            # 少額で確定成功
+            python:
+                amount = renpy.random.randint(3000, 5000)
+            misaki_c "...はい、これ"
+            "美咲から¥[amount:,]をもらった。"
+            $ change_money(amount, "美咲（対面交渉・控えめ）")
+            $ change_trust(-1)
+            $ change_dependence(5)
+            return
+
+        "引く（話題を変える）":
+            himo "いや、やっぱいい。気にしないで"
+            if _nego_reaction == "negative":
+                misaki_c "...そう"
+                "気まずい空気が流れた。"
+                $ add_suspicion("too_many_requests")
+            else:
+                misaki_c "...ほんとに？ 困ったら言ってね"
+                $ change_trust(2)
+            return
+
+        "強引に頼む" if _nego_reaction == "negative":
+            # 修羅場リスク
+            himo "頼むって、マジで困ってんだよ"
+            misaki_c "..."
+            python:
+                # 30%の確率で修羅場に発展
+                _nego_shuraba = renpy.random.random() < 0.30
+            if _nego_shuraba:
+                call misaki_negotiation_shuraba
+                return
+            else:
+                # 渋々了承
+                python:
+                    amount = renpy.random.randint(3000, 8000)
+                misaki_c "...分かった。でも、もうこれ最後にして"
+                "美咲から¥[amount:,]をもらった。"
+                $ change_money(amount, "美咲（対面交渉・強引）")
+                $ change_trust(-8)
+                $ change_dependence(3)
+                $ add_suspicion("too_many_requests")
+                return
+
+    return
+
+
+label misaki_negotiation_refuse:
+    # 週4回以上の場合の拒否イベント
+    misaki_c "...ヒモ太郎"
+    misaki_c "最近、お金のことばっかりだよね"
+    himo "..."
+    misaki_c "私、ATMじゃないよ？"
+
+    menu:
+        "何と言う？"
+
+        "謝る":
+            himo "...ごめん。調子に乗りすぎた"
+            misaki_c "...分かった。でも、ちょっと考えて"
+            $ change_trust(-5)
+            $ add_suspicion("too_many_requests")
+            $ himo_aptitude["honest_moments"] += 1
+
+        "誤魔化す":
+            himo "そんなつもりじゃ..."
+            misaki_c "...そうかな"
+            "美咲の目が冷たい。"
+            $ change_trust(-10)
+            $ add_suspicion("too_many_requests")
+            $ himo_aptitude["lies"] += 1
+            $ stats["lies_told"] += 1
+
+    return
+
+
+# 第3段階: 金額提示
+label misaki_negotiation_amount:
+    python:
+        location = daily_flags.get("date_location", "famires")
+
+    menu:
+        "いくら頼む？"
+
+        "控えめに（¥5,000〜10,000）":
+            $ _nego_amount_type = "low"
+            $ _nego_range = NEGOTIATION_AMOUNT_LOW
+
+        "普通に（¥10,000〜15,000）" if location != "famires":
+            # ファミレスでは中額以上は不自然
+            $ _nego_amount_type = "mid"
+            $ _nego_range = NEGOTIATION_AMOUNT_MID
+
+        "思い切って（¥15,000〜30,000）" if location not in ["famires", "himo_room"]:
+            # ファミレス・ヒモ太郎の部屋では大額不可
+            $ _nego_amount_type = "high"
+            $ _nego_range = NEGOTIATION_AMOUNT_HIGH
+
+    # 成功判定
+    python:
+        # 金額タイプによる成功率補正
+        amount_penalty = {"low": 0, "mid": -10, "high": -25}
+        final_rate = _nego_success_rate + amount_penalty.get(_nego_amount_type, 0)
+        final_rate = max(5, min(95, final_rate))
+
+        success = renpy.random.random() * 100 < final_rate
+
+    if success:
+        python:
+            amount = renpy.random.randint(_nego_range[0], _nego_range[1])
+        $ log_action("対面交渉_成功", "type=" + _nego_amount_type + " amount=" + str(amount) + " final_rate=" + str(final_rate))
+        $ stats["negotiation_success"] = stats.get("negotiation_success", 0) + 1
+        $ stats["negotiation_total_earned"] = stats.get("negotiation_total_earned", 0) + amount
+        misaki_c "...分かった。これ、使って"
+        "美咲から¥[amount:,]をもらった。"
+
+        $ change_money(amount, "美咲（対面交渉）")
+
+        # パラメータ変動（金額タイプで変化）
+        if _nego_amount_type == "low":
+            $ change_trust(-2)
+            $ change_dependence(5)
+            $ suspicion["misaki"] = suspicion.get("misaki", 0) + 1
+        elif _nego_amount_type == "mid":
+            $ change_trust(-4)
+            $ change_dependence(8)
+            $ suspicion["misaki"] = suspicion.get("misaki", 0) + 2
+        else:
+            $ change_trust(-6)
+            $ change_dependence(12)
+            $ suspicion["misaki"] = suspicion.get("misaki", 0) + 3
+
+        # 居酒屋ボーナス使用時の翌日リスク
+        if location == "izakaya":
+            $ flags["izakaya_money_hangover"] = True
+
+    else:
+        # 失敗
+        $ log_action("対面交渉_失敗", "type=" + _nego_amount_type + " final_rate=" + str(final_rate))
+        misaki_c "...ごめん、今月厳しくて"
+        himo "そっか..."
+        $ change_trust(-3)
+        $ add_suspicion("too_many_requests")
+
+    return
+
+
+label misaki_negotiation_shuraba:
+    # 強引に頼んで修羅場に発展した場合
+    misaki_c "...ヒモ太郎"
+    misaki_c "私、ずっと我慢してたんだけど"
+    misaki_c "お金のことばっかり言われると、利用されてるみたいで..."
+
+    "美咲の目に涙が浮かんでいる。"
+
+    # 嘘パズルに発展（高難度）
+    call run_lie_puzzle("money_shuraba", "misaki")
 
     return

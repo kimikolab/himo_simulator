@@ -95,6 +95,12 @@ default flags = {
     "qte_failed_badly": False,
     "misaki_visit_himo_room": False,   # v1.6: ヒモ太郎の部屋に美咲が来る
     "misaki_stayed_at_himo": False,    # v1.6: 美咲がヒモ太郎の部屋に泊まった
+    # Phase 4 Step 2: 経済圏システム
+    "izakaya_money_hangover": False,   # 居酒屋交渉の翌日疑念リスク
+    "kana_morning_after": False,       # カナ泊まり翌朝イベント
+    "kana_doubt_event_done": False,    # カナ版疑念イベント済み
+    "kana_at_himo_room": False,        # v1.1: カナがヒモ太郎の部屋に泊まり中
+    "kana_himo_room_morning": False,   # v1.1: カナがヒモ太郎の部屋に泊まった翌朝
 }
 
 # 1日ごとにリセットされるフラグ
@@ -114,6 +120,7 @@ default daily_flags = {
     "kana_tonight_source": None,    # Phase 4 v1.4: "player" or "kana" or None
     "misaki_lined_only": False,     # Phase 4 v1.4: LINEのみで対面していない
     "misaki_line_last_shown": [],   # Phase 4 v1.6: 美咲LINE選択肢の前回表示分
+    "kana_mood_resolved": False,    # Phase 4 Step 2: その日のご機嫌取りが済んだか
 }
 
 # 美咲イベント進行フラグ（Phase 2追加）
@@ -176,6 +183,19 @@ default stats = {
     "lie_puzzles_busted": 0,
     "meals_eaten": 0,
     "date_locations": {},
+    # Phase 4 Step 2: カナの交換経済
+    "kana_benefits_received": 0,    # カナから恩恵を受けた回数
+    "kana_ena_given": 0,            # カナにエナを使った回数（ステップ3で使用）
+    "kana_gokiragen_success": 0,    # ご機嫌取り成功回数
+    "kana_gokiragen_failed": 0,     # ご機嫌取り失敗回数
+    "kana_stayed_over": 0,          # カナの部屋に泊まった回数
+    # v1.1追加: 経済圏追跡カウンタ
+    "negotiation_attempts": 0,       # 対面交渉の試行回数
+    "negotiation_success": 0,        # 対面交渉の成功回数
+    "negotiation_total_earned": 0,   # 対面交渉の総収入
+    "line_request_attempts": 0,      # LINE要求の試行回数
+    "line_request_success": 0,       # LINE要求の成功回数
+    "kana_stayed_himo_room": 0,      # カナがヒモ太郎の部屋に泊まった回数
 }
 
 # ヒモ適性診断
@@ -202,6 +222,12 @@ default appointments = {
 default suspicion = {
     "misaki": 0,
     "kana": 0
+}
+
+# === 美咲の対面交渉（Phase 4 Step 2）===
+default money_request_weekly = {
+    "count": 0,              # 週間お金要求回数（LINE＋対面合算）
+    "last_reset_day": 1      # 最後にリセットした日
 }
 
 # 嘘パズル

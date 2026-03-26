@@ -5,6 +5,8 @@ init python:
     def advance_time():
         global game_date, player, misaki, kana
 
+        old_time = game_date["time"]
+
         if game_date["time"] == "morning":
             game_date["time"] = "afternoon"
         elif game_date["time"] == "afternoon":
@@ -12,6 +14,8 @@ init python:
         else:
             game_date["time"] = "morning"
             advance_day()
+
+        log_action("TIME_ADVANCE", old_time + " -> " + game_date["time"])
 
         # パラメータ減衰
         player["stamina"] = max(0, player["stamina"] - STAMINA_DECAY_PER_TURN)
@@ -109,6 +113,8 @@ init python:
         daily_flags["kana_tonight_source"] = None
         daily_flags["misaki_lined_only"] = False
         daily_flags["misaki_line_last_shown"] = []
+        # Phase 4 Step 2: ご機嫌取りフラグリセット
+        daily_flags["kana_mood_resolved"] = False
 
         # 宿泊リセット
         location_flags["staying_at_misaki"] = False
@@ -162,6 +168,16 @@ init python:
         # ランダム出費イベント（v2.2: 12%に下げた）
         if renpy.random.random() < 0.12:
             _pending_events.append(("random_expense_event", None))
+
+        # === Phase 4 Step 2: 週間お金要求カウントのリセット ===
+        if (game_date["day"] - money_request_weekly["last_reset_day"]) >= 7:
+            money_request_weekly["count"] = 0
+            money_request_weekly["last_reset_day"] = game_date["day"]
+
+        # === Phase 4 Step 2: 居酒屋ボーナスの翌日リスク ===
+        if flags.get("izakaya_money_hangover", False):
+            flags["izakaya_money_hangover"] = False
+            suspicion["misaki"] = suspicion.get("misaki", 0) + 2
 
 
     def update_misaki_mood():
