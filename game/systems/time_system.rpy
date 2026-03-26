@@ -127,6 +127,7 @@ init python:
         if game_date["day"] == 4:
             flags["street_unlocked"] = True
             renpy.notify("街に出られるようになった")
+            log_notify("街に出られるようになった")
 
         # 月次処理（体験版30日制ではエンディングで精算するため不要）
         # 製品版（60日以上）では15日目・45日目等に中間請求を入れる
@@ -274,6 +275,7 @@ label event_low_cleanliness:
         # 美咲・カナと会う予定がある日はペナルティ強化
         if flags.get("misaki_tonight") or flags.get("kana_tonight"):
             renpy.notify("美咲: 「...ちょっと、大丈夫？」")
+            log_notify("美咲: 「...ちょっと、大丈夫？」")
             change_trust(-3)
         else:
             change_charm(-2)

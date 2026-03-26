@@ -59,6 +59,7 @@ init python:
 
         if old < 100 <= misaki["dependence"]:
             renpy.notify("美咲: 「ずっと一緒にいたい」")
+            log_notify("美咲: 「ずっと一緒にいたい」")
 
         # マイルストーンを超えたらキューに追加（v2.2: 重複防止フラグ追加）
         for threshold in [DEPEND_MILD, DEPEND_MEDIUM, DEPEND_HEAVY]:
@@ -104,6 +105,7 @@ init python:
             elif flags.get("confession_accepted", False):
                 # 告白を受け入れていた場合のみテロップ表示
                 renpy.notify("美咲との関係: 恋人")
+                log_notify("美咲との関係: 恋人")
             # confession_done済みで受け入れていない場合はテロップなし
 
         # それ以外のステージ上昇通知
@@ -111,6 +113,7 @@ init python:
             stage_names = {2: "友達", 3: "いい雰囲気"}
             if misaki["stage"] in stage_names:
                 renpy.notify("美咲との関係が「" + stage_names[misaki["stage"]] + "」になった")
+                log_notify("美咲との関係が「" + stage_names[misaki["stage"]] + "」になった")
 
     def request_money_from_misaki(amount_type="small"):
         global stats, suspicion_count, himo_aptitude, money_refused_streak
@@ -167,6 +170,7 @@ init python:
             suspicion_count += 1
             if suspicion_count == 2:
                 renpy.notify("美咲: 「...お金、大丈夫？」")
+                log_notify("美咲: 「...お金、大丈夫？」")
 
         return True, amount, "成功"
 
@@ -184,6 +188,7 @@ init python:
             stage_names_kana = {2: "友達", 3: "いい感じ", 4: "推しの人"}
             if kana["stage"] in stage_names_kana:
                 renpy.notify("カナとの関係が「" + stage_names_kana[kana["stage"]] + "」になった")
+                log_notify("カナとの関係が「" + stage_names_kana[kana["stage"]] + "」になった")
 
     def change_dependence_kana(amount):
         global kana
@@ -198,6 +203,7 @@ init python:
 
         if old < 100 <= kana["dependence"]:
             renpy.notify("カナ: 「ヒモ太郎のことしか考えられない」")
+            log_notify("カナ: 「ヒモ太郎のことしか考えられない」")
 
     def update_kana_stage():
         global kana
@@ -255,3 +261,4 @@ init python:
         }
         if reason in messages and messages[reason]:
             renpy.notify(messages[reason])
+            log_notify(messages[reason])

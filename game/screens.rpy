@@ -212,7 +212,7 @@ screen choice(items):
 
     vbox:
         for i in items:
-            textbutton i.caption action i.action
+            textbutton i.caption action [Function(log_choice, i.caption), i.action]
 
     # テスト実行時: 自動でランダム選択
     if renpy.is_in_test():

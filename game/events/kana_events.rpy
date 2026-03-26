@@ -518,6 +518,7 @@ label kana_oshi_event(route):
         $ kana_flags["sns_risk"] += 10
         $ add_suspicion("sns_exposure")
         $ renpy.notify("SNSでの露出が増えた。美咲にバレるリスクが高まっている。")
+        $ log_notify("SNSでの露出が増えた。美咲にバレるリスクが高まっている。")
 
     elif route == "C":
         "気づけば、カナのことをよく考えるようになっていた。"

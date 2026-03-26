@@ -4,13 +4,32 @@
 
 init python:
     debug_log_entries = []
+    _last_logged_day = None
+    _last_logged_time = None
+
+    def get_turn_header():
+        """現在のターンヘッダー文字列を返す"""
+        return "========== [Day " + str(game_date["day"]) + " / " + game_date["time"] + "] =========="
 
     def log_action(action_name, notes=""):
         """行動ログを記録する"""
+        global _last_logged_day, _last_logged_time
+
         if not DEBUG_MODE:
             return
 
+        # ターンが変わったらヘッダーを挿入
+        if game_date["day"] != _last_logged_day or game_date["time"] != _last_logged_time:
+            _last_logged_day = game_date["day"]
+            _last_logged_time = game_date["time"]
+            header_entry = {
+                "is_header": True,
+                "text": get_turn_header(),
+            }
+            debug_log_entries.append(header_entry)
+
         entry = {
+            "is_header":   False,
             "day":         game_date["day"],
             "time":        game_date["time"],
             "action":      action_name,
@@ -46,6 +65,10 @@ init python:
         lines.append("-" * 100)
 
         for e in debug_log_entries:
+            if e.get("is_header", False):
+                lines.append("")
+                lines.append(e["text"])
+                continue
             lines.append(
                 "{:2}日 {:9} "
                 "{:18} "

@@ -213,3 +213,6 @@ default lie_puzzle = {
     "result": None
 }
 default lie_puzzle_timeout = False
+
+# セリフログ用リスト
+default dialogue_log_entries = []
