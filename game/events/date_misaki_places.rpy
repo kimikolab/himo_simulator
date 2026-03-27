@@ -63,7 +63,10 @@ label misaki_date_famires:
                 call misaki_negotiation_start
 
             "このまま楽しむ":
-                pass
+                # v1.2: お金の話をしなかった→好印象
+                if suspicion.get("misaki", 0) >= 6:
+                    himo "（今日はお金の話はやめとこう）"
+                $ reduce_suspicion("misaki", 1, "デート楽しむ")
 
     return
 
@@ -72,7 +75,37 @@ label misaki_date_izakaya:
     $ stats["date_locations"] = stats.get("date_locations", {})
     $ stats["date_locations"]["izakaya"] = stats["date_locations"].get("izakaya", 0) + 1
     "居酒屋に入った。"
-    misaki_c "たまにはこういうのもいいね"
+
+    # v1.2: 回数に応じてセリフを変える
+    python:
+        _izakaya_count = stats.get("date_locations", {}).get("izakaya", 0)
+
+    if _izakaya_count <= 1:
+        misaki_c "たまにはこういうのもいいね"
+    elif _izakaya_count <= 3:
+        python:
+            _iz_line = renpy.random.choice([
+                "また居酒屋？笑 好きだね〜",
+                "ここ、落ち着くよね",
+                "今日は何飲む？",
+            ])
+        misaki_c "[_iz_line]"
+    elif _izakaya_count <= 6:
+        python:
+            _iz_line = renpy.random.choice([
+                "いつもの席、空いてるかな",
+                "もう常連だね、ここ",
+                "店員さんに覚えられてそう",
+            ])
+        misaki_c "[_iz_line]"
+    else:
+        python:
+            _iz_line = renpy.random.choice([
+                "...またここ？たまには別の店行かない？",
+                "いつもの、でいい？もう分かるでしょ",
+                "ヒモ太郎って居酒屋好きすぎない？笑",
+            ])
+        misaki_c "[_iz_line]"
 
     "お酒が入って、美咲の口数が増える。"
     "美咲が奢ってくれた。"
@@ -91,7 +124,10 @@ label misaki_date_izakaya:
                 call misaki_negotiation_start
 
             "このまま楽しむ":
-                pass
+                # v1.2: お金の話をしなかった→好印象
+                if suspicion.get("misaki", 0) >= 6:
+                    himo "（今日はお金の話はやめとこう）"
+                $ reduce_suspicion("misaki", 1, "デート楽しむ")
 
     return
 
@@ -127,7 +163,10 @@ label misaki_date_room:
                 call misaki_negotiation_start
 
             "このまま楽しむ":
-                pass
+                # v1.2: お金の話をしなかった→好印象
+                if suspicion.get("misaki", 0) >= 6:
+                    himo "（今日はお金の話はやめとこう）"
+                $ reduce_suspicion("misaki", 1, "デート楽しむ")
 
     return
 
@@ -246,7 +285,10 @@ label misaki_visit_himo_room:
                 call misaki_negotiation_start
 
             "このまま楽しむ":
-                pass
+                # v1.2: お金の話をしなかった→好印象
+                if suspicion.get("misaki", 0) >= 6:
+                    himo "（今日はお金の話はやめとこう）"
+                $ reduce_suspicion("misaki", 1, "デート楽しむ")
 
     # 探り・ハプニング
     call check_date_incidents("misaki")
@@ -280,6 +322,9 @@ label misaki_date_fancy:
                 call misaki_negotiation_start
 
             "このまま楽しむ":
-                pass
+                # v1.2: お金の話をしなかった→好印象
+                if suspicion.get("misaki", 0) >= 6:
+                    himo "（今日はお金の話はやめとこう）"
+                $ reduce_suspicion("misaki", 1, "デート楽しむ")
 
     return

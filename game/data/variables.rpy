@@ -101,6 +101,7 @@ default flags = {
     "kana_doubt_event_done": False,    # カナ版疑念イベント済み
     "kana_at_himo_room": False,        # v1.1: カナがヒモ太郎の部屋に泊まり中
     "kana_himo_room_morning": False,   # v1.1: カナがヒモ太郎の部屋に泊まった翌朝
+    "last_sns_poster": "",             # v1.2: SNS重複表示防止用
 }
 
 # 1日ごとにリセットされるフラグ

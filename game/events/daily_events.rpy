@@ -18,9 +18,21 @@ label check_sns:
             ("元バイト仲間・ケン", "『正社員になりました！給料上がった！』", "positive"),
             ("SNSのフォロワー", "『生きてるだけで丸儲けとか言うけど金はいるよな』", "relatable"),
             ("知らない人のバズポスト", "『20代のうちに貯金しとかないと老後やばいぞ』", "scary"),
+            # v1.2追加
+            ("知り合い・翔太", "『起業して半年、やっと黒字化』", "positive"),
+            ("同級生・あかり", "『第一子誕生！育休中です』", "milestone"),
+            ("先輩・大和", "『海外赴任決まりました』", "positive"),
+            ("バイト仲間・ケンタ", "『やっと正社員なれた〜泣』", "neutral"),
         ]
-        post = renpy.random.choice(sns_posts)
+
+        # v1.2: 前回表示した投稿者を除外して重複防止
+        last_sns = flags.get("last_sns_poster", "")
+        available = [p for p in sns_posts if p[0] != last_sns]
+        if not available:
+            available = sns_posts
+        post = renpy.random.choice(available)
         poster, content, tone = post
+        flags["last_sns_poster"] = poster
 
     "[poster]の投稿:"
     "[content]"
@@ -449,8 +461,19 @@ label nanpa_event:
         nanpa_success = renpy.random.random() < success_rate
 
     if not nanpa_success:
-        "声をかけてみたが、うまくいかなかった。"
-        himo "...まあ、そんなもんか"
+        # v1.2: ナンパ失敗のセリフバリエーション
+        python:
+            _nanpa_fail_lines = [
+                ("声をかけてみたが、うまくいかなかった。", "...まあ、そんなもんか"),
+                ("笑顔で話しかけたが、無視された。", "...つれないな"),
+                ("いい感じに話せたけど、連絡先は教えてもらえなかった。", "惜しかったな...多分"),
+                ("声をかける前に相手が去っていった。", "タイミングって大事だな"),
+                ("話しかけたら彼氏がいると言われた。", "そりゃそうだよな"),
+            ]
+            _fail_text, _fail_himo = renpy.random.choice(_nanpa_fail_lines)
+
+        "[_fail_text]"
+        himo "[_fail_himo]"
         $ change_stamina(-5)
         $ flags["afternoon_consumed"] = True   # v1.5修正: 失敗時も昼ターン消費
         return

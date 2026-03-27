@@ -57,11 +57,25 @@ init python:
         dialogue_log_entries.append(entry)
 
 
+    # v1.2: 重複出力防止 — predict中のhistoryエントリをフィルタ
+    _dialogue_log_seen = set()
+
     def _on_history_entry(h):
         """セリフ履歴にエントリが追加されたときに呼ばれる (config.history_callbacks)"""
+        global _dialogue_log_seen
+        # predict呼び出しや二重登録による重複を防止
+        entry_id = id(h)
+        if entry_id in _dialogue_log_seen:
+            return
+        _dialogue_log_seen.add(entry_id)
+        # メモリ節約: 古いエントリを定期的にクリア
+        if len(_dialogue_log_seen) > 500:
+            _dialogue_log_seen = set()
         log_dialogue(h.who, h.what)
 
-    config.history_callbacks.append(_on_history_entry)
+    # 重複防止: 既に登録されていたら追加しない
+    if _on_history_entry not in config.history_callbacks:
+        config.history_callbacks.append(_on_history_entry)
 
 
     def export_dialogue_log():

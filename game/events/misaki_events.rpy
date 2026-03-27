@@ -41,27 +41,65 @@ label contact_misaki:
     # v1.3修正: LINEのみなのでreset_contactを呼ばない
     "美咲にLINEを送った..."
 
-    python:
-        mood = misaki_mood["today_mood"]
-
-    if mood == "stressed":
-        "2時間後、やっと返信が来た。"
-        misaki_c "ごめん、バタバタしてて"
-    elif mood == "tired":
-        "しばらくして返信が来た。"
-        misaki_c "お疲れ。今日しんどくて..."
-    elif mood == "good":
+    # === 既読判定 ===
+    if misaki["trust"] >= 60:
         "すぐに返信が来た。"
-        misaki_c "わ、ヒモ太郎！"
+    elif misaki["trust"] >= 40:
+        "しばらくして返信が来た。"
     else:
-        if misaki["trust"] >= 25:
-            "しばらくして返信が来た。"
-        else:
-            "既読スルーされた..."
-            $ change_trust(-2)
-            $ daily_flags["ignored_today"] = True
-            return
-        misaki_c "どうしたの？"
+        "既読スルーされた..."
+        $ change_trust(-2)
+        $ daily_flags["ignored_today"] = True
+        return
+
+    # === v1.2: 疑念度による美咲の返信テキスト ===
+    python:
+        _susp = suspicion.get("misaki", 0)
+
+    if _susp >= 16:
+        # 警戒レベル
+        python:
+            _reply = renpy.random.choice([
+                "...なに",
+                "また何かお願い？",
+                "...用事？",
+            ])
+        misaki_c "[_reply]"
+        himo "（やばい、美咲の態度がおかしい。何か変えないと）"
+
+    elif _susp >= 11:
+        # 明確な冷たさ
+        python:
+            _reply = renpy.random.choice([
+                "...どうしたの",
+                "何か用？",
+                "ん...なに？",
+            ])
+        misaki_c "[_reply]"
+        himo "（美咲、最近冷たくない？）"
+
+    elif _susp >= 6:
+        # 微妙な変化
+        python:
+            _reply = renpy.random.choice([
+                "...どうしたの？",
+                "ん、なに？",
+                "どうしたの",
+            ])
+        misaki_c "[_reply]"
+        if renpy.random.random() < 0.4:
+            himo "（なんか、反応がいつもと違う気がする）"
+
+    else:
+        # 通常（疑念低い）
+        python:
+            _reply = renpy.random.choice([
+                "どうしたの？",
+                "わ、ヒモ太郎！",
+                "おっ、久しぶり！",
+                "お、なになに？",
+            ])
+        misaki_c "[_reply]"
 
     # v1.6追加: ランダム選択肢を決定
     python:
@@ -179,7 +217,14 @@ label misaki_date_request:
         return
 
     if misaki["met_today"]:
-        misaki_c "今日もう会ったよ？笑"
+        # v1.2: バリエーション追加
+        python:
+            _met_reply = renpy.random.choice([
+                "今日もう会ったよ？笑",
+                "え、さっき会ったばっかりじゃん",
+                "また？ 嬉しいけど笑",
+            ])
+        misaki_c "[_met_reply]"
         himo "あ、そっか"
         return
 
@@ -213,10 +258,25 @@ label misaki_date_request:
 
     # 成功 → デートへ
     if game_date["time"] == "night":
+        # v1.2: バリエーション追加
+        python:
+            _ok_reply = renpy.random.choice([
+                "今から？いいよ",
+                "うん、行こ！",
+                "待ってた！...って言ったら重い？笑",
+            ])
+        misaki_c "[_ok_reply]"
         call misaki_date_with_location
         return
     else:
-        misaki_c "夜なら空いてるよ"
+        # v1.2: バリエーション追加
+        python:
+            _later_reply = renpy.random.choice([
+                "夜なら空いてるよ",
+                "夜でもいい？",
+                "仕事終わってからでいい？",
+            ])
+        misaki_c "[_later_reply]"
         $ flags["misaki_tonight"] = True
         himo "了解〜"
         return
@@ -283,6 +343,8 @@ label misaki_date:
             $ change_trust(5)
             $ change_dependence(1)
             $ himo_aptitude["showed_concern"] += 1
+            # v1.2: 疑念緩和
+            $ reduce_suspicion("misaki", 1, "愚痴を聞いた")
 
         "美咲を励ます":
             himo "まあでも、頑張ってる美咲かっこいいよ"
@@ -295,6 +357,8 @@ label misaki_date:
             $ change_trust(8)
             $ change_dependence(2)
             $ himo_aptitude["showed_concern"] += 2
+            # v1.2: 疑念緩和
+            $ reduce_suspicion("misaki", 2, "励まし")
 
         "自分の話（ポジティブに）":
             himo "俺？めっちゃ自由だよ"
@@ -323,6 +387,8 @@ label misaki_date:
             $ change_trust(6)
             $ change_dependence(5)
             $ himo_aptitude["honest_moments"] += 1
+            # v1.2: 疑念緩和（正直さは最も効果的）
+            $ reduce_suspicion("misaki", 3, "正直に話した")
 
     if misaki["trust"] >= 45:
         misaki_c "今日は私が出すね"
@@ -1199,6 +1265,8 @@ label misaki_line_listen_work:
     $ change_trust(4)
     $ change_dependence(3)
     $ himo_aptitude["showed_concern"] += 1
+    # v1.2: 疑念緩和
+    $ reduce_suspicion("misaki", 1, "LINE愚痴聞き")
 
     return
 
@@ -1224,6 +1292,8 @@ label misaki_line_offer_help:
             $ change_trust(5)
             $ change_dependence(4)
             $ himo_aptitude["showed_concern"] += 1
+            # v1.2: 疑念緩和
+            $ reduce_suspicion("misaki", 1, "LINE手伝い")
             "（週末に約束した）"
 
         "ちょっと考えさせて":
@@ -1292,6 +1362,8 @@ label misaki_line_miss_you:
         $ change_dependence(3)
 
     $ himo_aptitude["showed_concern"] += 1
+    # v1.2: 疑念緩和
+    $ reduce_suspicion("misaki", 1, "LINE声聞きたい")
 
     return
 
@@ -1316,6 +1388,8 @@ label misaki_line_amaeru:
             $ change_dependence(8)
             # 美咲のテンションが高い → デートの雰囲気が良くなる
             $ flags["misaki_good_mood_tonight"] = True
+            # v1.2: 疑念緩和
+            $ reduce_suspicion("misaki", 2, "LINE甘え")
 
         "今日は無理、ごめん":
             misaki_c "...そっか"
@@ -1389,6 +1463,8 @@ label misaki_negotiation_start:
             $ daily_flags["asked_money_today"] = False
             $ himo_aptitude["money_requests"] -= 1
             $ stats["negotiation_attempts"] = max(0, stats.get("negotiation_attempts", 0) - 1)
+            # v1.2: 踏みとどまった分の微緩和
+            $ reduce_suspicion("misaki", 1, "交渉キャンセル")
             return
 
     # v1.1: 開始ログ
@@ -1414,7 +1490,8 @@ label misaki_negotiation_reaction:
         else:
             weekly_penalty = 0
 
-        suspicion_penalty = suspicion.get("misaki", 0) * 3
+        # v1.2: 係数を2に緩和＋上限30%キャップ
+        suspicion_penalty = min(30, suspicion.get("misaki", 0) * 2)
 
         _nego_success_rate = _nego_base_rate + location_bonus - weekly_penalty - suspicion_penalty
         _nego_success_rate = max(5, min(95, _nego_success_rate))

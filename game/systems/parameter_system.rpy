@@ -271,3 +271,9 @@ init python:
         if reason in messages and messages[reason]:
             renpy.notify(messages[reason])
             log_notify(messages[reason])
+        log_action("疑念UP misaki reason=" + reason + " now=" + str(suspicion.get("misaki", 0)))
+
+    def reduce_suspicion(target, amount, reason=""):
+        """疑念を減少させるヘルパー関数"""
+        suspicion[target] = max(0, suspicion.get(target, 0) - amount)
+        log_action("疑念DOWN " + target + " -" + str(amount) + " now=" + str(suspicion.get(target, 0)) + " " + reason)
