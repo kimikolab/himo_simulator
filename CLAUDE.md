@@ -30,7 +30,7 @@ npm / make などのビルドコマンドは存在しない。**Ren'Py SDK ラ�
 
 ## 現在の実装状況
 
-**Phase 4 Step 1 完了。** 30日間のゲームループ、美咲・カナ両ヒロインのイベント、5種エンディング、自動テスト基盤が稼働中。
+**Phase 4 Step 2 v1.4 修正済み。** 30日間のゲームループ、美咲・カナ両ヒロインのイベント、5種エンディング、経済圏システム（対面交渉・泊まり・ご機嫌取りQTE）、自動テスト基盤が稼働中。
 
 ### ファイル構成（`game/` 以下）
 
@@ -51,9 +51,11 @@ systems/
   time_system.rpy       # 日時進行・パラメータ減衰ロジック
   parameter_system.rpy  # パラメータ更新・通知処理
   sns_system.rpy        # SNS/LINE システム
+  dialogue_log.rpy      # セリフログ（テストプレイ用）
+  debug_log.rpy         # デバッグログ出力
   lie_puzzle.rpy        # 嘘パズルミニゲーム
   evidence_qte.rpy      # 証拠QTEミニゲーム
-  debug_log.rpy         # デバッグログ出力
+  gokiragen_qte.rpy     # ご機嫌取りQTEミニゲーム
 
 events/
   intro.rpy             # オープニング
@@ -76,8 +78,8 @@ tests/
 - `game_design_document2_6.md` — ゲーム設計全体仕様（最新）
 - `phase_goals.md` — フェーズ別目標
 - `phase4_step1_design.md` — Phase 4 Step 1 設計
-- `autotest_action_plan.md` — 自動テスト実装計画・実施記録
 - `character_economy_and_energy_design.md` — エコノミー・エナジー設計
+- `current_state.md` — **コードベース状態スナップショット**（後述）
 
 ## コアゲームシステム
 
@@ -89,7 +91,7 @@ tests/
 ### パラメータ
 
 **可視（プレイヤーに表示）:**
-- `money` — 初期値 3,458 円。週末に家賃 12,500 円が発生
+- `money` — 初期値 3,458 円。月末に家賃 50,000 円が発生
 - `trust` — 美咲の信頼度（0〜100）
 - `dependence` — 美咲の依存度（0〜100）
 
@@ -108,13 +110,13 @@ STAGE_ACQUAINTANCE (1) → STAGE_FRIEND (2) → STAGE_CLOSE (3) → STAGE_DATING
 `easy_choices`、`money_requests`、`lies_told`、`honest_moments`、`work_avoided`、`showed_concern`
 
 ### イベントフラグ
-```python
-flags = {
-    "tutorial_done", "first_money", "first_date",
-    "street_unlocked",    # 4日目に解放
-    "had_doubt_moment", "doubt_event_done"
-}
-```
+フラグは用途別に4つの辞書で管理される:
+- `flags` — 永続フラグ（40個超。告白・中盤イベント・泊まり翌朝など）
+- `location_flags` — 場所関連（`staying_at_misaki`, `staying_at_kana`, `misaki_room_unlocked`）
+- `daily_flags` — 1日ごとにリセット（16個。`ate_today`, `date_location` など）
+- `appointments` — 約束日管理（`"misaki"`: int/None, `"kana"`: int/None）
+
+全キーの一覧は `docs/current_state.md` セクション3を参照。
 
 ### エンディング
 信頼度・依存度のバランス、誠実さ vs 欺瞞の選択、ヒモ適性診断の組み合わせで5種類のエンディングが決定される:
@@ -179,3 +181,20 @@ flags = {
 - テスト間でゲームは自動リスタートされない。各テストは `click "スタート"` で開始し、メインメニューまで戻って終了する
 - グローバルタイムアウト `_test.timeout` のデフォルトは5秒。長時間テストには `$ _test.timeout = 600` が必要
 - 本編コードへの `renpy.is_in_test()` 分岐は計6箇所（`lie_puzzle.rpy`, `evidence_qte.rpy`, `screens.rpy` の choice/status_detail, `gokiragen_qte.rpy` の通常版/疑念版）
+
+## Web Claude との連携
+
+修正指示書は Web Claude（claude.ai）で作成し、Claude Code が実装する運用を取っている。
+
+### `docs/current_state.md`（状態スナップショット）
+
+Web Claude がコードベースを直接読めない問題を補うために、**ラベル名・フラグ名・変数構造の正規一覧**を `docs/current_state.md` に保持している。
+
+- **更新タイミング**: Claude Code で大きな変更を加えた後（ユーザーが「スナップショット更新して」と指示）
+- **参照タイミング**: Web Claude で修正指示書を書く前に、プロジェクトナレッジまたはチャットに添付する
+- **編集権限**: Claude Code のみ。Web Claude 側では編集しない
+
+### 修正指示書のベストプラクティス
+- ラベル名・変数名は `current_state.md` を参照し、正確な名前を使う
+- コード例を書くより**方針**（何を・なぜ・どこで）を書く方がズレにくい
+- 関連箇所のコードを貼る場合は20行程度で十分
