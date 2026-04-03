@@ -96,6 +96,8 @@ label moment_of_doubt:
 # ========================================
 
 label check_forced_morning_event:
+    # v1.4追加: 翌朝フラグの状態をデバッグログ
+    $ log_action("MORNING_FLAGS misaki_sunday=" + str(flags.get("misaki_sunday_morning", False)) + " kana_after=" + str(flags.get("kana_morning_after", False)) + " kana_himo=" + str(flags.get("kana_himo_room_morning", False)))
 
     # v1.1: カナがヒモ太郎の部屋に泊まった翌朝
     if flags.get("kana_himo_room_morning", False):

@@ -41,14 +41,46 @@ label contact_misaki:
     # v1.3修正: LINEのみなのでreset_contactを呼ばない
     "美咲にLINEを送った..."
 
-    # === 既読判定 ===
+    # === 既読判定（v1.3: 閾値緩和 40→20）===
     if misaki["trust"] >= 60:
         "すぐに返信が来た。"
     elif misaki["trust"] >= 40:
         "しばらくして返信が来た。"
+    elif misaki["trust"] >= 20:
+        # v1.3: 信頼20〜39: 返信は来るが遅い
+        "...しばらくして、返信が来た。"
     else:
-        "既読スルーされた..."
-        $ change_trust(-2)
+        # v1.3: 信頼20未満: 既読スルー + バリエーション＋救済ヒント
+        python:
+            _ignore_count = stats.get("misaki_ignored_count", 0)
+            stats["misaki_ignored_count"] = _ignore_count + 1
+
+        if _ignore_count == 0:
+            "既読スルーされた..."
+            himo "（返信こないな...）"
+        elif _ignore_count <= 3:
+            python:
+                _ignore_text = renpy.random.choice([
+                    "既読スルーされた...",
+                    "既読はついた。でも返信は来ない。",
+                    "...返信なし。",
+                ])
+            "[_ignore_text]"
+            himo "（会ってないから信頼されてないのかな...）"
+        elif _ignore_count <= 6:
+            python:
+                _ignore_text = renpy.random.choice([
+                    "また既読スルー。",
+                    "既読...返信なし。いつもの。",
+                    "...画面を見つめたが、返信は来なかった。",
+                ])
+            "[_ignore_text]"
+            himo "（直接会って話した方がいいかもしれない）"
+        else:
+            "..."
+            himo "（LINEじゃ無理だ。どうにかして直接会わないと）"
+
+        $ change_trust(-1)    # v1.3: -2 → -1
         $ daily_flags["ignored_today"] = True
         return
 
@@ -253,6 +285,11 @@ label misaki_date_request:
                 misaki_c "ごめん、今日はもう予定入っちゃってて"
                 himo "そっか、また今度"
 
+            # v1.4追加: 断られたら約束フラグを確実にクリア
+            $ flags["misaki_tonight"] = False
+            if appointments.get("misaki", None) == game_date["day"]:
+                $ appointments["misaki"] = None
+
             $ change_trust(-1)
             return
 
@@ -326,6 +363,8 @@ label misaki_date:
     $ reset_contact()
     $ change_stamina(-15)
     $ daily_flags["ate_today"] = True
+    # v1.3: 既読スルーカウントをリセット
+    $ stats["misaki_ignored_count"] = 0
 
     menu:
         "何を話す？"
@@ -759,6 +798,11 @@ label M03_go:
             "泊めてもらうことになった。"
             $ location_flags["misaki_room_unlocked"] = True
             $ location_flags["staying_at_misaki"] = True
+            # v1.4追加: カナの翌朝フラグをクリア（排他制御）
+            $ flags["kana_morning_after"] = False
+            $ flags["kana_himo_room_morning"] = False
+            $ location_flags["staying_at_kana"] = False
+            $ flags["kana_at_himo_room"] = False
             $ change_trust(8)
             $ change_dependence(8)
             $ change_stamina(30)
@@ -897,23 +941,75 @@ label misaki_event_M05:
 
 # 自発的連絡（3日以上連絡なし）
 label misaki_check_in:
-    "美咲からLINEが来た。"
-    "'最近どうしてる？'"
     # v1.4修正: LINEのみなのでreset_contact()は使わない（met_todayも変更しない）
     $ misaki["last_contact"] = 1
     $ daily_flags["misaki_lined_only"] = True
     $ log_action("CHECK_IN", "lined_only={} streak={}".format(daily_flags["misaki_lined_only"], misaki_streak))
 
+    # v1.4: 3つ組（美咲メッセージ, ヒモ太郎返事, 美咲リプライ, タイプ）
+    # タイプ: "chat"=雑談で完了, "invite"=誘い→選択肢, "check"=確認
+    python:
+        _trust = misaki["trust"]
+        _depend = misaki["dependence"]
+
+        if _depend >= 60:
+            _init_pool = [
+                ("昨日なにしてた？", "家でゴロゴロしてた", "...ほんとに？", "check"),
+                ("最近会えてないね", "そうだな、会いたいね", "...じゃあ今日会える？", "invite"),
+                ("連絡くれないと不安になる", "ごめんごめん", "...もっと連絡ちょうだいね", "chat"),
+            ]
+        elif _trust >= 60:
+            _init_pool = [
+                ("ヒモ太郎元気？", "おう、元気だよ", "よかった", "chat"),
+                ("今日いい天気だね〜", "ほんとだ、散歩日和", "出かけない？", "invite"),
+                ("ご飯食べた？", "まだ〜", "ちゃんと食べなよ", "chat"),
+                ("面白い動画見つけたんだけど", "見る見る", "後で送るね", "chat"),
+            ]
+        elif _trust >= 40:
+            _init_pool = [
+                ("最近どうしてる？", "まあ〜ぼちぼち", "ちょっと気になって", "chat"),
+                ("元気にしてる？", "元気だよ", "よかった", "chat"),
+                ("久しぶり", "おう、久しぶり", "...って言うほどでもないか", "chat"),
+            ]
+        else:
+            _init_pool = [
+                ("...元気？", "元気だよ", "うん、それだけ", "chat"),
+                ("特に用事はないんだけど", "どうした？", "なんとなく", "chat"),
+            ]
+
+        _init_msg, _himo_reply, _misaki_reply, _init_type = renpy.random.choice(_init_pool)
+
+    "美咲からLINEが来た。"
+    "'[_init_msg]'"
+
     menu:
         "返信する？"
-        "元気だよと返す":
-            himo "元気だよ〜、そっちは？"
-            misaki_c "私も。...なんか急に気になって"
+
+        "返信する":
+            himo "[_himo_reply]"
+            misaki_c "[_misaki_reply]"
             $ change_trust(3)
+
+            # invite タイプの場合: 誘いへの対応
+            if _init_type == "invite":
+                menu:
+                    "..."
+
+                    "いいよ":
+                        himo "おう、夜な"
+                        misaki_c "やった！"
+                        $ flags["misaki_tonight"] = True
+
+                    "今日はちょっと...":
+                        himo "今日はちょっと用事あって"
+                        misaki_c "...そっか"
+                        $ change_trust(-1)
+
         "忙しいと返す":
             himo "ちょっとバタバタしてて"
             misaki_c "そっか。無理しないでね"
             $ change_trust(1)
+
         "既読スルー":
             "返信しなかった。"
             $ change_trust(-3)
@@ -1115,6 +1211,11 @@ label misaki_room_visit:
         "泊まる":
             "今日も泊まらせてもらった。"
             $ location_flags["staying_at_misaki"] = True
+            # v1.4追加: カナの翌朝フラグをクリア（排他制御）
+            $ flags["kana_morning_after"] = False
+            $ flags["kana_himo_room_morning"] = False
+            $ location_flags["staying_at_kana"] = False
+            $ flags["kana_at_himo_room"] = False
             $ change_trust(2)
             $ change_dependence(5)
             $ change_stamina(30)

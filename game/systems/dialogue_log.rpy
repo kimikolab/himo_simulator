@@ -57,25 +57,48 @@ init python:
         dialogue_log_entries.append(entry)
 
 
-    # v1.2: 重複出力防止 — predict中のhistoryエントリをフィルタ
-    _dialogue_log_seen = set()
+    # v1.4: 根本修正 — config.all_character_callbacks に移行
+    # history_callbacks は Ren'Py 内部で複数回呼ばれるケースがあるため、
+    # all_character_callbacks の begin イベントのみ捕捉する方式に変更。
+    import time as _time_module
 
-    def _on_history_entry(h):
-        """セリフ履歴にエントリが追加されたときに呼ばれる (config.history_callbacks)"""
-        global _dialogue_log_seen
-        # predict呼び出しや二重登録による重複を防止
-        entry_id = id(h)
-        if entry_id in _dialogue_log_seen:
+    def _dialogue_log_callback(event, interact=True, **kwargs):
+        """全キャラクターの発話時に呼ばれるコールバック"""
+        # ガード1: prediction時はスキップ
+        if not interact:
             return
-        _dialogue_log_seen.add(entry_id)
-        # メモリ節約: 古いエントリを定期的にクリア
-        if len(_dialogue_log_seen) > 500:
-            _dialogue_log_seen = set()
-        log_dialogue(h.who, h.what)
+        # ガード2: beginイベントのみ記録
+        if event != "begin":
+            return
+        # ガード3: 同一テキスト100ms以内の重複スキップ
+        what = kwargs.get("what", "") or ""
+        who = kwargs.get("name", "") or ""
+        now = _time_module.time()
+        if (what == _dialogue_log_callback._last_text
+                and who == _dialogue_log_callback._last_who
+                and (now - _dialogue_log_callback._last_time) < 0.1):
+            return
+        _dialogue_log_callback._last_text = what
+        _dialogue_log_callback._last_who = who
+        _dialogue_log_callback._last_time = now
+        log_dialogue(who if who else None, what)
 
-    # 重複防止: 既に登録されていたら追加しない
-    if _on_history_entry not in config.history_callbacks:
-        config.history_callbacks.append(_on_history_entry)
+    _dialogue_log_callback._last_text = ""
+    _dialogue_log_callback._last_who = ""
+    _dialogue_log_callback._last_time = 0
+
+    # 旧 history_callbacks を除去
+    config.history_callbacks = [
+        cb for cb in config.history_callbacks
+        if getattr(cb, '__name__', '') != '_on_history_entry'
+    ]
+
+    # 既存の同名コールバックを除去してから追加（Shift+R リロード対策）
+    config.all_character_callbacks = [
+        cb for cb in config.all_character_callbacks
+        if getattr(cb, '__name__', '') != '_dialogue_log_callback'
+    ]
+    config.all_character_callbacks.append(_dialogue_log_callback)
 
 
     def export_dialogue_log():

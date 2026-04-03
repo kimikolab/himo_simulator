@@ -102,6 +102,7 @@ default flags = {
     "kana_at_himo_room": False,        # v1.1: カナがヒモ太郎の部屋に泊まり中
     "kana_himo_room_morning": False,   # v1.1: カナがヒモ太郎の部屋に泊まった翌朝
     "last_sns_poster": "",             # v1.2: SNS重複表示防止用
+    "last_news_item": "",              # v1.3: ニュース重複表示防止用
 }
 
 # 1日ごとにリセットされるフラグ
@@ -197,6 +198,7 @@ default stats = {
     "line_request_attempts": 0,      # LINE要求の試行回数
     "line_request_success": 0,       # LINE要求の成功回数
     "kana_stayed_himo_room": 0,      # カナがヒモ太郎の部屋に泊まった回数
+    "misaki_ignored_count": 0,       # v1.3: 美咲の既読スルー連続回数
 }
 
 # ヒモ適性診断

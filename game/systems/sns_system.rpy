@@ -140,8 +140,21 @@ label sns_show_news:
             ("ニュースアプリ", "『同棲カップルの家計管理術 共同口座のススメ』"),
             ("ニュースアプリ", "『マッチングアプリ利用者 過去最高を更新』"),
             ("ニュースアプリ", "『二股交際で損害賠償 200万円の判決』"),
+            # v1.3追加
+            ("ニュースアプリ", "『副業で月10万稼ぐ方法 会社員の3割が挑戦』"),
+            ("ニュースアプリ", "『家賃滞納で即退去？ 法的にはどうなの』"),
+            ("ニュースアプリ", "『フリーターから正社員へ 転職成功の秘訣』"),
+            ("ニュースアプリ", "『一人暮らしの食費 月3万円以下で抑える方法』"),
+            ("ニュースアプリ", "『SNSで浮気発覚 証拠になるケースとは』"),
         ]
-        source, content = renpy.random.choice(posts)
+
+        # v1.3: 前回表示したニュースを除外して重複防止
+        last_news = flags.get("last_news_item", "")
+        available_news = [p for p in posts if p[1] != last_news]
+        if not available_news:
+            available_news = posts
+        source, content = renpy.random.choice(available_news)
+        flags["last_news_item"] = content
 
     "[source]の通知:"
     "[content]"

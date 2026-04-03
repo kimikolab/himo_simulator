@@ -31,6 +31,8 @@ label misaki_date_with_location:
     $ daily_flags["date_with"] = "misaki"
     $ daily_flags["ate_today"] = True
     $ reset_contact()
+    # v1.3: 既読スルーカウントをリセット
+    $ stats["misaki_ignored_count"] = 0
     # Phase 4 v1.2: misaki_tonight フラグを消費
     if flags.get("misaki_tonight", False):
         $ flags["misaki_tonight"] = False
@@ -153,6 +155,11 @@ label misaki_date_room:
         weekday_index = game_date.get("weekday", 0)
         if weekday_index == 6 and game_date["time"] == "night":  # 土曜の夜
             flags["misaki_sunday_morning"] = True
+            # v1.4追加: カナの翌朝フラグをクリア（排他制御）
+            flags["kana_morning_after"] = False
+            flags["kana_himo_room_morning"] = False
+            location_flags["staying_at_kana"] = False
+            flags["kana_at_himo_room"] = False
 
     # === 対面交渉の切り出しチャンス ===
     if misaki["trust"] >= 35 and money_request_weekly["count"] < NEGOTIATION_WEEKLY_LIMIT and not daily_flags.get("asked_money_today", False):

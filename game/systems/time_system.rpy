@@ -209,6 +209,10 @@ init python:
         if flags.get("game_ended", False):
             return
 
+        # v1.3追加: 信頼度ガード — 既読スルーする相手から自発的に連絡は来ない
+        if misaki["trust"] < 20:
+            return
+
         # v2.3修正: last_contactが3未満、または当日会っているなら何もしない
         if misaki["last_contact"] < 3 or misaki["met_today"]:
             return

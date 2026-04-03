@@ -651,6 +651,15 @@ label kana_stay_offer:
         call kana_stay_at_himo_room
         return
 
+    # === v1.4追加: カナの部屋以外からの導線テキスト ===
+    python:
+        _date_loc = daily_flags.get("date_location", "")
+
+    if _date_loc in ["cafe", "karaoke", "campus"]:
+        "夜も遅くなってきた。"
+        kana_c "ねー、うちこの近くなんだけど..."
+        "カナの部屋に寄ることになった。"
+
     # === 以下、カナの部屋での泊まり（既存）===
     # 依存度で誘い方が変わる
     if kana["dependence"] >= 50:
@@ -686,6 +695,9 @@ label kana_stay_event:
 
     # 泊まりフラグ（翌朝消費用）— location_flags を使う（既存定義と統一）
     $ location_flags["staying_at_kana"] = True
+    # v1.4追加: 美咲の翌朝フラグをクリア（排他制御）
+    $ flags["misaki_sunday_morning"] = False
+    $ location_flags["staying_at_misaki"] = False
 
     # === エナ期待の匂わせ（ステップ3で本格化）===
     "..."
@@ -840,6 +852,9 @@ label kana_stay_at_himo_room_event:
 
     # 泊まりフラグ
     $ flags["kana_at_himo_room"] = True
+    # v1.4追加: 美咲の翌朝フラグをクリア（排他制御）
+    $ flags["misaki_sunday_morning"] = False
+    $ location_flags["staying_at_misaki"] = False
 
     # === エナ期待の匂わせ ===
     "..."
