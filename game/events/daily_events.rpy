@@ -57,6 +57,7 @@ label check_sns:
                 "へー...まあ俺は俺だし",
                 "ふーん、みんな色々あるんだな",
                 "...俺もなんかしないとな。まあ明日から",
+                "ふーん。（スクロール）",
             ])
         himo "[_sns_reaction]"
         $ stats["optimistic_choices"] += 1
@@ -205,18 +206,32 @@ label misaki_morning_at_himo_room:
     himo "おう"
 
     "美咲がキッチンに立った。"
-    misaki_c "何もないね...卵くらいない？"
-    himo "コンビニ行くか"
-    misaki_c "...もう"
 
-    "結局、2人でコンビニに行って朝食を買った。"
+    # Phase 4 Step 3: 食材による分岐
+    if inventory.get("groceries", 0) == 2:
+        misaki_c "...これ、私のために買ってたの？"
+        himo "まあ、一応"
+        misaki_c "...ありがとう"
+        $ change_trust(5)
+        $ inventory["groceries"] = 0
+        $ daily_flags["ate_today"] = True
+    elif inventory.get("groceries", 0) == 1:
+        misaki_c "ちゃんと買ってたんだ...えらいじゃん"
+        $ change_trust(2)
+        $ inventory["groceries"] = 0
+        $ daily_flags["ate_today"] = True
+    else:
+        misaki_c "何もないね...卵くらいない？"
+        himo "コンビニ行くか"
+        misaki_c "...もう"
+        "結局、2人でコンビニに行って朝食を買った。"
+        $ daily_flags["ate_today"] = True
 
     misaki_c "たまにはこういうのもいいね"
     himo "...そうだな"
 
     $ change_trust(3)
     $ change_dependence(3)
-    $ daily_flags["ate_today"] = True
     $ misaki["met_today"] = True
     $ reset_contact()
 
@@ -479,7 +494,7 @@ label nanpa_event:
     "繁華街をぶらぶらしていた。"
 
     python:
-        charm = player["charm"]
+        charm = player["charm"] + energy_charm_bonus
         if charm >= 70:
             success_rate = 0.60
         elif charm >= 50:
@@ -519,22 +534,115 @@ label nanpa_event:
     jump k01_nanpa_success
 
 
+# === Phase 4 Step 3: コンビニ ===
+label convenience_store:
+    "コンビニに入った。"
+
+    python:
+        _is_night = (game_date["time"] == "night")
+        _bento_price = 700 if _is_night else 500
+        bento_label = "弁当（¥" + str(_bento_price) + "）"
+
+    label _conveni_menu:
+    menu:
+        "[bento_label]":
+            if not can_afford(_bento_price):
+                himo "...財布が足りない"
+                jump _conveni_menu
+            "コンビニ飯で腹を満たした。"
+            $ change_money(-_bento_price)
+            $ change_stamina(10 if not _is_night else 12)
+            $ daily_flags["ate_today"] = True
+
+        "栄養ドリンク（¥1,500）" if energy < energy_max:
+            if daily_flags.get("used_energy_drink", False):
+                himo "...2本目はさすがにやめとこう"
+                jump _conveni_menu
+            if not can_afford(1500):
+                himo "...高い。今は無理だ"
+                jump _conveni_menu
+            "栄養ドリンクを手に取った。"
+            $ change_money(-1500)
+            $ energy += 1
+            $ daily_flags["used_energy_drink"] = True
+            $ stats["energy_drinks_used"] = stats.get("energy_drinks_used", 0) + 1
+            himo "（...効いてくれ）"
+
+        "制汗スプレー（¥300）":
+            if not can_afford(300):
+                himo "...300円すらない"
+                jump _conveni_menu
+            "制汗スプレーを買った。"
+            $ change_money(-300)
+            $ change_cleanliness(10)
+            himo "これで少しはマシか"
+
+        "何も買わずに出る":
+            pass
+
+    return
+
+
+# === Phase 4 Step 3: 街のショップ（旧shopping_event差し替え） ===
 label shopping_event:
     scene bg_placeholder
-    "ショッピングモールをぶらぶらした。"
-    himo "特に買うものもないけど"
+    "ショッピングモールに来た。"
 
+    label _shopping_menu:
     menu:
-        "ウィンドウショッピング":
-            himo "まあ、金ないしな"
-            $ change_stamina(-5)
-
-        "服を見る" if can_afford(3000):
+        "服を見る（¥3,000）":
+            if not can_afford(3000):
+                himo "...欲しいけど、今は無理だな"
+                jump _shopping_menu
+            "ちょっといい服を買った。"
             $ change_money(-3000)
             $ change_charm(5)
             himo "おっ、いい感じ"
 
-        "何も買わず帰る":
+        "香水を見る（¥2,500）" if inventory.get("perfume_days", 0) <= 0:
+            if not can_afford(2500):
+                himo "...いい匂いだけど高い"
+                jump _shopping_menu
+            "香水を買った。"
+            $ change_money(-2500)
+            $ change_charm(3)
+            $ inventory["perfume_days"] = 3
+            himo "これでデートもバッチリだな"
+
+        "花束を買う（¥1,500）" if not inventory.get("bouquet", False):
+            if not can_afford(1500):
+                himo "...花は贅沢か"
+                jump _shopping_menu
+            "花束を買った。"
+            $ change_money(-1500)
+            $ inventory["bouquet"] = True
+            $ inventory["bouquet_day"] = game_date["day"]
+            himo "（次のデートで渡そう）"
+
+        "アクセサリーを買う（¥5,000）" if not inventory.get("accessory", False):
+            if not can_afford(5000):
+                himo "...5000円は痛い"
+                jump _shopping_menu
+            "アクセサリーを買った。"
+            $ change_money(-5000)
+            $ inventory["accessory"] = True
+            himo "（喜んでくれるかな）"
+
+        "推しグッズを買う（¥2,000）" if kana_flags["met"] and not inventory.get("kana_goods", False):
+            if not can_afford(2000):
+                himo "...今は無理だ"
+                jump _shopping_menu
+            "カナが好きそうなグッズを見つけた。"
+            $ change_money(-2000)
+            $ inventory["kana_goods"] = True
+            himo "（カナ、喜ぶかな）"
+
+        "ウィンドウショッピング":
+            "ぶらぶら見て回った。"
+            $ change_stamina(-5)
+            himo "目の保養にはなったな"
+
+        "何も買わずに帰る":
             pass
 
     return
@@ -562,35 +670,53 @@ label check_job_hint:
 # Phase 2追加: 週末の買い物
 label weekend_shopping:
     scene bg_placeholder
-    "週末のスーパーに来た。"
-    "家族連れで賑わっている。"
-    himo "週末はにぎやかだな"
+    "スーパーに来た。"
+    "週末だから人が多い。"
 
+    label _weekend_menu:
     menu:
-        "何を買う？"
-        "食材を買う（300〜800円）":
-            if not can_afford(300):
-                himo "...お金が..."
-                return
-            python:
-                cost = renpy.random.randint(300, 800)
-            $ change_money(-cost)
-            $ change_stamina(8)
-            himo "自炊するか"
+        "食材セット（¥1,000）" if inventory.get("groceries", 0) == 0:
+            if not can_afford(1000):
+                himo "...食材すら買えないのか"
+                jump _weekend_menu
+            "卵とか野菜とか、基本的な食材を買った。"
+            $ change_money(-1000)
+            $ inventory["groceries"] = 1
+            $ inventory["groceries_day"] = game_date["day"]
+            himo "（これで朝ごはん作れるな）"
 
-        "お菓子を買う（200〜500円）":
-            if not can_afford(200):
-                himo "...節約しないと"
-                return
+        "ちょっといい食材（¥2,000）" if inventory.get("groceries", 0) == 0:
+            if not can_afford(2000):
+                himo "...贅沢は敵だ"
+                jump _weekend_menu
+            "ベーコンとかチーズとか、ちょっといい食材を買った。"
+            $ change_money(-2000)
+            $ inventory["groceries"] = 2
+            $ inventory["groceries_day"] = game_date["day"]
+            himo "（ちょっと奮発したな）"
+
+        "お菓子を買う":
             python:
-                cost = renpy.random.randint(200, 500)
-            $ change_money(-cost)
+                _price = renpy.random.randint(200, 500)
+            if not can_afford(_price):
+                himo "...お菓子すら"
+                jump _weekend_menu
+            "お菓子を買った。"
+            $ change_money(-_price)
             $ change_stamina(5)
-            himo "まあいっか、たまには"
-            $ himo_aptitude["easy_choices"] += 1
+            himo "甘いもの食べたかったんだよな"
+
+        "洗剤を買う（¥400）":
+            if not can_afford(400):
+                himo "...400円"
+                jump _weekend_menu
+            "洗剤を買った。"
+            $ change_money(-400)
+            $ daily_flags["used_detergent"] = True
+            himo "ちゃんとしてる感あるな"
 
         "何も買わずに帰る":
-            himo "...金使わないほうがいいか"
+            himo "見るだけにしとこう"
 
     return
 
@@ -774,23 +900,58 @@ label kana_morning_after_event:
     kana_c "...んん"
     kana_c "おはよ..."
 
-    "カナが朝ごはんを作ってくれた。"
-
     $ daily_flags["ate_today"] = True
-    $ change_stamina(15)   # 追加の朝食回復
+    $ change_stamina(15)
 
-    # v1.2修正: 泊まり回数で翌朝テキストを分岐
+    # v1.7修正: 泊まり回数で翌朝テキストを3段階分岐
     python:
         _stay_count = stats.get("kana_stayed_over", 0)
 
-    if _stay_count <= 1:
-        kana_c "朝ごはん、食べるでしょ？"
-        himo "（...なんか、普通に嬉しいな）"
-    else:
+    if _stay_count <= 2:
+        # 1〜2回目: 初々しい
+        "カナが朝ごはんを作ってくれた。"
         kana_c "...昨日、ありがとう"
         kana_c "また泊まりに来てね"
         himo "（泊まるたびに『期待』されてる気がする...）"
         himo "（まあ、今はいっか）"
+    elif _stay_count <= 5:
+        # 3〜5回目: 慣れてきた
+        python:
+            _km_idx = renpy.random.randint(0, 2)
+
+        if _km_idx == 0:
+            kana_c "朝ごはん、目玉焼きとウインナーでいい？"
+            himo "最高"
+            kana_c "簡単なやつしか作れないけど"
+        elif _km_idx == 1:
+            kana_c "ねー、起きてー"
+            "カナがスマホで写真を撮ろうとしている。"
+            himo "やめろ"
+            kana_c "寝顔撮りたかったのに〜"
+        else:
+            "カナは先に起きて、何かの動画を見ていた。"
+            kana_c "あ、起きた。コーヒー淹れたよ"
+            himo "...気が利くな"
+        himo "（もう何回目だ、ここ泊まるの）"
+        himo "（...慣れてきたな）"
+    else:
+        # 6回以上: 日常化
+        python:
+            _km_idx = renpy.random.randint(0, 2)
+
+        if _km_idx == 0:
+            "もはや何も言わずに朝食が出てくる。"
+            kana_c "いつもの"
+            himo "いつもって何だよ"
+            kana_c "目玉焼きとウインナー"
+        elif _km_idx == 1:
+            "カナはまだ寝ている。"
+            "冷蔵庫を開けたら、カナが書いた付箋が貼ってあった。"
+            "「パン焼いて食べてね。バター冷蔵庫の奥」"
+        else:
+            "カナが半分寝ぼけながらくっついてきた。"
+            kana_c "...あと5分"
+            himo "俺のセリフだろそれ"
 
     "気づいたら昼になっていた。"
     "（朝の時間が消えた）"
@@ -811,20 +972,144 @@ label kana_himo_room_morning_event:
     kana_c "...んん...おはよ"
 
     "カナがキッチンに立った。"
-    kana_c "冷蔵庫...何もないじゃん"
-    himo "...すまん"
-    kana_c "しょうがないな〜。コンビニ行ってくるね"
 
-    "カナがコンビニで朝ごはんを買ってきてくれた。"
+    # Phase 4 Step 3: 食材による分岐
+    if inventory.get("groceries", 0) == 2:
+        kana_c "え、ベーコンある！パンケーキ作れる！"
+        himo "（買っといてよかった）"
+        $ change_trust_kana(5)
+        $ inventory["groceries"] = 0
+        $ daily_flags["ate_today"] = True
+        $ change_stamina(15)
+    elif inventory.get("groceries", 0) == 1:
+        kana_c "あ、卵あるじゃん。目玉焼き作るね"
+        himo "（ちゃんと用意しといた甲斐があったな）"
+        $ change_trust_kana(2)
+        $ inventory["groceries"] = 0
+        $ daily_flags["ate_today"] = True
+        $ change_stamina(12)
+    else:
+        kana_c "冷蔵庫...何もないじゃん"
+        himo "...すまん"
+        kana_c "しょうがないな〜。コンビニ行ってくるね"
+        "カナがコンビニで朝ごはんを買ってきてくれた。"
+        $ daily_flags["ate_today"] = True
+        $ change_stamina(10)
+        $ change_trust_kana(2)
 
-    $ daily_flags["ate_today"] = True
-    $ change_stamina(10)
-    $ change_trust_kana(2)
+    # v1.7: 泊まり回数で翌朝テキストを分岐
+    python:
+        _stay_count = stats.get("kana_stayed_over", 0)
 
-    kana_c "ヒモ太郎の部屋、もうちょっと片付けなよ"
-    himo "...はい"
+    if _stay_count <= 2:
+        kana_c "ヒモ太郎の部屋、もうちょっと片付けなよ"
+        himo "...はい"
+        himo "（泊まるたびに『期待』されてる気がする...）"
+        himo "（まあ、今はいっか）"
+    elif _stay_count <= 5:
+        python:
+            _kh_idx = renpy.random.randint(0, 2)
+
+        if _kh_idx == 0:
+            kana_c "ヒモ太郎の部屋、前より散らかってない？"
+            himo "...気のせいだろ"
+        elif _kh_idx == 1:
+            kana_c "次来るまでに掃除しといてよね？"
+            himo "善処します"
+        else:
+            kana_c "ここに置きっぱなしのヘアゴム、回収するね"
+            himo "（生活感出てきたな...）"
+        himo "（もう何回目だ、ここ泊まるの）"
+        himo "（...慣れてきたな）"
+    else:
+        python:
+            _kh_idx = renpy.random.randint(0, 2)
+
+        if _kh_idx == 0:
+            kana_c "おはよ。...もうここ半分私の部屋だね"
+            himo "勝手に住み着くなよ"
+        elif _kh_idx == 1:
+            "カナはまだ寝ている。枕を抱きしめたまま動かない。"
+            himo "（...起こすのもなんだし、放置するか）"
+        else:
+            kana_c "歯ブラシ、私の分も買っといて"
+            himo "...マジで住む気か"
 
     "気づいたら昼になっていた。"
     "（朝の時間が消えた）"
+
+    return
+
+
+# ========================================
+# Phase 4 Step 3: プレゼントシステム
+# ========================================
+
+label give_present(target):
+    $ _gp_target = target
+    menu:
+        "花束を渡す" if inventory.get("bouquet", False):
+            call give_bouquet(_gp_target)
+        "アクセサリーを渡す" if inventory.get("accessory", False):
+            call give_accessory(_gp_target)
+        "推しグッズを渡す" if inventory.get("kana_goods", False) and _gp_target == "kana":
+            call give_kana_goods
+        "やっぱりやめる":
+            pass
+    return
+
+
+label give_bouquet(target):
+    $ _gb_target = target
+    $ inventory["bouquet"] = False
+    $ stats["presents_given"] = stats.get("presents_given", 0) + 1
+
+    if _gb_target == "misaki":
+        himo "これ"
+        misaki_c "...花？ 私に？"
+        misaki_c "...ありがとう"
+        if cold_war.get("misaki_active", False):
+            $ change_trust(8)
+            "（冷戦中に花...効果は大きかったかもしれない）"
+        else:
+            $ change_trust(5)
+    else:
+        himo "はい、これ"
+        kana_c "え！花！？ インスタ載せていい！？"
+        $ change_trust_kana(5)
+
+    return
+
+
+label give_accessory(target):
+    $ _ga_target = target
+    $ inventory["accessory"] = False
+    $ stats["presents_given"] = stats.get("presents_given", 0) + 1
+
+    if _ga_target == "misaki":
+        himo "これ、美咲に"
+        misaki_c "え...私に？"
+        "美咲が目を丸くした。"
+        misaki_c "...ありがとう。大事にする"
+        $ change_trust(10)
+        $ change_dependence(5)
+    else:
+        himo "これ、カナに"
+        kana_c "やばい！かわいい！！"
+        kana_c "インスタ載せていい！？"
+        $ change_trust_kana(10)
+        $ change_dependence_kana(5)
+
+    return
+
+
+label give_kana_goods:
+    $ inventory["kana_goods"] = False
+    $ stats["presents_given"] = stats.get("presents_given", 0) + 1
+
+    kana_c "え！これ限定の！どこで見つけたの！？"
+    kana_c "ヒモ太郎、センスいいかも..."
+    $ change_trust_kana(8)
+    $ flags["kana_gokiragen_skip"] = True
 
     return

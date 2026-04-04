@@ -1568,6 +1568,21 @@ screen status_bar():
                 if kana_flags["met"]:
                     text "カナ 信頼:[kana['trust']] 依存:[kana['dependence']]" size 20 color "#ffe066"
 
+                # Phase 4 Step 3: エナジー表示
+                python:
+                    _ena_color = "#87CEEB"
+                    if energy_full_days >= 4:
+                        _ena_color = "#FF69B4"
+                    elif energy_full_days >= 3:
+                        _ena_color = "#FFB7C5"
+                    _ena_display = ""
+                    for _ei in range(energy_max):
+                        if _ei < energy:
+                            _ena_display += u"\u25cf "
+                        else:
+                            _ena_display += u"\u25cb "
+                text "ENA [_ena_display]" size 20 color _ena_color
+
 
 ## Debug Overlay（デバッグ表示）スクリーン ##############################################
 
@@ -1591,6 +1606,10 @@ screen debug_overlay():
                 if kana_flags["met"]:
                     text "カナstreak: [kana['last_contact']]" size 13 color "#ffe066"
                     text "SNSリスク: [kana_flags['sns_risk']]" size 13 color "#ffe066"
+
+                text "エナジー: [energy]/[energy_max]" size 13 color "#aaffaa"
+                text "満タン日数: [energy_full_days]" size 13 color "#aaffaa"
+                text "魅力ボーナス: [energy_charm_bonus]" size 13 color "#aaffaa"
 
 
 ## Status Detail（詳細ステータス）スクリーン ###########################################

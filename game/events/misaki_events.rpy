@@ -456,7 +456,17 @@ label misaki_date:
             # v1.2: 疑念緩和（正直さは最も効果的）
             $ reduce_suspicion("misaki", 3, "正直に話した")
 
-    if misaki["trust"] >= 45:
+    # Phase 4 Step 3追補: 魅力補正で奢り閾値を下げる
+    python:
+        _eff_charm = player["charm"] + energy_charm_bonus
+        if _eff_charm >= 70:
+            _ogori_threshold = 35
+        elif _eff_charm >= 55:
+            _ogori_threshold = 40
+        else:
+            _ogori_threshold = 45
+
+    if misaki["trust"] >= _ogori_threshold:
         misaki_c "今日は私が出すね"
         himo "マジ？ありがと〜"
         "気軽に受け取った。"
@@ -840,6 +850,9 @@ label M03_go:
             $ change_stamina(30)
             $ change_cleanliness(20)
             $ himo_aptitude["easy_choices"] += 1
+
+            # Phase 4 Step 3: えなマッチ
+            call ena_check("misaki")
 
             if is_weekend():
                 "翌朝、美咲はまだ隣で寝ていた。"
@@ -1267,6 +1280,9 @@ label misaki_room_visit:
             $ change_cleanliness(20)
             $ himo_aptitude["easy_choices"] += 1
 
+            # Phase 4 Step 3: えなマッチ
+            call ena_check("misaki")
+
             # v2.4修正: 土曜の「夜」に泊まった場合のみ日曜朝シーンを発動
             if is_weekend() and game_date["weekday"] == 6 and game_date["time"] == "night":
                 $ flags["misaki_sunday_morning"] = True
@@ -1651,11 +1667,20 @@ label misaki_negotiation_reaction:
         # v1.2: 係数を2に緩和＋上限30%キャップ
         suspicion_penalty = min(30, suspicion.get("misaki", 0) * 2)
 
-        _nego_success_rate = _nego_base_rate + location_bonus - weekly_penalty - suspicion_penalty
+        # Phase 4 Step 3追補: 魅力補正
+        _eff_charm_nego = player["charm"] + energy_charm_bonus
+        if _eff_charm_nego >= 70:
+            charm_negotiation_bonus = 10
+        elif _eff_charm_nego >= 55:
+            charm_negotiation_bonus = 5
+        else:
+            charm_negotiation_bonus = 0
+
+        _nego_success_rate = _nego_base_rate + location_bonus + charm_negotiation_bonus - weekly_penalty - suspicion_penalty
         _nego_success_rate = max(5, min(95, _nego_success_rate))
 
     # v1.1: 判定ログ
-    $ log_action("対面交渉_判定", "rate=" + str(_nego_success_rate) + " loc=" + location + " loc_bonus=" + str(location_bonus) + " weekly_pen=" + str(weekly_penalty) + " susp_pen=" + str(suspicion_penalty))
+    $ log_action("対面交渉_判定", "rate=" + str(_nego_success_rate) + " loc=" + location + " loc_bonus=" + str(location_bonus) + " charm_bonus=" + str(charm_negotiation_bonus) + " weekly_pen=" + str(weekly_penalty) + " susp_pen=" + str(suspicion_penalty))
 
     # 美咲の反応テキスト（信頼度・週間回数で変化）
     if misaki["trust"] >= 60 and weekly_count <= 1:
@@ -1799,6 +1824,7 @@ label misaki_negotiation_amount:
         "美咲から¥[amount:,]をもらった。"
 
         $ change_money(amount, "美咲（対面交渉）")
+        $ flags["first_money"] = True
 
         # パラメータ変動（金額タイプで変化）
         if _nego_amount_type == "low":

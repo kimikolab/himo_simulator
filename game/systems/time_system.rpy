@@ -18,8 +18,11 @@ init python:
         log_action("TIME_ADVANCE", old_time + " -> " + game_date["time"])
 
         # パラメータ減衰
+        _clean_decay = CLEANLINESS_DECAY_PER_TURN
+        if daily_flags.get("used_detergent", False):
+            _clean_decay = max(1, _clean_decay // 2)
         player["stamina"] = max(0, player["stamina"] - STAMINA_DECAY_PER_TURN)
-        player["cleanliness"] = max(0, player["cleanliness"] - CLEANLINESS_DECAY_PER_TURN)
+        player["cleanliness"] = max(0, player["cleanliness"] - _clean_decay)
         misaki["last_contact"] += 1
 
         # Phase 3: カナの連絡間隔も増加
@@ -40,6 +43,7 @@ init python:
 
     def advance_day():
         global game_date, misaki, flags, daily_flags
+        global energy, energy_max, energy_full_days, energy_charm_bonus
         global location_flags, misaki_events, misaki_streak
         global _game_over
 
@@ -115,6 +119,9 @@ init python:
         daily_flags["misaki_line_last_shown"] = []
         # Phase 4 Step 2: ご機嫌取りフラグリセット
         daily_flags["kana_mood_resolved"] = False
+        # Phase 4 Step 3: エナドリ・洗剤フラグリセット
+        daily_flags["used_energy_drink"] = False
+        daily_flags["used_detergent"] = False
 
         # 宿泊リセット
         location_flags["staying_at_misaki"] = False
@@ -199,6 +206,49 @@ init python:
             # 回復期のカウントダウン
             if cold_war.get("recovery_" + _cw_target, 0) > 0:
                 cold_war["recovery_" + _cw_target] -= 1
+
+        # === Phase 4 Step 3: エナジー回復処理 ===
+        if energy < energy_max:
+            _old_ena = energy
+            energy += 1
+            energy_full_days = 0
+            log_action("ENA回復", str(_old_ena) + "→" + str(energy))
+        else:
+            energy_full_days += 1
+            log_action("ENA満タン", str(energy_full_days) + "日目")
+
+        # 満タンボーナス管理（v1.7: 閾値を5日→3日に短縮）
+        if energy_full_days == 1:
+            energy_charm_bonus = 3
+            _pending_events.append(("energy_charm_bonus_notify", None))
+        elif energy_full_days == 2:
+            energy_charm_bonus = 5
+        elif energy_full_days >= 3:
+            energy_charm_bonus = 0
+            _pending_events.append(("energy_overflow_event", None))
+
+        # === Phase 4 Step 3: エナリンクのカウントダウン ===
+        for _el_target in ["misaki", "kana"]:
+            if ena_link_active.get(_el_target, 0) > 0:
+                ena_link_active[_el_target] -= 1
+                log_action("ENA_LINK_TICK", _el_target + " days=" + str(ena_link_active[_el_target]))
+                # v1.7: エナリンク終了通知
+                if ena_link_active[_el_target] == 0:
+                    renpy.notify("エナリンクの効果が切れた")
+
+        # === Phase 4 Step 3: インベントリ日次処理 ===
+        # 香水の効果日数カウントダウン
+        if inventory.get("perfume_days", 0) > 0:
+            inventory["perfume_days"] -= 1
+
+        # 花束の枯れ判定（購入から3日）
+        if inventory.get("bouquet", False) and game_date["day"] - inventory.get("bouquet_day", 0) >= 3:
+            inventory["bouquet"] = False
+
+        # 食材の腐り判定（購入から3日、未消費の場合）
+        if inventory.get("groceries", 0) > 0 and game_date["day"] - inventory.get("groceries_day", 0) >= 3:
+            inventory["groceries"] = 0
+            _pending_events.append(("groceries_spoiled", None))
 
         # === Phase 4 Step 2: 居酒屋ボーナスの翌日リスク ===
         if flags.get("izakaya_money_hangover", False):
@@ -362,4 +412,68 @@ label monthly_billing:
         himo "やばい...どうすんだこれ"
         $ _game_over = "bankruptcy"
 
+    return
+
+
+# === Phase 4 Step 3: エナジー関連イベント ===
+
+label energy_charm_bonus_notify:
+    himo "（なんか今日調子いいな）"
+    return
+
+label energy_overflow_event:
+    $ stats["energy_overflow_count"] = stats.get("energy_overflow_count", 0) + 1
+    "（...やばい。なんかムラムラする）"
+    "（集中できない。落ち着け落ち着け）"
+
+    menu:
+        "どうする？"
+
+        "独りで発散する":
+            "......"
+            "（...虚しい）"
+            $ energy -= 1
+            $ energy_full_days = 0
+            $ energy_charm_bonus = 0
+            $ change_charm(-10)
+            himo "...またエナっちまった"
+            himo "一人でエナるの、ほんと虚しいな..."
+
+        "衝動的に連絡する":
+            "つい、LINEを送ってしまった。"
+            himo "（エナが溜まりすぎて判断力がおかしくなってる...）"
+            "（...なんて送ったんだ俺）"
+            $ energy -= 1
+            $ energy_full_days = 0
+            $ energy_charm_bonus = 0
+            if misaki["trust"] >= kana.get("trust", 0) or not kana_flags["met"]:
+                $ change_trust(-5)
+                $ add_suspicion("overflow_contact")
+                misaki_c "...急にどうしたの"
+            else:
+                $ change_trust_kana(-5)
+                $ add_suspicion_kana("overflow_contact")
+                kana_c "は？笑"
+
+        "我慢する":
+            "（耐えろ...耐えるんだ...）"
+            python:
+                if renpy.random.random() < 0.7:
+                    _overflow_failed = True
+                else:
+                    _overflow_failed = False
+
+            if _overflow_failed:
+                "...ダメだった。"
+                "翌日に持ち越された。"
+            else:
+                "...なんとか耐えた。"
+                "（明日は絶対どうにかしないと）"
+                $ energy_full_days = 4
+
+    return
+
+label groceries_spoiled:
+    "（冷蔵庫から異臭が...）"
+    himo "食材...腐ってる"
     return

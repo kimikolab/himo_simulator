@@ -1,6 +1,6 @@
 # ヒモ男シミュレーター コードベース状態スナップショット
 
-**最終更新**: 2026-04-04（Phase 4 Step 2.5 v1.6 修正済み）
+**最終更新**: 2026-04-04（Phase 4 Step 3 v1.0 実装済み）
 **ブランチ**: feature/Phase4
 
 > Web Claude での修正指示書作成時に参照する。変数名・ラベル名・フラグキーはこの文書を正とする。
@@ -31,6 +31,7 @@ game/
     lie_puzzle.rpy        # 嘘パズル
     evidence_qte.rpy      # 証拠QTE
     gokiragen_qte.rpy     # ご機嫌取りQTE
+    ena_match.rpy         # 簡易えなマッチ（5段階）＋エナチェック
 
   events/
     intro.rpy             # オープニング
@@ -128,12 +129,26 @@ game/
 - `check_forced_afternoon_event` — 強制午後イベント
 - `afternoon_street` — 街に出る
 - `nanpa_event` / `shopping_event` / `pachinko_event` — 各種日常
+- `convenience_store` — コンビニ（弁当・エナドリ・制汗スプレー）
+- `weekend_shopping` — 週末スーパー（食材・お菓子・洗剤）
+- `give_present(target)` — プレゼントを渡す分岐
+- `give_bouquet(target)` / `give_accessory(target)` / `give_kana_goods` — 各プレゼント
 
 ### time_system.rpy（init python 内の関数）
 - `advance_day()` — 日付進行。約束不履行チェック・フラグリセット含む
 - `advance_time()` — 時間帯進行（朝→昼→夜）
 - `queue_misaki_initiative()` — 美咲の自発連絡をキューに追加
 - `check_misaki_event_unlock()` — イベント解放条件チェック
+
+### ena_match.rpy
+- `ena_check(target)` — エナチェック（泊まりイベントから呼び出し。テスト時はスキップ）
+- `ena_zero_branch(target)` — エナ0時の分岐（断る/エナドリ/嘘でごまかす）
+- `lie_puzzle_from_ena(target)` — エナ0嘘パズル連鎖
+- `ena_match(target)` — えなマッチ本体（5段階）
+- `ena_stage1(target)` 〜 `ena_stage5(target)` — 各段階
+- `energy_overflow_event` — 暴発イベント（time_system.rpy 内）
+- `energy_charm_bonus_notify` — 満タンボーナス通知（time_system.rpy 内）
+- `groceries_spoiled` — 食材腐り通知（time_system.rpy 内）
 
 ---
 
@@ -177,6 +192,7 @@ game/
 | `evidence_trace_done_this_week` | bool | 今週痕跡イベント済み（週間リセット） |
 | `evidence_trace_count` | int | 痕跡イベント発生回数（永続。2回目以降は専用テキスト＋即level=2冷戦） |
 | `offered_help_this_week` | bool | 今週「手伝い」選択済み（週間リセット） |
+| `kana_gokiragen_skip` | bool | 推��グッズでご機嫌取り1回免除 |
 
 ### location_flags（場所関連・永続）
 
@@ -206,6 +222,8 @@ game/
 | `misaki_lined_only` | bool | LINEのみで対面なし |
 | `misaki_line_last_shown` | list | LINE選択肢の前回表示分 |
 | `kana_mood_resolved` | bool | ご機嫌取り済み |
+| `used_energy_drink` | bool | 当日エナドリ使用済み |
+| `used_detergent` | bool | 洗剤使用（清潔感減衰半減） |
 
 ### appointments（約束日管理）
 
@@ -237,6 +255,38 @@ game/
 | `recovery_kana` | int | カナの回復度 |
 
 冷戦中は対象キャラの自発連絡（`check_kana_initiative`、`queue_misaki_initiative`）と中盤イベント（`check_midgame_events` 内の該当キャラ分岐）が発火しない。
+
+### エナジーシステム（Phase 4 Step 3追加）
+
+| 変数 | 型 | 説明 |
+|------|------|------|
+| `energy` | int | エナジー残量（初期3、最大 `energy_max`） |
+| `energy_max` | int | エナジー上限（初期3） |
+| `energy_full_days` | int | 満タン連続日数（3日で魅力+3、5日で暴発） |
+| `energy_charm_bonus` | int | 満タンボーナスの現在値（ナンパ成功率等に加算） |
+
+### インベントリ（Phase 4 Step 3追加）
+
+| キー | 型 | 説明 |
+|------|------|------|
+| `energy_drink` | int | 栄養ドリンク所持数 |
+| `groceries` | int | 食材（0=なし, 1=普通, 2=いい食材。泊まり翌朝で消費） |
+| `groceries_day` | int | 食材購入日（3日で腐る） |
+| `deodorant` | int | 制汗スプレー所持数 |
+| `perfume_days` | int | 香水残り効果日数（えなマッチ段階1でムー���+1） |
+| `bouquet` | bool | 花束所持（3日で枯れる） |
+| `bouquet_day` | int | 花束購入日 |
+| `accessory` | bool | アクセサリー所持 |
+| `kana_goods` | bool | ��しグッズ所持 |
+
+### エナリンク（Phase 4 Step 3追加）
+
+| 変数 | 型 | 説明 |
+|------|------|------|
+| `ena_link_active["misaki"/"kana"]` | int | エナリンク残り日数（0=無効。3日間有効） |
+| `ena_aftercare_history["misaki"/"kana"]` | list | アフターケア選択肢の直近3回の��択キー |
+
+エナリンクバフ: 対象キャラの疑念蓄積速度 -50%（`add_suspicion` / `add_suspicion_kana` 内で判定）。
 
 ---
 

@@ -670,9 +670,9 @@ label evidence_trace_event(discoverer):
                     $ flags["evidence_trace_count"] = flags.get("evidence_trace_count", 0) + 1
                     return
                 else:
-                    himo "妹が来ただけだって"
-                    kana_c "...ヒモ太郎に妹いたっけ"
-                    himo "いとこ。いとこの妹"
+                    himo "友達が泊まりに来ただけだって"
+                    kana_c "...友達"
+                    himo "大学の時の。久しぶりに飲んでさ"
                     kana_c "...ふーん"
                     "カナは完全には信じていないが、追及をやめた。"
                     $ suspicion["kana"] = suspicion.get("kana", 0) + 5

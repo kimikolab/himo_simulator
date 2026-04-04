@@ -268,6 +268,13 @@ init python:
 
     def add_suspicion(reason):
         global suspicion_count
+
+        # Phase 4 Step 3: エナリンクバフ（疑念蓄積速度 -50%）
+        if ena_link_active.get("misaki", 0) > 0:
+            if renpy.random.random() < 0.5:
+                log_action("疑念BLOCKED misaki エナリンク中 reason=" + reason)
+                return
+
         suspicion_count += 1
 
         # v1.2修正: too_many_requests のテロップをバリエーション化
@@ -332,6 +339,17 @@ init python:
         cold_war[target + "_apology_available"] = False
         cold_war["recovery_" + target] = 2
         log_action("冷戦解除 " + target + " → 回復期2日")
+
+    def add_suspicion_kana(reason):
+        """カナの疑念を増加させる"""
+        # Phase 4 Step 3: エナリンクバフ（疑念蓄積速度 -50%）
+        if ena_link_active.get("kana", 0) > 0:
+            if renpy.random.random() < 0.5:
+                log_action("疑念BLOCKED kana エナリンク中 reason=" + reason)
+                return
+
+        suspicion["kana"] = suspicion.get("kana", 0) + 1
+        log_action("疑念UP kana reason=" + reason + " now=" + str(suspicion.get("kana", 0)))
 
     def reduce_suspicion(target, amount, reason=""):
         """疑念を減少させるヘルパー関数"""

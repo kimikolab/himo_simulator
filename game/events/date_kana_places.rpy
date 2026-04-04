@@ -33,6 +33,14 @@ label kana_date_with_location:
     if daily_flags["date_location"] != "himo_room":
         $ daily_flags["ate_today"] = True
 
+    # Phase 4 Step 3: プレゼントを渡す
+    if inventory.get("bouquet", False) or inventory.get("accessory", False) or (inventory.get("kana_goods", False)):
+        menu:
+            "プレゼントを渡す":
+                call give_present("kana")
+            "渡さない":
+                pass
+
     # 探り・地雷・ハプニングの判定
     call check_date_incidents("kana")
 
@@ -46,10 +54,33 @@ label kana_date_with_location:
 label kana_date_cafe:
     $ stats["date_locations"] = stats.get("date_locations", {})
     $ stats["date_locations"]["cafe"] = stats["date_locations"].get("cafe", 0) + 1
-    "カフェに入った。"
-    kana_c "ここインスタ映えする〜"
+    $ kana_date_location_count["cafe"] = kana_date_location_count.get("cafe", 0) + 1
 
-    "カナがスマホを取り出して写真を撮り始めた。"
+    "カフェに入った。"
+
+    # v1.7: 訪問回数でテキスト分岐
+    python:
+        _cafe_count = kana_date_location_count["cafe"]
+
+    if _cafe_count == 1:
+        kana_c "ここインスタ映えする〜"
+        "カナがスマホを取り出して写真を撮り始めた。"
+    elif _cafe_count == 2:
+        kana_c "また来ちゃった"
+        kana_c "ここのパンケーキが好きなんだよね"
+    else:
+        python:
+            _cafe_txt = renpy.random.randint(0, 2)
+        if _cafe_txt == 0:
+            kana_c "ここ来すぎじゃない？笑"
+            himo "カナが好きなんだろ"
+        elif _cafe_txt == 1:
+            kana_c "今日は新メニュー出てるよ"
+        else:
+            "店員に顔を覚えられていた。"
+            "店員「いつものお席ですか？」"
+            himo "（常連扱い...）"
+
     "カナが奢ってくれた。"
 
     $ change_trust_kana(4)    # v1.3: 5→4
@@ -83,13 +114,38 @@ label kana_date_karaoke:
 label kana_date_campus:
     $ stats["date_locations"] = stats.get("date_locations", {})
     $ stats["date_locations"]["campus"] = stats["date_locations"].get("campus", 0) + 1
+    $ kana_date_location_count["university"] = kana_date_location_count.get("university", 0) + 1
+
     "カナの大学の近くで会った。"
-    kana_c "この辺よく来るんだ〜"
 
-    "カナの友達とすれ違った。"
-    kana_c "あ、まりちゃん！紹介するね、ヒモ太郎！"
+    # v1.7: 訪問回数でテキスト分岐
+    python:
+        _campus_count = kana_date_location_count["university"]
 
-    "...紹介された。"
+    if _campus_count == 1:
+        kana_c "この辺よく来るんだ〜"
+        "カナの友達とすれ違った。"
+        kana_c "あ、まりちゃん！紹介するね、ヒモ太郎！"
+        "...紹介された。"
+    elif _campus_count == 2:
+        "カナの友達とすれ違った。"
+        kana_c "あ、まりちゃん！この前の人！"
+        "まりちゃん「あ〜、カナの彼氏？」"
+        himo "（彼氏...?）"
+    else:
+        python:
+            _campus_txt = renpy.random.randint(0, 2)
+        if _campus_txt == 0:
+            kana_c "今日はまりちゃんいないね"
+            himo "そっか"
+        elif _campus_txt == 1:
+            "遠くにカナの知り合いが見える。"
+            kana_c "あ、知り合い。...今日は紹介しなくていいや"
+            himo "（助かる）"
+        else:
+            kana_c "この辺のラーメン屋おいしいんだよね"
+            himo "行こう"
+
     "近くの店でご飯を食べた。カナが奢ってくれた。"
 
     $ change_trust_kana(6)    # v1.3: 8→6
@@ -98,7 +154,7 @@ label kana_date_campus:
     $ change_stamina(20)   # 食事（差し引き+10）
     $ kana_flags["sns_risk"] = kana_flags.get("sns_risk", 0) + 1
 
-    # 情報収集イベント
+    # 情報収集イベント（初回のみ）
     if not flags.get("kana_friend_info_obtained", False):
         "友達と少し話す機会があった。"
         "友達「カナってさ、前の彼氏に浮気されてから男性不信なんだよね」"

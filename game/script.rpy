@@ -2,27 +2,6 @@
 # メインスクリプト（Phase 2: 30日・曜日・美咲イベント対応）
 # キャラクター定義は data/characters.rpy に移動（v2.6）
 
-# Phase 2: 曜日表示付きステータスバー
-screen status_bar():
-    frame:
-        xalign 0.5
-        yalign 0.02
-        padding (15, 8)
-
-        hbox:
-            spacing 30
-
-            text "[game_date['day']]日目([get_weekday_string()])" size 24
-            text get_time_string() size 24
-            text "所持金: ¥[player['money']:,]" size 24 color "#FFD700"
-            text "信頼: [misaki['trust']]" size 22 color "#87CEEB"
-            text "依存: [misaki['dependence']]" size 22 color "#FF69B4"
-
-            if player["stamina"] < 30:
-                text "[[疲労]" size 20 color "#ff6b6b"
-            if player["cleanliness"] < 20:
-                text "[[不潔]" size 20 color "#4ecdc4"
-
 
 label start:
     call intro_scene
@@ -280,15 +259,8 @@ label afternoon_actions:
         "カナに謝りに行く" if cold_war.get("kana_apology_available", False):
             call apology_event("kana")
 
-        "コンビニで昼飯を買う（500円）":
-            if not can_afford(500):
-                himo "...財布が軽すぎる"
-                jump afternoon_actions
-            $ change_money(-500)
-            $ change_stamina(10)
-            $ daily_flags["ate_today"] = True
-            "コンビニ飯で腹を満たした。"
-            himo "まあ生きていけるな"
+        "コンビニに行く":
+            call convenience_store
 
         "昼寝する":
             "昼寝タイム。"
@@ -401,14 +373,8 @@ label night_actions:
         "カナに謝りに行く" if cold_war.get("kana_apology_available", False):
             call apology_event("kana")
 
-        "コンビニ飯（700円）":
-            if not can_afford(700):
-                himo "...財布の中身が足りない"
-                jump night_actions
-            "コンビニ弁当を買ってきた。"
-            $ change_money(-700)
-            $ change_stamina(12)
-            $ daily_flags["ate_today"] = True
+        "コンビニに行く":
+            call convenience_store
 
         "風呂入って寝る":
             $ change_cleanliness(50)

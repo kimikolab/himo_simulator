@@ -109,6 +109,8 @@ default flags = {
     "evidence_trace_done_this_week": False,
     "evidence_trace_count": 0,             # v1.6: 痕跡イベント発生回数（永続）
     "offered_help_this_week": False,       # v1.5: 手伝い選択肢の週間制限
+    # Phase 4 Step 3: プレゼント・エナジー
+    "kana_gokiragen_skip": False,          # 推しグッズでご機嫌取り1回免除
 }
 
 # 1日ごとにリセットされるフラグ
@@ -129,6 +131,8 @@ default daily_flags = {
     "misaki_lined_only": False,     # Phase 4 v1.4: LINEのみで対面していない
     "misaki_line_last_shown": [],   # Phase 4 v1.6: 美咲LINE選択肢の前回表示分
     "kana_mood_resolved": False,    # Phase 4 Step 2: その日のご機嫌取りが済んだか
+    "used_energy_drink": False,     # Phase 4 Step 3: 当日エナドリ使用済み
+    "used_detergent": False,        # Phase 4 Step 3: 洗剤使用（清潔感減衰半減）
 }
 
 # 美咲イベント進行フラグ（Phase 2追加）
@@ -206,6 +210,15 @@ default stats = {
     "kana_stayed_himo_room": 0,      # カナがヒモ太郎の部屋に泊まった回数
     "misaki_ignored_count": 0,       # v1.3: 美咲の既読スルー連続回数
     "kana_visit_count": 0,           # v1.5: カナの部屋への訪問回数
+    # Phase 4 Step 3: エナジー統計
+    "ena_match_count": 0,            # エナマッチ総回数
+    "ena_match_success": 0,          # エナマッチ成功回数
+    "ena_match_failed": 0,           # エナマッチ失敗回数
+    "ena_link_count": 0,             # エナリンク成立回数
+    "ena_touch_count": 0,            # エナタッチ回数（引いた回数）
+    "energy_drinks_used": 0,         # エナドリ使用回数
+    "presents_given": 0,             # プレゼント渡した回数
+    "energy_overflow_count": 0,      # 暴発回数
     # Phase 4 Step 2.5: 冷戦統計
     "cold_war_misaki_count": 0,
     "cold_war_kana_count": 0,
@@ -268,6 +281,48 @@ default cold_war = {
     "recovery_misaki": 0,
     "recovery_kana": 0,
 }
+
+# === Phase 4 Step 3: エナジーシステム ===
+default energy = 3
+default energy_max = 3
+default energy_full_days = 0        # 満タン連続日数
+default energy_charm_bonus = 0      # 満タンボーナスの現在値
+
+# インベントリ
+default inventory = {
+    "energy_drink": 0,       # 栄養ドリンク所持数
+    "groceries": 0,          # 0=なし, 1=普通, 2=いい食材
+    "groceries_day": 0,      # 食材購入日（腐り判定用）
+    "deodorant": 0,          # 制汗スプレー所持数
+    "perfume_days": 0,       # 香水残り効果日数
+    "bouquet": False,        # 花束所持
+    "bouquet_day": 0,        # 花束購入日（枯れ判定用）
+    "accessory": False,      # アクセサリー所持
+    "kana_goods": False,     # 推しグッズ所持
+}
+
+# エナリンク（えなマッチ成功後のバフ、残り日数）
+default ena_link_active = {
+    "misaki": 0,
+    "kana": 0,
+}
+
+# アフターケア選択肢の使用履歴（連続使用減衰用）
+default ena_aftercare_history = {
+    "misaki": [],
+    "kana": [],
+}
+
+# Phase 4 Step 3 v1.7: カナデート場所別訪問カウント
+default kana_date_location_count = {
+    "cafe": 0,
+    "karaoke": 0,
+    "university": 0,
+    "room": 0,
+}
+
+# Phase 4 Step 3 v1.7: 美咲部屋デート訪問カウント
+default misaki_room_visit_count = 0
 
 # セリフログ用リスト
 default dialogue_log_entries = []

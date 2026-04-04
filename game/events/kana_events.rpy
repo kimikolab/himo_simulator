@@ -255,9 +255,66 @@ label kana_visit:
     if player["charm"] < KANA_CHARM_CAP:
         $ change_charm(1)
 
+    # --- Phase 4 Step 3 v1.7: エナタッチ判定（Stage3以上で発生）---
+    python:
+        _ena_touch_trigger = False
+        if kana["stage"] >= STAGE_CLOSE:
+            if kana["dependence"] >= 40:
+                _ena_touch_trigger = True
+            elif renpy.random.random() < 0.5:
+                _ena_touch_trigger = True
+
+    if _ena_touch_trigger:
+        call kana_daytime_touch
+
     $ kana["met_today"] = True
     $ reset_contact_kana()
     $ kana_dates_count += 1
+
+    return
+
+
+# ========================================
+# Phase 4 Step 3 v1.7: カナの昼エナタッチ
+# ========================================
+
+label kana_daytime_touch:
+    python:
+        _touch_texts = [
+            ("ねえ、まだ帰らないでしょ？", "カナがくっついてきた。"),
+            ("暇〜。ヒモ太郎も暇でしょ？", "カナが甘えてきた。"),
+            ("ちょっとだけ...いいでしょ？", "カナが離れない。"),
+        ]
+        _tt = renpy.random.choice(_touch_texts)
+
+    kana_c "[_tt[0]]"
+    "[_tt[1]]"
+
+    if energy <= 0:
+        menu:
+            "そろそろ帰るわ":
+                kana_c "え〜...もうちょっといてよ"
+                $ change_trust_kana(-2)
+                himo "（不満そう...）"
+
+            "嘘でごまかす":
+                himo "ちょっと体調悪くて..."
+                kana_c "大丈夫？無理しないでね"
+                $ change_trust_kana(-1)
+    else:
+        menu:
+            "もうちょっといる":
+                "しばらくカナとイチャイチャした。"
+                $ energy -= 1
+                $ energy_full_days = 0
+                $ energy_charm_bonus = 0
+                $ change_dependence_kana(5)
+                $ stats["ena_touch_count"] = stats.get("ena_touch_count", 0) + 1
+                himo "（エナ使っちゃったな...）"
+
+            "そろそろ帰るわ":
+                kana_c "え〜、つまんない"
+                $ change_trust_kana(-2)
 
     return
 
@@ -772,10 +829,8 @@ label kana_stay_event:
     $ flags["misaki_sunday_morning"] = False
     $ location_flags["staying_at_misaki"] = False
 
-    # === エナ期待の匂わせ（ステップ3で本格化）===
-    "..."
-    "カナがくっついてきた。"
-    "一緒に過ごした。"
+    # === Phase 4 Step 3: えなマッチ ===
+    call ena_check("kana")
 
     kana_c "...えへへ"
     "カナが幸せそうに笑った。"
@@ -991,10 +1046,8 @@ label kana_stay_at_himo_room_event:
         $ escalate_cold_war("misaki")
         himo "（...美咲にバレたら、もう終わりだな）"
 
-    # === エナ期待の匂わせ ===
-    "..."
-    "カナがくっついてきた。"
-    "一緒に過ごした。"
+    # === Phase 4 Step 3: えなマッチ ===
+    call ena_check("kana")
 
     kana_c "...ヒモ太郎の部屋、狭いけど落ち着く"
 

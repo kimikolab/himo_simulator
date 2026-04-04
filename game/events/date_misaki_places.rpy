@@ -56,6 +56,14 @@ label misaki_date_famires:
     $ change_stamina(-10)
     $ change_stamina(20)   # 食事による体力回復（差し引き+10）
 
+    # Phase 4 Step 3: プレゼントを渡す
+    if inventory.get("bouquet", False) or inventory.get("accessory", False):
+        menu:
+            "プレゼントを渡す":
+                call give_present("misaki")
+            "渡さない":
+                pass
+
     # === 対面交渉の切り出しチャンス ===
     if misaki["trust"] >= 35 and money_request_weekly["count"] < NEGOTIATION_WEEKLY_LIMIT and not daily_flags.get("asked_money_today", False):
         menu:
@@ -137,9 +145,34 @@ label misaki_date_izakaya:
 label misaki_date_room:
     $ stats["date_locations"] = stats.get("date_locations", {})
     $ stats["date_locations"]["misaki_room"] = stats["date_locations"].get("misaki_room", 0) + 1
+    $ misaki_room_visit_count += 1
+
     "美咲の部屋に行った。"
-    misaki_c "散らかっててごめんね"
-    himo "いいっていいって"
+
+    # v1.7: 訪問回数でテキスト分岐
+    if misaki_room_visit_count == 1:
+        misaki_c "散らかっててごめんね"
+        himo "いいっていいって"
+    elif misaki_room_visit_count <= 3:
+        python:
+            _mr_txt = renpy.random.randint(0, 1)
+        if _mr_txt == 0:
+            misaki_c "今日は片付けたんだ...ちょっとだけ"
+            himo "お、きれいじゃん"
+        else:
+            misaki_c "何飲む？お茶しかないけど"
+            himo "お茶でいい"
+    else:
+        python:
+            _mr_txt = renpy.random.randint(0, 1)
+        if _mr_txt == 0:
+            "もう勝手知ったる美咲の部屋。"
+            himo "ただいま"
+            misaki_c "...おかえり"
+        else:
+            misaki_c "そろそろスリッパ買おうかな。ヒモ太郎用の"
+            himo "え、いいの？"
+            misaki_c "...冗談"
 
     "2人きりの空間。"
     "美咲が何か作ってくれた。"
@@ -230,6 +263,14 @@ label misaki_visit_himo_room:
     "いつもと違う距離感。"
     "美咲がリラックスしている気がする。"
 
+    # Phase 4 Step 3: プレゼントを渡す
+    if inventory.get("bouquet", False) or inventory.get("accessory", False):
+        menu:
+            "プレゼントを渡す":
+                call give_present("misaki")
+            "渡さない":
+                pass
+
     # 会話メニュー
     menu:
         "何を話す？"
@@ -293,6 +334,9 @@ label misaki_visit_himo_room:
                 if cold_war.get("kana_active", False):
                     $ escalate_cold_war("kana")
                     himo "（...カナが知ったら、もう二度と会ってくれないだろうな）"
+
+                # Phase 4 Step 3: えなマッチ
+                call ena_check("misaki")
 
             "送ってくよ":
                 misaki_c "...ありがとう"
