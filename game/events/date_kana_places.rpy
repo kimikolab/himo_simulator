@@ -113,17 +113,51 @@ label kana_date_campus:
 label kana_date_himo_room:
     $ stats["date_locations"] = stats.get("date_locations", {})
     $ stats["date_locations"]["himo_room"] = stats["date_locations"].get("himo_room", 0) + 1
+    # v1.2追加: カナ用のhimo_roomカウンタも更新
+    $ stats["date_locations"]["himo_room_kana"] = stats["date_locations"].get("himo_room_kana", 0) + 1
     "ヒモ太郎の部屋で会うことにした。"
 
-    if player["cleanliness"] >= 50:
-        kana_c "意外と綺麗にしてるじゃん"
-        $ change_trust_kana(4)    # v1.3: 5→4
-    elif player["cleanliness"] >= 30:
-        kana_c "...まあ、男の人の部屋ってこんなもんか"
-        $ change_trust_kana(2)    # v1.3: 3→2
+    # v1.2修正: 回数分岐テキスト
+    python:
+        _himo_date_count = stats.get("date_locations", {}).get("himo_room_kana", 0)
+
+    if _himo_date_count <= 1:
+        if player["cleanliness"] >= 50:
+            kana_c "意外と綺麗にしてるじゃん"
+            $ change_trust_kana(4)
+        elif player["cleanliness"] >= 30:
+            kana_c "...まあ、男の人の部屋ってこんなもんか"
+            $ change_trust_kana(2)
+        else:
+            kana_c "...汚い"
+            $ change_trust_kana(-3)
+    elif _himo_date_count <= 3:
+        python:
+            _hr = renpy.random.choice([
+                "またヒモ太郎の部屋？ まあいいけど",
+                "なんか落ち着くよね、ここ",
+                "今日は何する？ゲームでもする？",
+            ])
+        kana_c "[_hr]"
+        $ change_trust_kana(2)
+    elif _himo_date_count <= 6:
+        python:
+            _hr = renpy.random.choice([
+                "もう自分の部屋みたいな感覚",
+                "冷蔵庫勝手に開けていい？",
+                "あ、前来たときのヘアゴムあった！",
+            ])
+        kana_c "[_hr]"
+        $ change_trust_kana(3)
     else:
-        kana_c "...汚い"
-        $ change_trust_kana(-3)
+        python:
+            _hr = renpy.random.choice([
+                "ただいま〜...って違うか",
+                "ねえ、合鍵ちょうだい",
+                "もう半同棲じゃん、これ",
+            ])
+        kana_c "[_hr]"
+        $ change_trust_kana(4)
 
     $ change_dependence_kana(6)
     $ change_stamina(-5)

@@ -85,6 +85,14 @@ label main_loop:
 label process_pending_events:
     if len(_pending_events) > 0:
         $ _ev = _pending_events.pop(0)
+        # v1.5: 冷戦中は美咲の自発LINEイベントをスキップ
+        if _ev[0] in ("misaki_check_in", "misaki_stress_call") and cold_war.get("misaki_active", False):
+            $ log_action("CHECK_IN 冷戦中のためスキップ: " + _ev[0])
+            jump process_pending_events
+        # v1.5: 冷戦中はカナの自発イベントもスキップ
+        if _ev[0] in ("kana_check_in",) and cold_war.get("kana_active", False):
+            $ log_action("CHECK_IN 冷戦中のためスキップ: " + _ev[0])
+            jump process_pending_events
         if _ev[1] is not None:
             call expression _ev[0] pass (_ev[1])
         else:
@@ -96,6 +104,15 @@ label process_pending_events:
 label morning_actions:
     # v1.1: 防御クリア（前日から持ち越されないように）
     $ flags["morning_consumed"] = False
+
+    # v1.4修正: 強制朝イベントを最優先で処理
+    # （中盤イベントより前に呼ぶ。翌朝フラグは内部で無条件クリアされる）
+    call check_forced_morning_event
+
+    # 強制イベントが発生してターンが消費された場合は通常行動をスキップ
+    if flags.get("morning_consumed", False):
+        $ flags["morning_consumed"] = False
+        return
 
     # Phase 4追加: SNS受動通知
     $ check_sns_notification()
@@ -111,22 +128,29 @@ label morning_actions:
     # v1.4: notify型イベントはここで先に処理（ターンは消費しない）
     call process_pending_events
 
-    # v1.1追加: 強制朝イベントのチェック
-    call check_forced_morning_event
-
-    # 強制イベントが発生してターンが消費された場合は通常行動をスキップ
-    if flags.get("morning_consumed", False):
-        $ flags["morning_consumed"] = False
-        return
-
     "――朝、10時――"
 
+    # v1.5: 朝テキストのバリエーション
     if is_weekend():
-        himo "週末の朝か。最高すぎる"
+        python:
+            _weekend_morning = renpy.random.choice([
+                "週末の朝か。最高すぎる",
+                "休日の朝。何の予定もない。最高",
+                "土日は最高。二度寝してもいい",
+            ])
+        himo "[_weekend_morning]"
     else:
-        himo "...よし、起きるか"
-        "平日の朝10時。サラリーマンはもう満員電車。"
-        himo "俺は自由だわ〜"
+        python:
+            _morning_lines = [
+                ("...よし、起きるか", "平日の朝10時。サラリーマンはもう満員電車。", "俺は自由だわ〜"),
+                ("...あと5分", "結局30分寝てた。まあ誰にも怒られないし。", "自由って最高"),
+                ("...今日も予定なし", "窓の外、スーツ姿が急いでる。", "俺は急ぐ必要ないけどな"),
+                ("んー...起きた", "スマホの時計。10時半。", "遅刻という概念がない生活"),
+            ]
+            _m1, _m2, _m3 = renpy.random.choice(_morning_lines)
+        himo "[_m1]"
+        "[_m2]"
+        himo "[_m3]"
 
     menu:
         "【[game_date['day']]日目([get_weekday_string()])・朝】何をする？"
@@ -143,6 +167,13 @@ label morning_actions:
 
         "カナに連絡する" if kana_flags["met"]:
             call contact_kana
+
+        # Phase 4 Step 2.5: 謝罪メニュー
+        "美咲に謝りに行く" if cold_war.get("misaki_apology_available", False):
+            call apology_event("misaki")
+
+        "カナに謝りに行く" if cold_war.get("kana_apology_available", False):
+            call apology_event("kana")
 
         "二度寝する":
             "もうちょっと寝よう。"
@@ -183,12 +214,27 @@ label afternoon_actions:
 
     "――昼、14時――"
 
+    # v1.5: 昼テキストのバリエーション
     if is_weekend():
-        himo "週末の昼か。最高すぎる"
+        python:
+            _weekend_afternoon = renpy.random.choice([
+                "週末の昼か。最高すぎる",
+                "休日の昼。自由な時間だ",
+                "のんびりした昼下がりだな",
+            ])
+        himo "[_weekend_afternoon]"
     else:
+        python:
+            _afternoon_lines = [
+                ("ランチタイムも終わりか", "俺はこれから昼飯でも食うかな"),
+                ("昼過ぎ。腹減ったな", "何しよっかな"),
+                ("14時。世間は仕事中だろうな", "俺は...まあ自由だ"),
+                ("昼下がり。いい天気だ", "外に出るか、ゴロゴロするか"),
+            ]
+            _a1, _a2 = renpy.random.choice(_afternoon_lines)
         "平日の昼下がり。"
-        himo "ランチタイムも終わりか"
-        himo "俺はこれから昼飯でも食うかな"
+        himo "[_a1]"
+        himo "[_a2]"
 
     menu:
         "【[game_date['day']]日目([get_weekday_string()])・昼】何をする？"
@@ -203,8 +249,8 @@ label afternoon_actions:
         "美咲に連絡する" if game_date["day"] > 1:
             call contact_misaki
 
-        # Phase 4 v1.3: 土日は美咲を昼に誘える
-        "美咲を昼デートに誘う" if (is_weekend() and not misaki["met_today"] and game_date["day"] > 1):
+        # Phase 4 v1.3: 土日は美咲を昼に誘える（v1.5: 冷戦中は非表示）
+        "美咲を昼デートに誘う" if (is_weekend() and not misaki["met_today"] and game_date["day"] > 1 and not cold_war.get("misaki_active", False)):
             call misaki_daytime_date_request
 
         # Phase 3: カナに連絡する
@@ -226,6 +272,13 @@ label afternoon_actions:
             # K-05トリガー（v1.3: 依存度50以上 + 25日目以降 or デート12回以上 + 25日目以降）
             if ((kana["dependence"] >= 50 or kana_dates_count >= 12) and game_date["day"] >= 25 and not kana_flags["k05_done"]):
                 call k05_do_you_like_me
+
+        # Phase 4 Step 2.5: 謝罪メニュー
+        "美咲に謝りに行く" if cold_war.get("misaki_apology_available", False):
+            call apology_event("misaki")
+
+        "カナに謝りに行く" if cold_war.get("kana_apology_available", False):
+            call apology_event("kana")
 
         "コンビニで昼飯を買う（500円）":
             if not can_afford(500):
@@ -323,15 +376,15 @@ label night_actions:
         "美咲の部屋に行く" if (is_weekend() and misaki_events["M03_unlocked"] and not misaki_events["M03_done"]):
             call misaki_event_M03
 
-        # Phase 2 v2.0: 美咲宅訪問（M-03完了後、週末定期行動）
-        "美咲の部屋に行く（週末）" if (is_weekend() and misaki_events["M03_done"] and location_flags["misaki_room_unlocked"] and not misaki["met_today"]):
+        # Phase 2 v2.0: 美咲宅訪問（M-03完了後、週末定期行動）（v1.5: 冷戦中は非表示）
+        "美咲の部屋に行く（週末）" if (is_weekend() and misaki_events["M03_done"] and location_flags["misaki_room_unlocked"] and not misaki["met_today"] and not cold_war.get("misaki_active", False)):
             call misaki_room_visit
 
-        # Phase 2 v2.0: 美咲宅訪問（平日、関係CLOSE以上）
-        "美咲の部屋に行く" if (misaki["stage"] >= STAGE_CLOSE and misaki_events["M03_done"] and not is_weekend() and not misaki["met_today"]):
+        # Phase 2 v2.0: 美咲宅訪問（平日、関係CLOSE以上）（v1.5: 冷戦中は非表示）
+        "美咲の部屋に行く" if (misaki["stage"] >= STAGE_CLOSE and misaki_events["M03_done"] and not is_weekend() and not misaki["met_today"] and not cold_war.get("misaki_active", False)):
             call misaki_room_visit
 
-        "美咲を誘う" if (not misaki["met_today"]):
+        "美咲を誘う" if (not misaki["met_today"] and not cold_war.get("misaki_active", False)):
             call misaki_date_request
 
         # Phase 3: カナを誘う
@@ -340,6 +393,13 @@ label night_actions:
 
         "美咲に連絡する":
             call contact_misaki
+
+        # Phase 4 Step 2.5: 謝罪メニュー
+        "美咲に謝りに行く" if cold_war.get("misaki_apology_available", False):
+            call apology_event("misaki")
+
+        "カナに謝りに行く" if cold_war.get("kana_apology_available", False):
+            call apology_event("kana")
 
         "コンビニ飯（700円）":
             if not can_afford(700):

@@ -177,24 +177,144 @@ label ending_demo:
 
 
 label ending_bankruptcy_30days:
+    # === Phase 4 Step 2.5: 破滅END分岐 ===
+    python:
+        _misaki_rescue = (
+            misaki["stage"] >= STAGE_DATING
+            and misaki["trust"] > kana.get("trust", 0)
+            and suspicion.get("misaki", 0) < 30
+        )
+        _kana_rescue = (
+            kana_flags.get("met", False)
+            and kana["stage"] >= STAGE_CLOSE
+            and kana["trust"] > misaki["trust"]
+            and suspicion.get("kana", 0) < 30
+        )
+
+    if _misaki_rescue:
+        jump ending_bankruptcy_misaki_rescue
+    elif _kana_rescue:
+        jump ending_bankruptcy_kana_rescue
+    else:
+        jump ending_bankruptcy
+
+
+# === 美咲居候END ===
+
+label ending_bankruptcy_misaki_rescue:
+    $ flags["game_ended"] = True
+    $ _ending_type = "gray"
+    $ log_action("BANKRUPTCY_MISAKI_RESCUE END")
+    $ export_debug_log()
+    $ export_dialogue_log()
+
+    scene bg_placeholder with fade
+    centered "{size=40}エンディング: 居候{/size}"
+
+    "家賃が払えなかった。"
+    "大家からの催促が来た。"
+    himo "...やばい"
+
+    "途方に暮れていると、美咲から連絡が来た。"
+
+    misaki_c "ヒモ太郎、大丈夫？"
+    himo "...実は、家賃が"
+    misaki_c "..."
+    misaki_c "...うち、来る？"
+    himo "え"
+    misaki_c "しょうがないな...って言ったら怒る？"
+
+    "美咲の声には、どこか諦めたような響きがあった。"
+    "でも、拒絶ではなかった。"
+    himo "...ありがとう"
+
+    "こうして、俺は美咲の部屋に転がり込んだ。"
+    "..."
+    "美咲は優しかった。"
+    "でも、対等な関係はもう崩れていた。"
+
+    misaki_c "ヒモ太郎は...このままでいいの？"
+    himo "..."
+    "答えられなかった。"
+
+    centered "{size=30}GRAY END — 居候{/size}"
+    centered "『助けてもらえた。でも、これは本当に救いなのか。』"
+
+    call show_himo_aptitude_result
+    return
+
+
+# === カナ居候END ===
+
+label ending_bankruptcy_kana_rescue:
+    $ flags["game_ended"] = True
+    $ _ending_type = "gray"
+    $ log_action("BANKRUPTCY_KANA_RESCUE END")
+    $ export_debug_log()
+    $ export_dialogue_log()
+
+    scene bg_placeholder with fade
+    centered "{size=40}エンディング: ヒモの完成{/size}"
+
+    "家賃が払えなかった。"
+    "大家からの催促が来た。"
+    himo "...マジでやばい"
+
+    "カナに電話した。"
+
+    kana_c "え、家賃？"
+    kana_c "..."
+    kana_c "じゃあ、うち来れば？"
+
+    "カナはあっさり言った。"
+    "21歳の大学生に養われる25歳。"
+
+    himo "...いいの？"
+    kana_c "いいよ。ヒモ太郎がいると楽しいし"
+
+    "カナは嬉しそうだった。"
+    "でも、カナの友達の目が痛い。"
+    "狭いワンルームに二人。"
+    "依存関係が、完全に逆転した。"
+
+    kana_c "ヒモ太郎は私のものだからね"
+    himo "..."
+    "助かった。"
+    "でも、自由は消えた。"
+
+    centered "{size=30}GRAY END — ヒモの完成{/size}"
+    centered "『カナに飼われている。それが、俺の選んだ道。』"
+
+    call show_himo_aptitude_result
+    return
+
+
+# === 通常破滅END ===
+
+label ending_bankruptcy:
     $ flags["game_ended"] = True
     $ _ending_type = "bad_bankruptcy"
     $ log_action("BAD END 破産")
     $ export_debug_log()
     $ export_dialogue_log()
-    scene bg_placeholder with fade
 
+    scene bg_placeholder with fade
     centered "{size=40}エンディング: 破滅{/size}"
 
     "家賃が払えなかった。"
-    himo "...終わった"
-    "大家から退去通知が来た。"
+    himo "...あれ、マジで？"
+    "大家からの催促。"
+
+    "美咲にも、カナにも、頼れなかった。"
+    "いや、頼る資格がなかった。"
+
+    himo "...どうすんだよ、これ"
+    "荷物をまとめて、部屋を出た。"
 
     centered "{size=30}BAD END{/size}"
-    "「楽観も、ほどほどに」"
+    centered "『楽観も、ほどほどに。』"
 
     call show_himo_aptitude_result
-
     return
 
 

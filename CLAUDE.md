@@ -157,6 +157,41 @@ STAGE_ACQUAINTANCE (1) → STAGE_FRIEND (2) → STAGE_CLOSE (3) → STAGE_DATING
   ```
 - この制約は `random` に限らず、すべての標準ライブラリモジュールの `import` に適用される可能性がある。Ren'Py組み込みの代替があればそちらを優先すること
 
+### ⚠️ menu内callでのラベルパラメータ渡し制約
+
+**Ren'Pyの `menu` ブロック内の `call` では、ラベルパラメータ（ローカル変数）を引数として渡せない。** `call expression "label" pass (var)` も同様に失敗する。
+
+- **原因**: menu内のcallでは、呼び出し元ラベルのパラメータがスコープ外になる
+- **症状**: `TypeError: missing a required argument: 'target'`
+- **正しい書き方**: ストア変数に退避してから、パラメータなしラベルで参照する
+  ```python
+  label my_label(target):
+      $ _my_target = target   # ストア変数に退避
+      menu:
+          "選択肢A":
+              call sub_label_a    # パラメータなしで呼ぶ
+
+  label sub_label_a:
+      if _my_target == "misaki":   # ストア変数を参照
+          # ...
+  ```
+- **禁止**:
+  ```python
+  # NG: menu内でパラメータ付きラベルを呼ぶ
+  menu:
+      "選択肢A":
+          call sub_label_a(target)           # エラー
+          call expression "sub_label_a" pass (target)  # エラー
+  ```
+
+### ⚠️ `qte_failed_badly` フラグの用途
+
+**`flags["qte_failed_badly"]` は証拠隠滅QTE（`evidence_qte.rpy`）専用のフラグ。** 嘘パズル（`lie_puzzle.rpy`）では設定されない。
+
+- 嘘パズルの結果判定には `lie_puzzle["result"]` を使う（`"busted"` / `"suspicious"` / `"uneasy"` / `"safe"` / `"honest"`）
+- 証拠隠滅QTEの結果判定には `flags["qte_failed_badly"]` を使う
+- この2つを混同しないこと
+
 ## 自動テスト
 
 ### テストの実行方法

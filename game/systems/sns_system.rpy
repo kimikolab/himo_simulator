@@ -90,8 +90,21 @@ label sns_show_kana_hint:
 
 label sns_show_misaki_mood:
     python:
-        depend = misaki["dependence"]
-        if depend >= 60:
+        # v1.5: 冷戦レベル別ステータス分岐
+        _cw_level = cold_war.get("misaki_level", 0) if cold_war.get("misaki_active", False) else 0
+        if _cw_level >= 2:
+            posts = [
+                "美咲のLINEステータスが変わっている。\n「...」",
+                "美咲のステータス。\n「もういいかな」",
+                "美咲のLINEステータスが変わっている。\n「信じるって難しい」",
+            ]
+        elif _cw_level == 1:
+            posts = [
+                "美咲のLINEステータスが変わっている。\n「...」",
+                "美咲のステータス。\n「考え中」",
+                "美咲のLINEステータスが変わっている。\n「一人の時間も大事」",
+            ]
+        elif misaki["dependence"] >= 60:
             posts = [
                 "美咲のLINEステータスが変わっている。\n「...会いたいな」",
                 "美咲のステータス。\n「早く帰りたい」",
@@ -105,7 +118,12 @@ label sns_show_misaki_mood:
 
     "[post]"
 
-    if misaki["dependence"] >= 60:
+    if cold_war.get("misaki_active", False):
+        if cold_war.get("misaki_level", 0) >= 2:
+            himo "...怒ってるな、完全に"
+        else:
+            himo "...気まずいな"
+    elif misaki["dependence"] >= 60:
         himo "...重いな"
     else:
         himo "大変そうだな"

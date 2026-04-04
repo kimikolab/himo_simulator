@@ -173,6 +173,32 @@ init python:
         if (game_date["day"] - money_request_weekly["last_reset_day"]) >= 7:
             money_request_weekly["count"] = 0
             money_request_weekly["last_reset_day"] = game_date["day"]
+            # Phase 4 Step 2.5: 痕跡フラグの週間リセット
+            flags["misaki_stayed_himo_this_week"] = False
+            flags["kana_stayed_himo_this_week"] = False
+            flags["evidence_trace_done_this_week"] = False
+            flags["offered_help_this_week"] = False
+
+        # === Phase 4 Step 2.5: 冷戦の日次処理 ===
+        for _cw_target in ["misaki", "kana"]:
+            if cold_war.get(_cw_target + "_active", False):
+                _cw_before = cold_war[_cw_target + "_days_left"]
+                cold_war[_cw_target + "_days_left"] -= 1
+                _cw_after = cold_war[_cw_target + "_days_left"]
+                log_action("冷戦TICK " + _cw_target + " level=" + str(cold_war.get(_cw_target + "_level", 0)) + " days_left=" + str(_cw_before) + "→" + str(_cw_after) + " active=" + str(cold_war[_cw_target + "_active"]))
+
+                # 2日目以降に謝罪イベント解禁
+                if cold_war[_cw_target + "_days_left"] <= cold_war.get(_cw_target + "_level", 1) * 3 - 2:
+                    cold_war[_cw_target + "_apology_available"] = True
+
+                # 日数切れで自然解除
+                if cold_war[_cw_target + "_days_left"] <= 0:
+                    log_action("冷戦解除 " + _cw_target + " 自動期限切れ")
+                    end_cold_war(_cw_target)
+
+            # 回復期のカウントダウン
+            if cold_war.get("recovery_" + _cw_target, 0) > 0:
+                cold_war["recovery_" + _cw_target] -= 1
 
         # === Phase 4 Step 2: 居酒屋ボーナスの翌日リスク ===
         if flags.get("izakaya_money_hangover", False):
@@ -209,12 +235,24 @@ init python:
         if flags.get("game_ended", False):
             return
 
+        # Phase 4 Step 2.5: 冷戦中は自発連絡しない
+        if cold_war.get("misaki_active", False):
+            return
+
         # v1.3追加: 信頼度ガード — 既読スルーする相手から自発的に連絡は来ない
         if misaki["trust"] < 20:
             return
 
-        # v2.3修正: last_contactが3未満、または当日会っているなら何もしない
-        if misaki["last_contact"] < 3 or misaki["met_today"]:
+        # v1.3修正: 一緒にいるときは送らない
+        if (flags.get("misaki_visit_himo_room", False)
+                or flags.get("misaki_stayed_at_himo", False)
+                or location_flags.get("staying_at_misaki", False)
+                or flags.get("misaki_tonight", False)
+                or misaki.get("met_today", False)):
+            return
+
+        # v2.3修正: last_contactが3未満なら何もしない
+        if misaki["last_contact"] < 3:
             return
 
         # 3日以上連絡なし → 美咲からLINE

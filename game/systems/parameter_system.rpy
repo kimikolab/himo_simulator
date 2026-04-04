@@ -29,6 +29,9 @@ init python:
 
     def change_trust(amount):
         global misaki
+        # === 回復期チェック ===
+        if amount > 0 and cold_war.get("recovery_misaki", 0) > 0:
+            amount = max(1, amount // 2)
         trust = misaki["trust"]
 
         # 収穫逓減（v2.0追加）
@@ -73,11 +76,15 @@ init python:
         """美咲のlast_contactをリセット（実際に会った時のみ呼ぶ）"""
         global misaki
         misaki["last_contact"] = 0
+        # v1.4追加: 会ったら約束も消化
+        appointments["misaki"] = None
 
     def reset_contact_kana():
         """カナのlast_contactをリセット（実際に会った時のみ呼ぶ）"""
         global kana
         kana["last_contact"] = 0
+        # v1.4追加: 会ったら約束も消化
+        appointments["kana"] = None
 
     def update_misaki_stage():
         global misaki
@@ -177,6 +184,9 @@ init python:
 
     def change_trust_kana(amount):
         global kana
+        # === 回復期チェック ===
+        if amount > 0 and cold_war.get("recovery_kana", 0) > 0:
+            amount = max(1, amount // 2)
         old_stage = kana["stage"]
         kana["trust"] = clamp(kana["trust"] + amount, 0, 100)
         update_kana_stage()
@@ -260,18 +270,68 @@ init python:
         global suspicion_count
         suspicion_count += 1
 
-        messages = {
-            "contact_delay": "美咲: 「最近忙しそうだね」",
-            "vague_answer": "美咲: 「...そうなんだ」",
-            "too_many_requests": "美咲: 「また？」",
-            "avoided_question": "美咲: 「...」",
-            "deflected": "",
-            "sns_exposure": "美咲: 「...ねえ、これって知り合い？」",
-        }
-        if reason in messages and messages[reason]:
-            renpy.notify(messages[reason])
-            log_notify(messages[reason])
+        # v1.2修正: too_many_requests のテロップをバリエーション化
+        if reason == "too_many_requests":
+            _msgs = [
+                "美咲: 「また？」",
+                "美咲: 「...お金、大丈夫？」",
+                "美咲: 「最近多くない？」",
+                "美咲: 「ちゃんと働いてる？」",
+            ]
+            _msg = renpy.random.choice(_msgs)
+            renpy.notify(_msg)
+            log_notify(_msg)
+        else:
+            messages = {
+                "contact_delay": "美咲: 「最近忙しそうだね」",
+                "vague_answer": "美咲: 「...そうなんだ」",
+                "avoided_question": "美咲: 「...」",
+                "deflected": "",
+                "sns_exposure": "美咲: 「...ねえ、これって知り合い？」",
+            }
+            if reason in messages and messages[reason]:
+                renpy.notify(messages[reason])
+                log_notify(messages[reason])
         log_action("疑念UP misaki reason=" + reason + " now=" + str(suspicion.get("misaki", 0)))
+
+    # ========================================
+    # Phase 4 Step 2.5: 冷戦システム関数
+    # ========================================
+
+    def start_cold_war(target, level=1):
+        """冷戦を開始する"""
+        cold_war[target + "_active"] = True
+        cold_war[target + "_level"] = level
+        cold_war[target + "_apology_available"] = False
+
+        if level == 1:
+            cold_war[target + "_days_left"] = 3
+        elif level == 2:
+            cold_war[target + "_days_left"] = 5
+
+        stats["cold_war_" + target + "_count"] = stats.get("cold_war_" + target + "_count", 0) + 1
+        log_action("冷戦開始 " + target + " level=" + str(level) + " days=" + str(cold_war[target + "_days_left"]))
+
+    def escalate_cold_war(target):
+        """冷戦を悪化させる（もう片方と泊まった場合）"""
+        if cold_war.get(target + "_active", False):
+            # v1.5: 既にlevel=2の場合は再悪化しない（days_leftの無限リセット防止）
+            if cold_war.get(target + "_level", 0) >= 2:
+                log_action("冷戦悪化スキップ " + target + " 既にlevel=2 days=" + str(cold_war[target + "_days_left"]))
+                return
+            cold_war[target + "_level"] = 2
+            cold_war[target + "_days_left"] = max(cold_war[target + "_days_left"], 3) + 3
+            cold_war[target + "_apology_available"] = False
+            log_action("冷戦悪化 " + target + " level=2 days=" + str(cold_war[target + "_days_left"]))
+
+    def end_cold_war(target):
+        """冷戦を解除し回復期に移行する"""
+        cold_war[target + "_active"] = False
+        cold_war[target + "_level"] = 0
+        cold_war[target + "_days_left"] = 0
+        cold_war[target + "_apology_available"] = False
+        cold_war["recovery_" + target] = 2
+        log_action("冷戦解除 " + target + " → 回復期2日")
 
     def reduce_suspicion(target, amount, reason=""):
         """疑念を減少させるヘルパー関数"""

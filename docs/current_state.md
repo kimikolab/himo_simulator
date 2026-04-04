@@ -1,6 +1,6 @@
 # ヒモ男シミュレーター コードベース状態スナップショット
 
-**最終更新**: 2026-04-04（Phase 4 Step 2 v1.4 修正済み）
+**最終更新**: 2026-04-04（Phase 4 Step 2.5 v1.6 修正済み）
 **ブランチ**: feature/Phase4
 
 > Web Claude での修正指示書作成時に参照する。変数名・ラベル名・フラグキーはこの文書を正とする。
@@ -104,6 +104,20 @@ game/
 - `kana_doubt_event` — カナ版疑念イベント
 - `demo_end_scene` — デモ版エンドシーン
 
+### midgame_events.rpy
+- `check_midgame_events()` — 中盤イベント発火判定（init python関数）
+- `midgame_misaki_busy` — 美咲「最近忙しいの？」
+- `midgame_kana_urgent` — カナからの急な呼び出し
+- `midgame_double_booking` — ダブルブッキング危機
+- `midgame_sighting_confrontation` — 目撃情報→修羅場
+- `midgame_kana_raid` — カナの突撃訪問
+- `midgame_misaki_direct` — 美咲の直球質問ver.2
+- `evidence_trace_event` — 痕跡イベント（泊まり翌朝の証拠発見）
+- `cold_war_contact(target)` — 冷戦中の連絡テキスト
+- `apology_event(target)` — 謝罪イベント
+- `apology_conversation(target)` — 謝罪会話
+- `apology_honest` / `apology_gift` / `apology_dodge` — 謝罪方法別
+
 ### daily_events.rpy
 - `check_forced_morning_event` — 強制朝イベント分岐（翌朝フラグ消費）
 - `misaki_sunday_morning_icha` — 日曜朝イチャイチャ
@@ -158,6 +172,11 @@ game/
 | `midgame_*` | bool | 各中盤イベント済みフラグ（7種） |
 | `last_sns_poster` | str | SNS重複防止 |
 | `last_news_item` | str | ニュース重複防止 |
+| `misaki_stayed_himo_this_week` | bool | 美咲が今週ヒモ太郎の部屋に泊まった（週間リセット） |
+| `kana_stayed_himo_this_week` | bool | カナが今週ヒモ太郎の部屋に泊まった（週間リセット） |
+| `evidence_trace_done_this_week` | bool | 今週痕跡イベント済み（週間リセット） |
+| `evidence_trace_count` | int | 痕跡イベント発生回数（永続。2回目以降は専用テキスト＋即level=2冷戦） |
+| `offered_help_this_week` | bool | 今週「手伝い」選択済み（週間リセット） |
 
 ### location_flags（場所関連・永続）
 
@@ -202,6 +221,23 @@ game/
 | `misaki` | int | 美咲の疑念度（0〜100） |
 | `kana` | int | カナの疑念度（0〜100） |
 
+### cold_war（冷戦状態・Phase 4 Step 2.5追加）
+
+| キー | 型 | 説明 |
+|------|------|------|
+| `misaki_active` | bool | 美咲と冷戦中 |
+| `misaki_level` | int | 冷戦レベル（1=軽度、2=重度） |
+| `misaki_days_left` | int | 冷戦残り日数 |
+| `misaki_apology_available` | bool | 謝罪イベント解禁済み |
+| `kana_active` | bool | カナと冷戦中 |
+| `kana_level` | int | 冷戦レベル |
+| `kana_days_left` | int | 冷戦残り日数 |
+| `kana_apology_available` | bool | 謝罪イベント解禁済み |
+| `recovery_misaki` | int | 美咲の回復度 |
+| `recovery_kana` | int | カナの回復度 |
+
+冷戦中は対象キャラの自発連絡（`check_kana_initiative`、`queue_misaki_initiative`）と中盤イベント（`check_midgame_events` 内の該当キャラ分岐）が発火しない。
+
 ---
 
 ## 4. 主要定数（constants.rpy）
@@ -213,6 +249,8 @@ game/
 | `STAGE_ACQUAINTANCE/FRIEND/CLOSE/DATING` | 1/2/3/4 | 関係ステージ |
 | `SUSPICION_MAX` | 100 | 疑念度上限 |
 | `NEGOTIATION_WEEKLY_LIMIT` | 4 | 週間交渉上限 |
+| `SUSPICION_SHURABA_THRESHOLD` | 3 | 修羅場発生の疑念度閾値 |
+| `KANA_EXPLOITATION_THRESHOLD` | 15 | カナ版疑念イベント発火の搾取スコア閾値 |
 | `DEBUG_MODE` | True | デバッグモード |
 
 ---
@@ -236,9 +274,54 @@ game/
 
 ---
 
-## 6. 最近のコミット（直近10件）
+## 6. 冷戦システム（Phase 4 Step 2.5追加）
+
+### 発火条件
+- 痕跡イベント（`evidence_trace_event`）で嘘パズル失敗 or 「正直に認める」選択
+
+### days_leftカウントダウン仕様（v1.5明記）
+- `advance_day()` 内で毎日 `days_left -= 1` が実行される
+- `days_left <= 0` で `end_cold_war()` → 自動解除
+- 悪化時（`escalate_cold_war()`）: `days_left = max(current, 3) + 3` で再設定
+- デバッグログ: `冷戦TICK [target] level=X days_left=Y→Z active=True`
+- 解除ログ: `冷戦解除 [target] 自動期限切れ`
+
+### 冷戦中の制限
+- 対象キャラの自発連絡が停止（`check_kana_initiative` / `queue_misaki_initiative` にガードあり）
+- 対象キャラの中盤イベントが停止（`check_midgame_events` 内の全該当イベントにガードあり — v1.5で①⑤⑥を追加修正）
+- 対象キャラへのLINE連絡が専用テキストに切り替わる（`cold_war_contact`）
+- 対象キャラの部屋訪問・デート誘い選択肢が非表示（v1.5追加: `script.rpy` の `night_actions` / `afternoon_actions`）
+- `process_pending_events` でチェックイン消費時に冷戦再チェック（v1.5追加）
+- SNSステータスが冷戦レベル別テキストに切り替わる（v1.5追加: `sns_show_misaki_mood`）
+
+### 冷戦の解除
+- `cold_war[target+"_days_left"]` が0になると自動解除
+- 謝罪イベント（`apology_event`）で解除を早められる
+
+### 痕跡イベント発火条件
+- 週間フラグ: 美咲 or カナがヒモ太郎の部屋に泊まった週に、もう片方が訪問
+- `evidence_trace_done_this_week` で週1回制限
+
+### 週間リセット対象フラグ（`advance_day` 内、7日ごと）
+- `money_request_weekly["count"]` — 週間お金要求回数
+- `misaki_stayed_himo_this_week` / `kana_stayed_himo_this_week` — 泊まり痕跡
+- `evidence_trace_done_this_week` — 痕跡イベント済み
+- `offered_help_this_week` — 手伝い選択肢の週間制限
+
+---
+
+## 7. デートハプニングの場所制限（v1.5追加）
+
+`date_happening` で自宅系の場所（`himo_room`, `room`, `misaki_room`）では外出系ハプニング（`acquaintance` = 同僚遭遇・友人目撃）が発火しない。LINE通知・インスタ撮影・レシート落とし等は場所に関係なく発火する。
+
+---
+
+## 8. 最近のコミット（直近10件）
 
 ```
+（v1.5 + v1.6 fixes — コミット前）
+66f7e7f Claude.md更新、current_state.md追加
+d92caea Phase4 step2 v1.4 fixes
 e7c89cf ignore: debug_logフォルダ以下を無視
 3aeacd3 docs整理: 旧修正指示書・実装記録・旧版設計書を削除
 be77c0c phase4_step2_v1.2_fixes
@@ -246,14 +329,11 @@ be77c0c phase4_step2_v1.2_fixes
 3151fff 台詞ログ機能を実装
 e48bde8 Phase4 step1 v1.6 fixes
 793d4bd Phase4 v1.5 fixes
-7385935 Phase4 v1.4修正 + 自動テスト機能追加
-0835f14 Phase4 step1 v1.4 fixes
-3f8a318 Phase 4 Step 1 v1.3 反映漏れ
 ```
 
 ---
 
-## 7. 修正指示書を書くときの注意
+## 9. 修正指示書を書くときの注意
 
 1. **ラベル名は必ずこの文書のセクション2を参照**する
    - 例: 美咲の自発LINE = `misaki_check_in`（`misaki_initiative_event` ではない）

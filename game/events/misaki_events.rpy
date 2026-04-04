@@ -11,10 +11,9 @@ init python:
 
         if trust >= 40:
             pool.append("listen_work")
-        if trust >= 50:
+        if trust >= 50 and not flags.get("offered_help_this_week", False):
             pool.append("offer_help")
-        if trust >= 55 and stage >= STAGE_CLOSE:
-            pool.append("invite_home")
+        # v1.4修正: invite_homeは固定枠に移動したのでランダムプールから除外
         if trust >= 65:
             pool.append("miss_you")
         if trust >= 75 and stage >= STAGE_DATING:
@@ -38,6 +37,11 @@ init python:
 
 
 label contact_misaki:
+    # === 冷戦チェック ===
+    if cold_war.get("misaki_active", False):
+        call cold_war_contact("misaki")
+        return
+
     # v1.3修正: LINEのみなのでreset_contactを呼ばない
     "美咲にLINEを送った..."
 
@@ -124,13 +128,19 @@ label contact_misaki:
 
     else:
         # 通常（疑念低い）
+        # v1.5: last_contact条件追加 + プール拡張
         python:
-            _reply = renpy.random.choice([
+            _reply_pool = [
                 "どうしたの？",
-                "わ、ヒモ太郎！",
-                "おっ、久しぶり！",
                 "お、なになに？",
-            ])
+                "ん、どした？",
+                "お、ヒモ太郎",
+            ]
+            if misaki["last_contact"] >= 3:
+                _reply_pool.append("おっ、久しぶり！")
+            else:
+                _reply_pool.append("わ、ヒモ太郎！")
+            _reply = renpy.random.choice(_reply_pool)
         misaki_c "[_reply]"
 
     # v1.6追加: ランダム選択肢を決定
@@ -157,6 +167,10 @@ label contact_misaki_menu:
         "お金の話をする（真剣に）" if (misaki_events["M05_unlocked"] and not misaki_events["M05_done"]):
             call misaki_event_M05
             return
+        # v1.4修正: 自宅誘いを固定枠に（信頼55以上・STAGE_CLOSE以上で常時表示）
+        "今日の夜、うちで飲まない？" if (misaki["trust"] >= 55 and misaki["stage"] >= STAGE_CLOSE):
+            call misaki_line_invite_home
+            return
 
         # --- v1.6修正: ランダム枠（毎回2個まで） ---
 
@@ -165,9 +179,6 @@ label contact_misaki_menu:
 
         "何か手伝えることある？" if "offer_help" in _misaki_extra:
             call misaki_line_offer_help
-
-        "今日の夜、うちで飲まない？" if "invite_home" in _misaki_extra:
-            call misaki_line_invite_home
 
         "声聞きたくなった" if "miss_you" in _misaki_extra:
             call misaki_line_miss_you
@@ -231,8 +242,18 @@ label misaki_chat:
             misaki_c "ダメだね、お互い笑"
     else:
         # 知り合いレベル
-        "他愛もない話をした。"
-        himo "まあ、気楽に生きてるよ"
+        # v1.5: 雑談テキストのバリエーション
+        python:
+            _chat_lines = [
+                ("他愛もない話をした。", "まあ、気楽に生きてるよ"),
+                ("最近見たドラマの話をした。", "俺は見てないけど、相槌は打てる"),
+                ("美咲の職場の話を聞いた。", "大変そうだけど、楽しそうでもあるな"),
+                ("お互いの近況を話した。", "俺の近況...特にないな"),
+                ("くだらない話で盛り上がった。", "こういう時間、悪くない"),
+            ]
+            _c1, _c2 = renpy.random.choice(_chat_lines)
+        "[_c1]"
+        himo "[_c2]"
 
     $ change_trust(2)
     $ change_dependence(1)
@@ -242,6 +263,12 @@ label misaki_chat:
 
 
 label misaki_date_request:
+    # === 冷戦チェック ===
+    if cold_war.get("misaki_active", False):
+        misaki_c "...今はちょっと、会いたくない"
+        himo "（怒ってる...当たり前か）"
+        return
+
     # 既読スルー直後はデート不可
     if daily_flags.get("ignored_today", False):
         "さっき既読スルーされたばかりだし..."
@@ -478,6 +505,11 @@ label misaki_date:
 
 
 label misaki_money_request:
+    # === 冷戦チェック ===
+    if cold_war.get("misaki_active", False):
+        himo "（今お金の話なんかしたら、完全に終わる）"
+        return
+
     $ _money_request_blocked = False
     if daily_flags.get("asked_money_today", False):
         himo "...さっきもらったばかりだし、今日はやめとこう"
@@ -941,6 +973,10 @@ label misaki_event_M05:
 
 # 自発的連絡（3日以上連絡なし）
 label misaki_check_in:
+    # v1.3追加: 一緒にいるときはスキップ
+    if flags.get("misaki_visit_himo_room", False) or flags.get("misaki_stayed_at_himo", False) or location_flags.get("staying_at_misaki", False):
+        return
+
     # v1.4修正: LINEのみなのでreset_contact()は使わない（met_todayも変更しない）
     $ misaki["last_contact"] = 1
     $ daily_flags["misaki_lined_only"] = True
@@ -980,7 +1016,7 @@ label misaki_check_in:
         _init_msg, _himo_reply, _misaki_reply, _init_type = renpy.random.choice(_init_pool)
 
     "美咲からLINEが来た。"
-    "'[_init_msg]'"
+    misaki_c "[_init_msg]"
 
     menu:
         "返信する？"
@@ -1126,7 +1162,7 @@ label misaki_dependence_milestone(threshold):
                     $ himo_aptitude["honest_moments"] += 1
         else:
             "深夜にLINEが来た。"
-            "'今日誰かといた？'"
+            misaki_c "今日誰かといた？"
             himo "...どこで知ったんだ"
 
             menu:
@@ -1170,6 +1206,15 @@ label misaki_broken_promise:
 
 # 美咲の部屋訪問（M-03完了後の定期行動 / バリエーション付き）
 label misaki_room_visit:
+    # === v1.5: ガード条件（理由テキスト付き） ===
+    if cold_war.get("misaki_active", False):
+        himo "（今は美咲の部屋に行ける状況じゃない...）"
+        return
+
+    if misaki.get("met_today", False):
+        himo "（今日はもう美咲に会った。また明日にしよう）"
+        return
+
     "美咲の部屋に来た。"
 
     # v2.3: 曜日による外見描写
@@ -1313,6 +1358,12 @@ label misaki_confession:
 # ========================================
 
 label misaki_daytime_date_request:
+    # === 冷戦チェック ===
+    if cold_war.get("misaki_active", False):
+        misaki_c "...今はちょっと、会いたくない"
+        himo "（怒ってる...当たり前か）"
+        return
+
     "美咲に昼から会えないか聞いてみた。"
 
     if not is_weekend():
@@ -1373,6 +1424,7 @@ label misaki_line_listen_work:
 
 
 label misaki_line_offer_help:
+    $ flags["offered_help_this_week"] = True
     himo "なんか手伝えることある？"
     misaki_c "え、急にどうしたの"
     himo "いや、なんとなく"
@@ -1507,6 +1559,11 @@ label misaki_line_amaeru:
 
 # 第1段階: 切り出し方
 label misaki_negotiation_start:
+    # === 冷戦チェック ===
+    if cold_war.get("misaki_active", False):
+        himo "（今お金の話なんかしたら、完全に終わる）"
+        return
+
     # 週間カウント加算
     $ money_request_weekly["count"] += 1
     $ daily_flags["asked_money_today"] = True
@@ -1767,7 +1824,9 @@ label misaki_negotiation_amount:
         misaki_c "...ごめん、今月厳しくて"
         himo "そっか..."
         $ change_trust(-3)
-        $ add_suspicion("too_many_requests")
+        # v1.2修正: 交渉失敗専用の疑念上昇（テロップなし）
+        $ suspicion["misaki"] = suspicion.get("misaki", 0) + 1
+        $ log_action("疑念UP misaki reason=negotiation_failed now=" + str(suspicion.get("misaki", 0)))
 
     return
 

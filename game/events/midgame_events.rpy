@@ -10,12 +10,13 @@ init python:
 
         # --- 中盤前半（9〜15日） ---
 
-        # イベント①: 美咲「最近忙しいの？」（LINE系 → ターン消費しない）
+        # イベント①: 美咲「最近忙しいの？」（LINE系 → ターン消費しない）（v1.5: 冷戦ガード追加）
         if (day >= 9 and day <= 15
             and not flags.get("midgame_busymisaki_done", False)
             and kana_flags["met"]
             and misaki["last_contact"] >= 3
-            and time == "morning"):
+            and time == "morning"
+            and not cold_war.get("misaki_active", False)):
             _pending_events.append(("midgame_misaki_busy", None))
             return "notify"
 
@@ -24,29 +25,32 @@ init python:
             and kana_flags["met"]
             and kana["dependence"] >= 20
             and time == "afternoon"
-            and not kana["met_today"]):
+            and not kana["met_today"]
+            and not cold_war.get("kana_active", False)):
             if renpy.random.random() < 0.20:
                 _pending_events.append(("midgame_kana_urgent", None))
                 return True
 
         # --- 中盤後半（16〜23日） ---
 
-        # イベント⑤: ダブルブッキング危機（LINE系 → ターン消費しない）
+        # イベント⑤: ダブルブッキング危機（LINE系 → ターン消費しない）（v1.5: 冷戦ガード追加）
         if (day >= 16 and day <= 25
             and not flags.get("midgame_doublebooking_done", False)
             and kana_flags["met"]
             and misaki["stage"] >= STAGE_FRIEND
             and kana["trust"] >= 25
             and time == "afternoon"
-            and not daily_flags["double_booking_checked"]):
+            and not daily_flags["double_booking_checked"]
+            and not cold_war.get("misaki_active", False)):
             if renpy.random.random() < 0.30:
                 _pending_events.append(("midgame_double_booking", None))
                 return "notify"
 
-        # イベント⑥: 目撃情報 → 修羅場
+        # イベント⑥: 目撃情報 → 修羅場（v1.5: 冷戦ガード追加）
         if (flags.get("midgame_sighting_done", False)
             and not flags.get("midgame_sighting_confronted", False)
-            and time == "night"):
+            and time == "night"
+            and not cold_war.get("misaki_active", False)):
             if renpy.random.random() < 0.40:
                 _pending_events.append(("midgame_sighting_confrontation", None))
                 return True
@@ -57,7 +61,8 @@ init python:
             and kana_flags["met"]
             and kana["dependence"] >= 40
             and time == "night"
-            and not kana["met_today"]):
+            and not kana["met_today"]
+            and not cold_war.get("kana_active", False)):
             if renpy.random.random() < 0.20:
                 _pending_events.append(("midgame_kana_raid", None))
                 return True
@@ -66,7 +71,8 @@ init python:
         if (kana_flags.get("met", False)
             and not flags.get("kana_doubt_event_done", False)
             and day >= 15
-            and calculate_kana_exploitation() >= KANA_EXPLOITATION_THRESHOLD):
+            and calculate_kana_exploitation() >= KANA_EXPLOITATION_THRESHOLD
+            and not cold_war.get("kana_active", False)):
             _pending_events.append(("kana_doubt_event", None))
             return True
 
@@ -75,7 +81,8 @@ init python:
             and not flags.get("midgame_misaki_direct_done", False)
             and suspicion["misaki"] >= SUSPICION_SHURABA_THRESHOLD
             and misaki["trust"] >= 50
-            and time == "night"):
+            and time == "night"
+            and not cold_war.get("misaki_active", False)):
             _pending_events.append(("midgame_misaki_direct", None))
             return True
 
@@ -460,5 +467,559 @@ label kana_appointment_broken:
 
         "体調悪くて（嘘）":
             call run_lie_puzzle("double_booking", "kana")
+
+    return
+
+
+# ========================================
+# Phase 4 Step 2.5: 別の女の痕跡イベント
+# ========================================
+
+label evidence_trace_event(discoverer):
+    scene bg_placeholder
+
+    # v1.6: 2回目以降の痕跡イベント専用テキスト
+    if flags.get("evidence_trace_count", 0) >= 1:
+        if discoverer == "misaki":
+            "美咲が部屋を見回している。"
+
+            misaki_c "...また？"
+
+            "美咲の声は静かだが、怒りを通り越している。"
+
+            misaki_c "前にも言ったよね。もうやめてって"
+
+            himo "..."
+
+            "美咲は何も言わずにドアに向かった。"
+
+            menu:
+                "待って":
+                    himo "待って、美咲"
+                    misaki_c "...何？"
+                    "振り返った美咲の目は、もう何も期待していなかった。"
+                    misaki_c "もう、いいよ"
+
+                "...ごめん":
+                    himo "...ごめん"
+                    "美咲は振り返らなかった。"
+
+            $ change_trust(-20)
+            $ suspicion["misaki"] = 0
+            $ flags["misaki_tonight"] = False
+            $ start_cold_war("misaki", 2)
+            $ flags["evidence_trace_count"] = flags.get("evidence_trace_count", 0) + 1
+            return
+
+        elif discoverer == "kana":
+            "カナが部屋を見回している。"
+
+            kana_c "...またやったんだ"
+
+            "カナの声は震えていた。"
+
+            kana_c "もう信じないって決めたのに。また信じちゃったんだ、私"
+
+            himo "..."
+
+            kana_c "バカだよね、私"
+
+            "カナが涙を拭いながらドアに向かった。"
+
+            menu:
+                "待って":
+                    himo "カナ、待ってくれ"
+                    kana_c "...なに。また嘘つくの？"
+                    "カナの涙が止まらなかった。"
+
+                "...ごめん":
+                    himo "...ごめん"
+                    "カナは黙って首を横に振った。"
+
+            $ change_trust_kana(-20)
+            $ suspicion["kana"] = 0
+            $ kana_flags["sns_risk"] = kana_flags.get("sns_risk", 0) + 5
+            $ flags["kana_tonight"] = False
+            $ start_cold_war("kana", 2)
+            $ flags["evidence_trace_count"] = flags.get("evidence_trace_count", 0) + 1
+            return
+
+        $ flags["evidence_trace_count"] = flags.get("evidence_trace_count", 0) + 1
+        return
+
+    # === 1回目の痕跡イベント（既存テキスト） ===
+    if discoverer == "misaki":
+        "美咲が部屋を見回している。"
+
+        python:
+            _evidence = renpy.random.choice([
+                ("...ねえ、この髪の毛", "長い髪。美咲の髪色とは違う。"),
+                ("...この化粧品、私のじゃないんだけど", "見覚えのないリップがテーブルに。"),
+                ("...なんか、甘い匂いしない？", "確かに、カナの香水の残り香。"),
+            ])
+            _line, _desc = _evidence
+
+        misaki_c "[_line]"
+        "[_desc]"
+        "美咲の目が鋭くなった。"
+        misaki_c "...誰か来たの？ この部屋に"
+
+        # v1.4修正: 選択肢で正直に認めるか嘘をつくか分岐
+        menu:
+            "嘘をつく":
+                call run_lie_puzzle("evidence_trace", "misaki")
+
+                # v1.4修正: lie_puzzleの結果で分岐（qte_failed_badlyは証拠QTE専用）
+                python:
+                    _lp_result = lie_puzzle.get("result", "safe")
+
+                if _lp_result in ["busted", "suspicious"]:
+                    misaki_c "...もういい"
+                    misaki_c "帰る"
+                    "美咲が黙って部屋を出ていった。"
+                    $ change_trust(-15)
+                    $ suspicion["misaki"] = suspicion.get("misaki", 0) + 10
+                    $ flags["misaki_tonight"] = False
+                    $ start_cold_war("misaki", 1)
+                    $ flags["evidence_trace_count"] = flags.get("evidence_trace_count", 0) + 1
+                    return
+                else:
+                    himo "友達が遊びに来ただけだって"
+                    misaki_c "...ほんとに？"
+                    himo "ほんとほんと"
+                    misaki_c "...まあ、いいけど"
+                    "美咲はまだ少し疑っている。"
+                    $ suspicion["misaki"] = suspicion.get("misaki", 0) + 3
+
+            "正直に認める":
+                himo "...ごめん。正直に言う"
+                himo "他に会ってる人がいる"
+
+                "美咲の手が止まった。"
+
+                misaki_c "..."
+                misaki_c "...そう"
+
+                "美咲の声は静かだった。怒りですらなかった。"
+
+                misaki_c "なんとなく、分かってた"
+                misaki_c "最近、連絡遅いし。会っても目が合わないし"
+
+                himo "..."
+
+                misaki_c "私、ずっと気づかないフリしてた"
+                misaki_c "気づいたら...怖くて"
+
+                "美咲の手が小さく震えている。"
+
+                misaki_c "...ねえ、私じゃダメだったの？"
+
+                himo "...そういうことじゃない"
+
+                misaki_c "じゃあ、なんなの"
+
+                "答えられなかった。"
+
+                misaki_c "...今日は帰って"
+                misaki_c "一人にして"
+
+                $ change_trust(-15)
+                $ suspicion["misaki"] = 0
+                $ himo_aptitude["honest_moments"] += 2
+                $ flags["misaki_tonight"] = False
+                $ start_cold_war("misaki", 1)
+
+                "美咲は最後まで泣かなかった。"
+                "でもドアが閉まる瞬間、声が震えていた。"
+
+                $ flags["evidence_trace_count"] = flags.get("evidence_trace_count", 0) + 1
+                return
+
+    elif discoverer == "kana":
+        "カナが部屋を歩き回っている。"
+
+        python:
+            _evidence = renpy.random.choice([
+                ("...ねえ、この髪留め誰の？", "テーブルの上に、見覚えのないヘアピン。"),
+                ("...なんかこの部屋、女の匂いする", "カナの鼻は鋭い。"),
+                ("...この紙袋、どこの店？", "美咲と行った店のショッパーが残っていた。"),
+            ])
+            _line, _desc = _evidence
+
+        kana_c "[_line]"
+        "[_desc]"
+        "カナの目が座った。"
+        kana_c "ヒモ太郎...誰か連れ込んだでしょ"
+
+        menu:
+            "嘘をつく":
+                call run_lie_puzzle("evidence_trace", "kana")
+
+                python:
+                    _lp_result = lie_puzzle.get("result", "safe")
+
+                if _lp_result in ["busted", "suspicious"]:
+                    kana_c "...最低"
+                    "カナが泣き出した。"
+                    kana_c "もう帰る。二度と呼ばないで"
+                    $ change_trust_kana(-20)
+                    $ suspicion["kana"] = suspicion.get("kana", 0) + 10
+                    $ kana_flags["sns_risk"] = kana_flags.get("sns_risk", 0) + 5
+                    $ flags["kana_tonight"] = False
+                    $ start_cold_war("kana", 1)
+                    $ flags["evidence_trace_count"] = flags.get("evidence_trace_count", 0) + 1
+                    return
+                else:
+                    himo "妹が来ただけだって"
+                    kana_c "...ヒモ太郎に妹いたっけ"
+                    himo "いとこ。いとこの妹"
+                    kana_c "...ふーん"
+                    "カナは完全には信じていないが、追及をやめた。"
+                    $ suspicion["kana"] = suspicion.get("kana", 0) + 5
+
+            "正直に認める":
+                himo "...ごめん。実は..."
+                himo "他に会ってる人がいる"
+
+                kana_c "..."
+
+                "カナの表情が凍った。"
+
+                kana_c "...やっぱり"
+                kana_c "分かってたよ。なんとなく"
+
+                "カナの目に涙が溜まった。"
+
+                kana_c "この部屋、あの人の匂いがしたから"
+                kana_c "でも...信じたかった"
+
+                "カナが声を震わせた。"
+
+                kana_c "前の彼氏と同じだ"
+                kana_c "優しくしてくれて、でも裏では..."
+
+                himo "..."
+
+                "何も言えなかった。"
+
+                kana_c "...でも"
+
+                "カナが涙を拭いた。"
+
+                kana_c "正直に言ってくれたのは...あの人と違う"
+                kana_c "嘘つかれるよりマシ"
+
+                "長い沈黙。"
+
+                kana_c "...今日は帰って"
+                kana_c "少し考えたいから"
+
+                $ change_trust_kana(-15)
+                $ suspicion["kana"] = 0
+                $ himo_aptitude["honest_moments"] += 2
+                $ flags["kana_tonight"] = False
+                $ start_cold_war("kana", 1)
+
+                "カナが静かにドアを閉めた。"
+                "背中越しに、小さな嗚咽が聞こえた。"
+
+                $ flags["evidence_trace_count"] = flags.get("evidence_trace_count", 0) + 1
+                return
+
+    # 嘘成功時もカウント（冷戦にはならないが発生回数は記録）
+    $ flags["evidence_trace_count"] = flags.get("evidence_trace_count", 0) + 1
+    return
+
+
+# ========================================
+# Phase 4 Step 2.5: 冷戦中の専用テキスト
+# ========================================
+
+label cold_war_contact(target):
+    if target == "misaki":
+        "美咲にLINEを送った..."
+
+        if cold_war["misaki_level"] == 1:
+            python:
+                _cw_reply = renpy.random.choice([
+                    "...用事？",
+                    "...なに",
+                    "今ちょっと話したくない",
+                ])
+            "しばらくして、短い返信が来た。"
+            misaki_c "[_cw_reply]"
+            himo "（まだ怒ってる...）"
+
+            if cold_war.get("misaki_apology_available", False):
+                himo "（...ちゃんと謝った方がいいかもしれない）"
+
+        elif cold_war["misaki_level"] == 2:
+            python:
+                _cw_reply = renpy.random.choice([
+                    "...",
+                    "もう連絡しないで",
+                    "考えさせて",
+                ])
+            "かなり経ってから、返信が来た。"
+            misaki_c "[_cw_reply]"
+            himo "（完全にやばい...）"
+
+            if cold_war.get("misaki_apology_available", False):
+                himo "（直接謝りに行かないとダメだ）"
+
+    elif target == "kana":
+        "カナにLINEを送った..."
+
+        if cold_war["kana_level"] == 1:
+            python:
+                _cw_reply = renpy.random.choice([
+                    "は？",
+                    "なんの用",
+                    "今無理",
+                ])
+            "しばらくして、返信が来た。"
+            kana_c "[_cw_reply]"
+            himo "（カナ、怒りの返信...）"
+
+            if cold_war.get("kana_apology_available", False):
+                himo "（直接会って謝らないと...）"
+
+        elif cold_war["kana_level"] == 2:
+            "既読スルーされた..."
+            himo "（完全に無視されてる...）"
+
+            if cold_war.get("kana_apology_available", False):
+                himo "（家まで行くしかない...）"
+
+    return
+
+
+# ========================================
+# Phase 4 Step 2.5: 謝罪イベント
+# ========================================
+
+label apology_event(target):
+    scene bg_placeholder
+    $ stats["apology_" + target + "_count"] = stats.get("apology_" + target + "_count", 0) + 1
+
+    if target == "misaki":
+        "美咲のマンションの前に来た。"
+        "インターホンを押した。"
+
+        # 出てくる確率（冷戦レベルで変化）
+        python:
+            if cold_war["misaki_level"] == 1:
+                _door_chance = 0.60
+            else:
+                _door_chance = 0.35
+
+            _door_opens = renpy.random.random() < _door_chance
+
+        if not _door_opens:
+            "..."
+            "反応がない。"
+            himo "（いないのか、出たくないのか...）"
+            "今日はダメだった。"
+            return
+
+        "ドアが開いた。"
+        misaki_c "...なに"
+
+        "美咲の目は冷たい。"
+
+        call expression "apology_conversation" pass ("misaki")
+
+    elif target == "kana":
+        "カナのアパートの前に来た。"
+        "ドアをノックした。"
+
+        python:
+            if cold_war["kana_level"] == 1:
+                _door_chance = 0.55
+            else:
+                _door_chance = 0.30
+
+            _door_opens = renpy.random.random() < _door_chance
+
+        if not _door_opens:
+            "..."
+            "出てこない。"
+            "中にいるのは分かってるのに。"
+            himo "（...今日は無理か）"
+            return
+
+        "ドアが少しだけ開いた。"
+        kana_c "...何しに来たの"
+
+        "カナの目が赤い。泣いていたのかもしれない。"
+
+        call expression "apology_conversation" pass ("kana")
+
+    return
+
+
+label apology_conversation(target):
+    # Ren'Pyのmenu内callではラベルパラメータのローカル変数を渡せないため
+    # ストア変数に退避してサブラベルで参照する
+    $ _apology_target = target
+    menu:
+        "どう謝る？"
+
+        "正直に謝る":
+            call apology_honest
+
+        "プレゼントを持っていく" if can_afford(5000):
+            call apology_gift
+
+        "ごまかす":
+            call apology_dodge
+
+    # v1.6: menu終了後に次ラベルへフォールスルーしないようreturnを追加
+    return
+
+
+label apology_honest:
+    if _apology_target == "misaki":
+        himo "...ごめん。俺が悪かった"
+        misaki_c "..."
+        himo "言い訳はしない。本当にごめん"
+
+        "長い沈黙。"
+
+        if cold_war["misaki_level"] == 1:
+            misaki_c "...分かった"
+            misaki_c "でも、次はないから"
+            "美咲は許してくれた。"
+            "でも、目の奥にまだ不信感が残っている。"
+            $ end_cold_war("misaki")
+            $ change_trust(-3)
+            $ himo_aptitude["honest_moments"] += 2
+
+        else:
+            # レベル2: 一度では許されない。もう1回来る必要がある
+            misaki_c "...正直に言ってくれたのは分かる"
+            misaki_c "でも、すぐには無理"
+            misaki_c "...少し時間ちょうだい"
+            "完全には許されなかった。でも、少し和らいだ。"
+            $ cold_war["misaki_level"] = 1
+            $ cold_war["misaki_days_left"] = 2
+            $ himo_aptitude["honest_moments"] += 1
+
+    elif _apology_target == "kana":
+        himo "カナ、ごめん。俺が最低だった"
+        kana_c "..."
+        kana_c "...分かってるよ、そんなの"
+
+        "カナの声が震えている。"
+
+        if cold_war["kana_level"] == 1:
+            kana_c "...ヒモ太郎のバカ"
+            "カナが泣きながら怒っている。"
+            kana_c "もう絶対しないって言って"
+            himo "しない。約束する"
+            kana_c "...信じるから"
+            $ end_cold_war("kana")
+            $ change_trust_kana(-3)
+            $ himo_aptitude["honest_moments"] += 2
+
+        else:
+            kana_c "...約束しても、また破るんでしょ"
+            kana_c "前の彼氏もそうだった"
+            "カナの過去の傷が開いている。"
+            himo "俺は違う"
+            kana_c "...それも前の彼氏と同じこと言ってる"
+            "完全には許されなかった。"
+            $ cold_war["kana_level"] = 1
+            $ cold_war["kana_days_left"] = 2
+            $ himo_aptitude["honest_moments"] += 1
+
+    return
+
+
+label apology_gift:
+    $ change_money(-5000)
+
+    if _apology_target == "misaki":
+        himo "これ...好きだって言ってたやつ"
+        misaki_c "..."
+        misaki_c "...物で解決しようとしてる？"
+        himo "違う。ごめんって気持ちを形にしたかっただけ"
+
+        "美咲がプレゼントを受け取った。"
+
+        if cold_war["misaki_level"] == 1:
+            misaki_c "...ありがと。でも、もうしないでね"
+            $ end_cold_war("misaki")
+            $ change_trust(-1)
+
+        else:
+            misaki_c "...気持ちは分かった。でも、まだ許せない"
+            $ cold_war["misaki_level"] = 1
+            $ cold_war["misaki_days_left"] = 1
+
+    elif _apology_target == "kana":
+        himo "カナ、これ"
+        kana_c "...なに"
+        "プレゼントを渡した。"
+
+        if cold_war["kana_level"] == 1:
+            kana_c "...買収？"
+            himo "違う"
+            kana_c "..."
+            kana_c "...かわいい"
+            "カナが少し笑った。"
+            $ end_cold_war("kana")
+            $ change_trust_kana(-1)
+
+        else:
+            kana_c "...物もらっても、嬉しくない"
+            kana_c "嘘。ちょっと嬉しい。でもまだ怒ってる"
+            $ cold_war["kana_level"] = 1
+            $ cold_war["kana_days_left"] = 1
+
+    return
+
+
+label apology_dodge:
+    # ごまかし → 嘘パズル
+    if _apology_target == "misaki":
+        himo "いや、あれは本当に友達で..."
+        misaki_c "...まだそれ言うの？"
+
+        call run_lie_puzzle("apology_dodge", "misaki")
+
+        if lie_puzzle.get("result", "safe") in ["busted", "suspicious"]:
+            misaki_c "...帰って"
+            "ドアが閉まった。"
+            $ cold_war["misaki_days_left"] += 2
+            $ suspicion["misaki"] = suspicion.get("misaki", 0) + 3
+            $ himo_aptitude["lies"] += 1
+        else:
+            misaki_c "...もういい。信じるから"
+            "半ば呆れたように言った。"
+            $ end_cold_war("misaki")
+            $ change_trust(-5)
+            $ suspicion["misaki"] = suspicion.get("misaki", 0) + 2
+            $ himo_aptitude["lies"] += 1
+
+    elif _apology_target == "kana":
+        himo "あれはマジでいとこで..."
+        kana_c "ヒモ太郎にいとこいないって前に言ってたじゃん"
+        himo "（やば、覚えてたのか）"
+
+        call run_lie_puzzle("apology_dodge", "kana")
+
+        if lie_puzzle.get("result", "safe") in ["busted", "suspicious"]:
+            kana_c "もう嘘つかないで"
+            "ドアが閉まった。"
+            $ cold_war["kana_days_left"] += 2
+            $ suspicion["kana"] = suspicion.get("kana", 0) + 3
+            $ himo_aptitude["lies"] += 1
+        else:
+            kana_c "...もう信じないけど、今回だけ"
+            $ end_cold_war("kana")
+            $ change_trust_kana(-8)
+            $ suspicion["kana"] = suspicion.get("kana", 0) + 3
+            $ himo_aptitude["lies"] += 1
 
     return

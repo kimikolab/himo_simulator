@@ -26,12 +26,21 @@ init python:
         if flags.get("game_ended", False):
             return
 
+        # Phase 4 Step 2.5: 冷戦中は自発連絡しない
+        if cold_war.get("kana_active", False):
+            return
+
+        # v1.3追加: 一緒にいるときは送らない
+        if (flags.get("kana_at_himo_room", False)
+                or location_flags.get("staying_at_kana", False)
+                or flags.get("kana_tonight", False)
+                or kana.get("met_today", False)):
+            return
+
         global kana
 
         # last_contactが2以上かつ当日未接触で発火
         if kana["last_contact"] < 2:
-            return
-        if kana["met_today"]:
             return
 
         # 依存度が高いほど頻繁に来る
@@ -139,6 +148,11 @@ label k01_nanpa_success:
 # ========================================
 
 label kana_visit:
+    # === 冷戦チェック ===
+    if cold_war.get("kana_active", False):
+        himo "（カナの部屋には行けない。怒ってるし）"
+        return
+
     # v1.6追加: 不在チェック
     python:
         _kana_home = is_kana_available()
@@ -176,9 +190,38 @@ label kana_visit:
 
     if game_date["time"] == "afternoon":
         "昼間から来られるのは、カナならでは。"
+
+    # v1.5: 訪問回数に応じたセリフ
+    python:
+        _kana_visit_count = stats.get("kana_visit_count", 0)
+        stats["kana_visit_count"] = _kana_visit_count + 1
+
+    if _kana_visit_count == 0:
         kana_c "来た来た！暇だったんだよね〜"
+    elif _kana_visit_count <= 3:
+        python:
+            _kv = renpy.random.choice([
+                "来た来た！暇だったんだよね〜",
+                "お、来た！待ってたよ",
+                "いらっしゃ〜い",
+            ])
+        kana_c "[_kv]"
+    elif _kana_visit_count <= 7:
+        python:
+            _kv = renpy.random.choice([
+                "また来たの？笑 まあ入りなよ",
+                "もう合鍵渡そうかな笑",
+                "おかえり〜...って違うか",
+            ])
+        kana_c "[_kv]"
     else:
-        kana_c "いらっしゃい"
+        python:
+            _kv = renpy.random.choice([
+                "もうここ半分ヒモ太郎の部屋じゃん",
+                "おかえり。...もうおかえりでいいよね",
+                "鍵、開けといたよ",
+            ])
+        kana_c "[_kv]"
 
     # --- 食事（独立チェック）---
     if not daily_flags["ate_today"]:
@@ -224,6 +267,11 @@ label kana_visit:
 # ========================================
 
 label contact_kana:
+    # === 冷戦チェック ===
+    if cold_war.get("kana_active", False):
+        call cold_war_contact("kana")
+        return
+
     # v1.3修正: LINEのみなのでlast_contactをリセットしない
 
     "カナにLINEを送った..."
@@ -301,6 +349,12 @@ label contact_kana:
 # ========================================
 
 label kana_date_request:
+    # === 冷戦チェック ===
+    if cold_war.get("kana_active", False):
+        kana_c "...今無理"
+        himo "（怒ってる...当たり前か）"
+        return
+
     if daily_flags.get("ignored_kana_today", False):
         himo "今日はやめとこう"
         return
@@ -642,6 +696,10 @@ label demo_end_scene:
 # ========================================
 
 label kana_stay_offer:
+    # === 冷戦チェック ===
+    if cold_war.get("kana_active", False):
+        return
+
     # カナデート後に呼ばれる。条件: 夜のデート＋信頼30以上
     if game_date["time"] != "night" or kana["trust"] < 30:
         return
@@ -656,9 +714,24 @@ label kana_stay_offer:
         _date_loc = daily_flags.get("date_location", "")
 
     if _date_loc in ["cafe", "karaoke", "campus"]:
-        "夜も遅くなってきた。"
-        kana_c "ねー、うちこの近くなんだけど..."
-        "カナの部屋に寄ることになった。"
+        # v1.2修正: 訪問歴で導線テキストを分岐
+        python:
+            _kana_visit_count = stats.get("kana_visit_count", 0)
+
+        if _kana_visit_count == 0:
+            "夜も遅くなってきた。"
+            kana_c "ねー、うちこの近くなんだけど..."
+            "カナの部屋に寄ることになった。"
+        else:
+            python:
+                _transition = renpy.random.choice([
+                    ("夜も遅くなってきた。", "カナの部屋に行こっか"),
+                    ("終電の時間が近い。", "うち寄ってく？"),
+                    ("夜も更けてきた。", "帰るの面倒じゃない？ うち来れば？"),
+                ])
+                _t1, _t2 = _transition
+            "[_t1]"
+            kana_c "[_t2]"
 
     # === 以下、カナの部屋での泊まり（既存）===
     # 依存度で誘い方が変わる
@@ -702,13 +775,25 @@ label kana_stay_event:
     # === エナ期待の匂わせ（ステップ3で本格化）===
     "..."
     "カナがくっついてきた。"
-
-    # ステップ3ではここでエナマッチが発生する
     "一緒に過ごした。"
 
     kana_c "...えへへ"
-
     "カナが幸せそうに笑った。"
+
+    # v1.2修正: 泊まり回数で匂わせテキストを分岐
+    python:
+        _stay_count = stats.get("kana_stayed_over", 0)
+
+    if _stay_count <= 1:
+        himo "（...なんか、こういうのもいいな）"
+    elif _stay_count <= 3:
+        kana_c "...また泊まりに来てね"
+        himo "（カナといると、なんか楽だな）"
+    else:
+        kana_c "...昨日、ありがとう"
+        kana_c "また泊まりに来てね"
+        himo "（泊まるたびに『期待』されてる気がする...）"
+        himo "（まあ、今はいっか）"
 
     # 翌朝の演出用フラグ
     $ flags["kana_morning_after"] = True
@@ -835,6 +920,50 @@ label kana_stay_at_himo_room:
 
 
 label kana_stay_at_himo_room_event:
+    # === Phase 4 Step 2.5: 痕跡チェック ===
+    if flags.get("misaki_stayed_himo_this_week", False) and not flags.get("evidence_trace_done_this_week", False):
+        call evidence_trace_event("kana")
+        $ flags["evidence_trace_done_this_week"] = True
+        if cold_war.get("kana_active", False):
+            # 嘘パズル失敗→冷戦突入→帰った
+            return
+
+        # === v1.3追加: 嘘パズル成功でも空気は変わっている ===
+        "..."
+        "気まずい沈黙が流れた。"
+        kana_c "..."
+
+        menu:
+            "「...泊まってく？」":
+                himo "...泊まってけよ。こんな時間だし"
+                kana_c "...うん"
+                "カナは小さくうなずいた。"
+                "さっきまでの空気とは違う。"
+                # フラグ設定は通常通り行うが、泊まりテキストは短縮
+                $ stats["kana_stayed_over"] = stats.get("kana_stayed_over", 0) + 1
+                $ stats["kana_stayed_himo_room"] = stats.get("kana_stayed_himo_room", 0) + 1
+                $ stats["kana_benefits_received"] = stats.get("kana_benefits_received", 0) + 1
+                $ flags["kana_stayed_himo_this_week"] = True
+                $ change_stamina(20)
+                $ change_trust_kana(1)
+                $ change_dependence_kana(KANA_STAY_DEPENDENCE + 3)
+                $ flags["kana_at_himo_room"] = True
+                $ flags["kana_himo_room_morning"] = True
+                # 排他制御
+                $ flags["misaki_sunday_morning"] = False
+                $ location_flags["staying_at_misaki"] = False
+                "..."
+                "その夜は、あまり話さなかった。"
+                return
+
+            "「...帰るか？」":
+                himo "...送ろうか"
+                kana_c "...いい。一人で帰れる"
+                "カナが静かに出ていった。"
+                $ change_trust_kana(-3)
+                return
+
+    # === 以下、痕跡チェックなしの通常フロー ===
     himo "いいよ、泊まってけ"
     kana_c "やった！"
 
@@ -844,6 +973,7 @@ label kana_stay_at_himo_room_event:
     $ stats["kana_stayed_over"] = stats.get("kana_stayed_over", 0) + 1
     $ stats["kana_stayed_himo_room"] = stats.get("kana_stayed_himo_room", 0) + 1
     $ stats["kana_benefits_received"] = stats.get("kana_benefits_received", 0) + 1
+    $ flags["kana_stayed_himo_this_week"] = True
 
     # 恩恵（カナの部屋より少ない。自分の部屋なので清潔感回復なし）
     $ change_stamina(20)
@@ -855,6 +985,11 @@ label kana_stay_at_himo_room_event:
     # v1.4追加: 美咲の翌朝フラグをクリア（排他制御）
     $ flags["misaki_sunday_morning"] = False
     $ location_flags["staying_at_misaki"] = False
+
+    # === 冷戦悪化チェック ===
+    if cold_war.get("misaki_active", False):
+        $ escalate_cold_war("misaki")
+        himo "（...美咲にバレたら、もう終わりだな）"
 
     # === エナ期待の匂わせ ===
     "..."

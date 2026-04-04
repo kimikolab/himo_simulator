@@ -37,21 +37,40 @@ label check_sns:
     "[poster]の投稿:"
     "[content]"
 
+    # v1.5: SNS反応バリエーション
     if tone == "positive":
-        himo "おー、すげえじゃん"
-        himo "でも大変そうだな"
+        python:
+            _sns_reaction = renpy.random.choice([
+                ("おー、すげえじゃん", "でも大変そうだな"),
+                ("へー...頑張ってんな", "俺には関係ないけど"),
+                ("マジか、同い年なのにな", "...まあ人は人だ"),
+                ("すげえな", "俺とは別の世界の話だわ"),
+            ])
+        himo "[_sns_reaction[0]]"
+        himo "[_sns_reaction[1]]"
         $ stats["optimistic_choices"] += 1
 
     elif tone == "neutral":
-        himo "ローンとか責任とか、色々背負うんだな"
-        himo "俺はそういうの無理だわ"
+        python:
+            _sns_reaction = renpy.random.choice([
+                "ローンとか責任とか、色々背負うんだな",
+                "へー...まあ俺は俺だし",
+                "ふーん、みんな色々あるんだな",
+                "...俺もなんかしないとな。まあ明日から",
+            ])
+        himo "[_sns_reaction]"
         $ stats["optimistic_choices"] += 1
         $ himo_aptitude["avoided_work"] += 1
 
     elif tone == "relatable":
-        himo "わかる〜"
-        himo "...って、俺バイトないんだった"
-        himo "まあいっか"
+        python:
+            _sns_reaction = renpy.random.choice([
+                ("わかる〜", "...って、俺バイトないんだった"),
+                ("それな", "気楽が一番だよな"),
+                ("分かるわ〜", "俺もそんな感じ。いやもっとひどいか"),
+            ])
+        himo "[_sns_reaction[0]]"
+        himo "[_sns_reaction[1]]"
 
     elif tone == "milestone":
         himo "子どもか..."
@@ -97,28 +116,36 @@ label moment_of_doubt:
 
 label check_forced_morning_event:
     # v1.4追加: 翌朝フラグの状態をデバッグログ
-    $ log_action("MORNING_FLAGS misaki_sunday=" + str(flags.get("misaki_sunday_morning", False)) + " kana_after=" + str(flags.get("kana_morning_after", False)) + " kana_himo=" + str(flags.get("kana_himo_room_morning", False)))
+    $ log_action("MORNING_FLAGS misaki_sunday=" + str(flags.get("misaki_sunday_morning", False)) + " kana_after=" + str(flags.get("kana_morning_after", False)) + " kana_himo=" + str(flags.get("kana_himo_room_morning", False)) + " misaki_himo=" + str(flags.get("misaki_stayed_at_himo", False)))
 
-    # v1.1: カナがヒモ太郎の部屋に泊まった翌朝
+    # === v1.2修正: 再生するイベントを1つ決定 ===
+    $ _morning_event = None
+
     if flags.get("kana_himo_room_morning", False):
-        $ flags["kana_himo_room_morning"] = False
-        $ flags["kana_at_himo_room"] = False
-        call kana_himo_room_morning_event
-        $ flags["morning_consumed"] = True
-        return
+        $ _morning_event = "kana_himo_room_morning_event"
 
-    # Phase 4 Step 2: カナ宅泊まり翌朝
-    if flags.get("kana_morning_after", False):
-        $ flags["kana_morning_after"] = False
-        $ location_flags["staying_at_kana"] = False
-        call kana_morning_after_event
-        $ flags["morning_consumed"] = True
-        return
+    elif flags.get("kana_morning_after", False):
+        $ _morning_event = "kana_morning_after_event"
 
-    # v1.6追加: 美咲がヒモ太郎の部屋に泊まった翌朝
-    if flags.get("misaki_stayed_at_himo", False):
-        $ flags["misaki_stayed_at_himo"] = False
-        call misaki_morning_at_himo_room
+    elif flags.get("misaki_stayed_at_himo", False):
+        $ _morning_event = "misaki_morning_at_himo_room"
+
+    elif flags.get("misaki_sunday_morning", False):
+        $ _morning_event = "misaki_sunday_morning_icha"
+
+    # === すべての翌朝フラグを無条件クリア ===
+    $ flags["kana_himo_room_morning"] = False
+    $ flags["kana_morning_after"] = False
+    $ flags["kana_at_himo_room"] = False
+    $ location_flags["staying_at_kana"] = False
+    $ flags["misaki_stayed_at_himo"] = False
+    $ flags["misaki_sunday_morning"] = False
+    $ flags["misaki_visit_himo_room"] = False
+    $ location_flags["staying_at_misaki"] = False
+
+    # === 決定したイベントを再生 ===
+    if _morning_event is not None:
+        call expression _morning_event
         $ flags["morning_consumed"] = True
         return
 
@@ -132,13 +159,6 @@ label check_forced_morning_event:
         $ change_trust(-5)
         $ suspicion["misaki"] = min(suspicion["misaki"] + 2, SUSPICION_MAX)
 
-    # イベント1: 日曜朝・美咲宅でイチャイチャして昼になる
-    if flags.get("misaki_sunday_morning", False):
-        $ flags["misaki_sunday_morning"] = False
-        call misaki_sunday_morning_icha
-        $ flags["morning_consumed"] = True
-        return
-
     # イベント2: 疲労MAX → 昼まで寝てしまう
     if player["stamina"] <= 10:
         call event_oversleep
@@ -146,14 +166,23 @@ label check_forced_morning_event:
         return
 
     # イベント3: 美咲 or カナから朝の電話（依存度が高い場合）
+    # v1.6: 泊まり翌朝イベントが発火した朝はスキップ（_morning_eventで消費済み）
+    # v1.6: 冷戦中は催促電話を抑制
     python:
         phone_call_chance = False
 
-        if misaki["dependence"] >= 70 and misaki["last_contact"] >= 2:
+        # 泊まり翌朝チェック（フラグはクリア済みだが _morning_event で判定可能）
+        _had_overnight = _morning_event is not None
+
+        if (not _had_overnight
+                and misaki["dependence"] >= 70 and misaki["last_contact"] >= 2
+                and not cold_war.get("misaki_active", False)):
             if renpy.random.random() < 0.30:
                 phone_call_chance = "misaki"
 
-        if kana_flags["met"] and kana["dependence"] >= 50 and kana["last_contact"] >= 2:
+        if (not _had_overnight
+                and kana_flags["met"] and kana["dependence"] >= 50 and kana["last_contact"] >= 2
+                and not cold_war.get("kana_active", False)):
             if renpy.random.random() < 0.25:
                 phone_call_chance = "kana"
 
@@ -750,12 +779,18 @@ label kana_morning_after_event:
     $ daily_flags["ate_today"] = True
     $ change_stamina(15)   # 追加の朝食回復
 
-    # 匂わせテキスト（ステップ3への伏線）
-    kana_c "...昨日、ありがとう"
-    kana_c "また泊まりに来てね"
+    # v1.2修正: 泊まり回数で翌朝テキストを分岐
+    python:
+        _stay_count = stats.get("kana_stayed_over", 0)
 
-    himo "（泊まるたびに『期待』されてる気がする...）"
-    himo "（まあ、今はいっか）"
+    if _stay_count <= 1:
+        kana_c "朝ごはん、食べるでしょ？"
+        himo "（...なんか、普通に嬉しいな）"
+    else:
+        kana_c "...昨日、ありがとう"
+        kana_c "また泊まりに来てね"
+        himo "（泊まるたびに『期待』されてる気がする...）"
+        himo "（まあ、今はいっか）"
 
     "気づいたら昼になっていた。"
     "（朝の時間が消えた）"

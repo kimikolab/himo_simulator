@@ -185,8 +185,26 @@ label misaki_date_room:
 label misaki_visit_himo_room:
     scene bg_placeholder
 
-    "チャイムが鳴った。"
-    misaki_c "お邪魔します..."
+    # === Phase 4 Step 2.5: 痕跡チェック ===
+    $ _evidence_trace_passed = False
+    if flags.get("kana_stayed_himo_this_week", False) and not flags.get("evidence_trace_done_this_week", False):
+        call evidence_trace_event("misaki")
+        $ flags["evidence_trace_done_this_week"] = True
+        if cold_war.get("misaki_active", False):
+            return
+
+        # === v1.3追加: 嘘パズル成功でも空気が変わった演出 ===
+        "..."
+        "美咲が少し黙り込んだ。"
+        misaki_c "...ごめん、気にしすぎだよね"
+        himo "...いや、俺の方こそごめん"
+        "ぎこちない空気のまま、夜を過ごした。"
+        $ _evidence_trace_passed = True
+
+    if not _evidence_trace_passed:
+        # 痕跡イベントがなかった場合のみ来訪テキストを表示
+        "チャイムが鳴った。"
+        misaki_c "お邪魔します..."
 
     # 清潔感チェック
     if player["cleanliness"] >= 60:
@@ -264,7 +282,17 @@ label misaki_visit_himo_room:
                 $ change_dependence(8)
                 # 翌朝イベントフラグ
                 $ flags["misaki_stayed_at_himo"] = True
+                $ flags["misaki_stayed_himo_this_week"] = True
                 $ flags["morning_consumed"] = True
+                # === v1.3追加: カナの翌朝フラグをクリア（排他制御）===
+                $ flags["kana_morning_after"] = False
+                $ flags["kana_himo_room_morning"] = False
+                $ flags["kana_at_himo_room"] = False
+                $ location_flags["staying_at_kana"] = False
+                # === 冷戦悪化チェック ===
+                if cold_war.get("kana_active", False):
+                    $ escalate_cold_war("kana")
+                    himo "（...カナが知ったら、もう二度と会ってくれないだろうな）"
 
             "送ってくよ":
                 misaki_c "...ありがとう"

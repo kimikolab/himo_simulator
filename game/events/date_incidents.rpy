@@ -310,7 +310,12 @@ label date_landmine(target):
 
 label date_happening(target):
     python:
-        happenings = ["line_notification", "acquaintance"]
+        happenings = ["line_notification"]
+
+        # 自宅デートでは外で人に会う系のハプニングを除外
+        _current_location = daily_flags.get("date_location", "")
+        if _current_location not in ("himo_room", "room", "misaki_room"):
+            happenings.append("acquaintance")
 
         if target == "kana":
             happenings.append("insta_shot")

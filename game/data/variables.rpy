@@ -103,6 +103,12 @@ default flags = {
     "kana_himo_room_morning": False,   # v1.1: カナがヒモ太郎の部屋に泊まった翌朝
     "last_sns_poster": "",             # v1.2: SNS重複表示防止用
     "last_news_item": "",              # v1.3: ニュース重複表示防止用
+    # Phase 4 Step 2.5: 痕跡イベント用
+    "misaki_stayed_himo_this_week": False,
+    "kana_stayed_himo_this_week": False,
+    "evidence_trace_done_this_week": False,
+    "evidence_trace_count": 0,             # v1.6: 痕跡イベント発生回数（永続）
+    "offered_help_this_week": False,       # v1.5: 手伝い選択肢の週間制限
 }
 
 # 1日ごとにリセットされるフラグ
@@ -199,6 +205,12 @@ default stats = {
     "line_request_success": 0,       # LINE要求の成功回数
     "kana_stayed_himo_room": 0,      # カナがヒモ太郎の部屋に泊まった回数
     "misaki_ignored_count": 0,       # v1.3: 美咲の既読スルー連続回数
+    "kana_visit_count": 0,           # v1.5: カナの部屋への訪問回数
+    # Phase 4 Step 2.5: 冷戦統計
+    "cold_war_misaki_count": 0,
+    "cold_war_kana_count": 0,
+    "apology_misaki_count": 0,
+    "apology_kana_count": 0,
 }
 
 # ヒモ適性診断
@@ -242,6 +254,20 @@ default lie_puzzle = {
     "result": None
 }
 default lie_puzzle_timeout = False
+
+# Phase 4 Step 2.5: 冷戦システム
+default cold_war = {
+    "misaki_active": False,
+    "misaki_level": 0,
+    "misaki_days_left": 0,
+    "misaki_apology_available": False,
+    "kana_active": False,
+    "kana_level": 0,
+    "kana_days_left": 0,
+    "kana_apology_available": False,
+    "recovery_misaki": 0,
+    "recovery_kana": 0,
+}
 
 # セリフログ用リスト
 default dialogue_log_entries = []

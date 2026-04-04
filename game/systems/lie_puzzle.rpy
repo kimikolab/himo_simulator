@@ -116,6 +116,10 @@ label run_lie_puzzle(scenario="generic", target="misaki"):
         call lie_puzzle_other_woman(target)
     elif scenario == "double_booking":
         call lie_puzzle_double_booking(target)
+    elif scenario == "evidence_trace" or scenario == "apology_dodge":
+        # Phase 4 Step 2.5: 痕跡イベント・謝罪ごまかしは other_woman と同じパズルを使用
+        # 難易度はターゲットで変化
+        call lie_puzzle_other_woman(target)
 
     # 結果判定
     python:
