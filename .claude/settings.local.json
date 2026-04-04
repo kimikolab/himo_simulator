@@ -9,7 +9,8 @@
       "Bash(done)",
       "Bash(where:*)",
       "Bash(python:*)",
-      "Bash(find c:/works/renpy_proj/himo_simulator/game -name \"*.rpyc\" -type f -delete)"
+      "Bash(find c:/works/renpy_proj/himo_simulator/game -name \"*.rpyc\" -type f -delete)",
+      "Bash(git rm:*)"
     ]
   }
 }
