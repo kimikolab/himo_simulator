@@ -115,6 +115,7 @@ default flags = {
     "offered_help_this_week": False,       # v1.5: 手伝い選択肢の週間制限
     # Phase 4 Step 3: プレゼント・エナジー
     "kana_gokiragen_skip": False,          # 推しグッズでご機嫌取り1回免除
+    "day1_date_pending": False,            # 初日専用デートフラグ
 }
 
 # 1日ごとにリセットされるフラグ

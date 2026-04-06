@@ -6,7 +6,7 @@
 label start:
     call intro_scene
     $ misaki_events["M01_done"] = True
-    $ flags["misaki_tonight"] = True
+    $ flags["day1_date_pending"] = True    # 初日専用デートフラグ
 
     if not flags["tutorial_done"]:
         call tutorial
@@ -277,6 +277,12 @@ label afternoon_actions:
 
 label night_actions:
     "――夜、21時――"
+
+    # ★初日専用デート（最優先）
+    if flags.get("day1_date_pending", False):
+        $ flags["day1_date_pending"] = False
+        call misaki_date_day1
+        return
 
     # v1.2: 告白ペンディングチェック（朝・昼にSTAGE_DATING移行した場合、夜に発火）
     if flags.get("confession_pending", False) and not flags.get("confession_done", False):
