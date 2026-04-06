@@ -338,6 +338,8 @@ init python:
         cold_war[target + "_days_left"] = 0
         cold_war[target + "_apology_available"] = False
         cold_war["recovery_" + target] = 2
+        # v2.0: 冷戦解除直後フラグ（自宅デートパターンD判定用）
+        flags["cold_war_recently_resolved_" + target] = True
         log_action("冷戦解除 " + target + " → 回復期2日")
 
     def add_suspicion_kana(reason):

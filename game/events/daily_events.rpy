@@ -208,14 +208,23 @@ label misaki_morning_at_himo_room:
     "美咲がキッチンに立った。"
 
     # Phase 4 Step 3: 食材による分岐
-    if inventory.get("groceries", 0) == 2:
+    # v1.9: 夕食で使った残りで朝食を作れるケース
+    if daily_flags.get("groceries_used_dinner", False) and inventory.get("groceries", 0) > 0:
+        if inventory["groceries"] == 2:
+            misaki_c "昨日の残りでオムレツ作れそう"
+        else:
+            misaki_c "卵まだ残ってたね。目玉焼き作るね"
+        $ change_trust(3)
+        $ inventory["groceries"] = 0
+        $ daily_flags["ate_today"] = True
+    elif not daily_flags.get("groceries_used_dinner", False) and inventory.get("groceries", 0) == 2:
         misaki_c "...これ、私のために買ってたの？"
         himo "まあ、一応"
         misaki_c "...ありがとう"
         $ change_trust(5)
         $ inventory["groceries"] = 0
         $ daily_flags["ate_today"] = True
-    elif inventory.get("groceries", 0) == 1:
+    elif not daily_flags.get("groceries_used_dinner", False) and inventory.get("groceries", 0) == 1:
         misaki_c "ちゃんと買ってたんだ...えらいじゃん"
         $ change_trust(2)
         $ inventory["groceries"] = 0
@@ -347,10 +356,9 @@ label morning_phone_kana:
 
 label check_forced_afternoon_event:
 
-    # イベント1: ナンパ解禁トリガー（カナ未出会い・魅力35以上・5日目以降）
+    # イベント1: ナンパ解禁トリガー（カナ未出会い・5日目以降。v1.8: 魅力条件を撤廃）
     if (not kana_flags["met"]
         and not flags.get("nanpa_unlocked", False)
-        and player["charm"] >= 35
         and game_date["day"] >= 5):
         call event_nanpa_unlock
         return
@@ -493,16 +501,21 @@ label nanpa_event:
 
     "繁華街をぶらぶらしていた。"
 
+    # v1.8: カナ未出会い時は65%固定（魅力依存を撤廃。カナとの出会いはストーリー必須イベント）
+    # カナ出会い済み後のナンパ（将来拡張用）は魅力依存を残す
     python:
-        charm = player["charm"] + energy_charm_bonus
-        if charm >= 70:
-            success_rate = 0.60
-        elif charm >= 50:
-            success_rate = 0.40
-        elif charm >= 35:
-            success_rate = 0.25
+        if not kana_flags["met"]:
+            success_rate = 0.65
         else:
-            success_rate = 0.10
+            charm = player["charm"] + energy_charm_bonus
+            if charm >= 70:
+                success_rate = 0.60
+            elif charm >= 50:
+                success_rate = 0.40
+            elif charm >= 35:
+                success_rate = 0.25
+            else:
+                success_rate = 0.10
 
         nanpa_success = renpy.random.random() < success_rate
 
@@ -576,6 +589,17 @@ label convenience_store:
             $ change_money(-300)
             $ change_cleanliness(10)
             himo "これで少しはマシか"
+
+        "食材（¥800）" if inventory["groceries"] == 0:
+            if not can_afford(800):
+                himo "...食材すら買えない"
+                jump _conveni_menu
+            "卵とパンとハムを買った。"
+            "コンビニ食材だけど、何もないよりマシだ。"
+            $ change_money(-800)
+            $ inventory["groceries"] = 1
+            $ inventory["groceries_day"] = game_date["day"]
+            himo "（これで最低限は何か作れるな）"
 
         "何も買わずに出る":
             pass
@@ -974,14 +998,24 @@ label kana_himo_room_morning_event:
     "カナがキッチンに立った。"
 
     # Phase 4 Step 3: 食材による分岐
-    if inventory.get("groceries", 0) == 2:
+    # v1.9: 夕食で使った残りで朝食を作れるケース
+    if daily_flags.get("groceries_used_dinner", False) and inventory.get("groceries", 0) > 0:
+        if inventory["groceries"] == 2:
+            kana_c "昨日のベーコンまだあるじゃん！朝ごはん作る！"
+        else:
+            kana_c "卵あるから目玉焼きね〜"
+        $ change_trust_kana(3)
+        $ inventory["groceries"] = 0
+        $ daily_flags["ate_today"] = True
+        $ change_stamina(12)
+    elif not daily_flags.get("groceries_used_dinner", False) and inventory.get("groceries", 0) == 2:
         kana_c "え、ベーコンある！パンケーキ作れる！"
         himo "（買っといてよかった）"
         $ change_trust_kana(5)
         $ inventory["groceries"] = 0
         $ daily_flags["ate_today"] = True
         $ change_stamina(15)
-    elif inventory.get("groceries", 0) == 1:
+    elif not daily_flags.get("groceries_used_dinner", False) and inventory.get("groceries", 0) == 1:
         kana_c "あ、卵あるじゃん。目玉焼き作るね"
         himo "（ちゃんと用意しといた甲斐があったな）"
         $ change_trust_kana(2)

@@ -101,6 +101,10 @@ default flags = {
     "kana_doubt_event_done": False,    # カナ版疑念イベント済み
     "kana_at_himo_room": False,        # v1.1: カナがヒモ太郎の部屋に泊まり中
     "kana_himo_room_morning": False,   # v1.1: カナがヒモ太郎の部屋に泊まった翌朝
+    "home_date_completed": False,       # v1.9: 自宅デート処理済み（二重泊まり防止）
+    "sake_bonus_active": False,        # v2.0: 酒ルートのお金交渉ボーナス
+    "cold_war_recently_resolved_misaki": False,  # v2.0: 冷戦解除直後フラグ
+    "cold_war_recently_resolved_kana": False,    # v2.0: 冷戦解除直後フラグ
     "last_sns_poster": "",             # v1.2: SNS重複表示防止用
     "last_news_item": "",              # v1.3: ニュース重複表示防止用
     # Phase 4 Step 2.5: 痕跡イベント用
@@ -133,6 +137,7 @@ default daily_flags = {
     "kana_mood_resolved": False,    # Phase 4 Step 2: その日のご機嫌取りが済んだか
     "used_energy_drink": False,     # Phase 4 Step 3: 当日エナドリ使用済み
     "used_detergent": False,        # Phase 4 Step 3: 洗剤使用（清潔感減衰半減）
+    "groceries_used_dinner": False, # v1.9: 夕食で食材使用済み（翌朝朝食分が残る）
 }
 
 # 美咲イベント進行フラグ（Phase 2追加）
@@ -323,6 +328,11 @@ default kana_date_location_count = {
 
 # Phase 4 Step 3 v1.7: 美咲部屋デート訪問カウント
 default misaki_room_visit_count = 0
+
+# Phase 4 Step 3 v2.0: 自宅デート
+default home_date_mood_bonus = 0  # 自宅デートのムードからエナマッチへの加算値（0/1/2）
+default misaki_himo_room_visit_count = 0
+default kana_himo_room_visit_count = 0
 
 # セリフログ用リスト
 default dialogue_log_entries = []

@@ -30,8 +30,10 @@ init python:
         if cold_war.get("kana_active", False):
             return
 
-        # v1.3追加: 一緒にいるときは送らない
+        # v1.8修正: 一緒にいる／泊まり翌朝のときは送らない
         if (flags.get("kana_at_himo_room", False)
+                or flags.get("kana_morning_after", False)
+                or flags.get("kana_himo_room_morning", False)
                 or location_flags.get("staying_at_kana", False)
                 or flags.get("kana_tonight", False)
                 or kana.get("met_today", False)):
@@ -62,6 +64,13 @@ init python:
 # ========================================
 
 label kana_initiative_event:
+    # v1.8追加: 一緒にいる／泊まり翌朝のときはスキップ
+    if (flags.get("kana_at_himo_room", False)
+            or flags.get("kana_morning_after", False)
+            or flags.get("kana_himo_room_morning", False)
+            or location_flags.get("staying_at_kana", False)):
+        return
+
     python:
         kana_msgs = [
             ("暇〜。ヒモ太郎も暇？", "casual"),
@@ -753,6 +762,10 @@ label demo_end_scene:
 # ========================================
 
 label kana_stay_offer:
+    # === v1.9: 自宅デートで既に泊まり処理済みならスキップ ===
+    if flags.get("home_date_completed", False):
+        return
+
     # === 冷戦チェック ===
     if cold_war.get("kana_active", False):
         return

@@ -986,8 +986,11 @@ label misaki_event_M05:
 
 # 自発的連絡（3日以上連絡なし）
 label misaki_check_in:
-    # v1.3追加: 一緒にいるときはスキップ
-    if flags.get("misaki_visit_himo_room", False) or flags.get("misaki_stayed_at_himo", False) or location_flags.get("staying_at_misaki", False):
+    # v1.8修正: 一緒にいる／泊まり翌朝のときはスキップ
+    if (flags.get("misaki_visit_himo_room", False)
+            or flags.get("misaki_stayed_at_himo", False)
+            or flags.get("misaki_sunday_morning", False)
+            or location_flags.get("staying_at_misaki", False)):
         return
 
     # v1.4修正: LINEのみなのでreset_contact()は使わない（met_todayも変更しない）
@@ -1680,7 +1683,7 @@ label misaki_negotiation_reaction:
         _nego_success_rate = max(5, min(95, _nego_success_rate))
 
     # v1.1: 判定ログ
-    $ log_action("対面交渉_判定", "rate=" + str(_nego_success_rate) + " loc=" + location + " loc_bonus=" + str(location_bonus) + " charm_bonus=" + str(charm_negotiation_bonus) + " weekly_pen=" + str(weekly_penalty) + " susp_pen=" + str(suspicion_penalty))
+    $ log_action("対面交渉_判定", "rate=" + str(_nego_success_rate) + " loc=" + str(location) + " loc_bonus=" + str(location_bonus) + " charm_bonus=" + str(charm_negotiation_bonus) + " weekly_pen=" + str(weekly_penalty) + " susp_pen=" + str(suspicion_penalty))
 
     # 美咲の反応テキスト（信頼度・週間回数で変化）
     if misaki["trust"] >= 60 and weekly_count <= 1:

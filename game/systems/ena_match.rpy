@@ -114,37 +114,37 @@ init python:
     # === 段階5: アフターケア選択肢プール ===
     ena_aftercare_choices = {
         "whisper_love": {
-            "text": "「好きだよ」と囁く",
+            "text": "「好きだよ」と囁く", "type": "words",
             "misaki_link": True, "kana_link": False,
             "misaki_trust": 3, "kana_trust": 2,
         },
         "say_thanks": {
-            "text": "「ありがとう」と伝える",
+            "text": "「ありがとう」と伝える", "type": "words",
             "misaki_link": False, "kana_link": False,
             "misaki_trust": 2, "kana_trust": 1,
         },
         "stroke_hair": {
-            "text": "（髪を撫でる）",
+            "text": "（髪を撫でる）", "type": "action",
             "misaki_link": True, "kana_link": False,
             "misaki_trust": 3, "kana_trust": 2,
         },
         "praise": {
-            "text": "「最高だった」",
+            "text": "「最高だった」", "type": "words",
             "misaki_link": False, "kana_link": True,
             "misaki_trust": 1, "kana_trust": 3,
         },
         "want_again": {
-            "text": "「また会いたい」と言う",
+            "text": "「また会いたい」と言う", "type": "words",
             "misaki_link": False, "kana_link": True,
             "misaki_trust": 2, "kana_trust": 3,
         },
         "arm_pillow": {
-            "text": "そのまま腕枕する",
+            "text": "そのまま腕枕する", "type": "action",
             "misaki_link": True, "kana_link": False,
             "misaki_trust": 3, "kana_trust": 0,
         },
         "ask_breakfast": {
-            "text": "「明日何食べたい？」",
+            "text": "「明日何食べたい？」", "type": "words",
             "misaki_link": False, "kana_link": False,
             "misaki_trust": 2, "kana_trust": 2,
         },
@@ -285,6 +285,10 @@ label ena_match(target):
             _mood = 1
         else:
             _mood = 0
+
+        # v2.0: 自宅デートからの流入ボーナス
+        _mood += home_date_mood_bonus
+        home_date_mood_bonus = 0
 
     $ log_action("ENA_MATCH_START", _em_target + " energy=" + str(energy) + " mood=" + str(_mood) + " charm=" + str(_effective_charm))
 
@@ -586,9 +590,12 @@ label ena_stage5(target):
         _ac_repeated = _s5_choice in _ac_history[-2:] if len(_ac_history) >= 2 else _s5_choice in _ac_history
 
         # 信頼効果
+        # v1.9: 行動系/言葉系でrepeated時の効果を分ける
+        _ac_type = _ac_data.get("type", "words")
         _ac_trust = _ac_data[_s5_target + "_trust"]
-        if _ac_repeated:
+        if _ac_repeated and _ac_type == "words":
             _ac_trust = max(0, _ac_trust // 2)
+        # 行動系のrepeatedは信頼効果据え置き（行動の繰り返しは「習慣」として自然）
 
         # エナリンク判定
         _ac_link_key = _s5_target + "_link"
@@ -612,10 +619,17 @@ label ena_stage5(target):
 
     # 反応テキスト
     if _ac_repeated:
-        if _s5_target == "misaki":
-            misaki_c "...前も言ってたね"
+        if _ac_type == "action":
+            # v1.9: 行動系のrepeatedは別テキスト
+            if _s5_target == "misaki":
+                "美咲が嬉しそうに受け入れた。"
+            else:
+                "カナが慣れた様子で受け入れた。"
         else:
-            kana_c "それ前も言った"
+            if _s5_target == "misaki":
+                misaki_c "...前も言ってたね"
+            else:
+                kana_c "それ前も言った"
     else:
         if _s5_target == "misaki":
             "美咲が安心したように微笑んだ。"

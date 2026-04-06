@@ -122,15 +122,16 @@ init python:
         # Phase 4 Step 3: エナドリ・洗剤フラグリセット
         daily_flags["used_energy_drink"] = False
         daily_flags["used_detergent"] = False
+        # Phase 4 Step 3 v1.9: 自宅デート・食材フラグリセット
+        flags["home_date_completed"] = False
+        daily_flags["groceries_used_dinner"] = False
 
-        # 宿泊リセット
-        location_flags["staying_at_misaki"] = False
-        location_flags["staying_at_kana"] = False
+        # v1.8修正: 宿泊リセットをイニシアティブ判定の後に移動（下方参照）
 
         # v1.6修正: ゲーム終了日を超えたらイベントキューイングをスキップ
-        # (game_endedフラグはエンディングラベルでセットされるため、
-        #  ここではまだFalse。日数で直接判定する)
         if game_date["day"] > GAME_DAYS:
+            location_flags["staying_at_misaki"] = False
+            location_flags["staying_at_kana"] = False
             return
 
         # 美咲ムード更新
@@ -164,6 +165,10 @@ init python:
         # Phase 3: カナからの自発的連絡
         if kana_flags["met"]:
             check_kana_initiative()
+
+        # v1.8修正: 宿泊リセット（イニシアティブ判定の後に移動。泊まり中の自発連絡を防ぐ）
+        location_flags["staying_at_misaki"] = False
+        location_flags["staying_at_kana"] = False
 
         # 美咲イベントアンロック
         check_misaki_event_unlock()
@@ -293,9 +298,10 @@ init python:
         if misaki["trust"] < 20:
             return
 
-        # v1.3修正: 一緒にいるときは送らない
+        # v1.8修正: 一緒にいる／泊まり翌朝のときは送らない
         if (flags.get("misaki_visit_himo_room", False)
                 or flags.get("misaki_stayed_at_himo", False)
+                or flags.get("misaki_sunday_morning", False)
                 or location_flags.get("staying_at_misaki", False)
                 or flags.get("misaki_tonight", False)
                 or misaki.get("met_today", False)):
@@ -423,6 +429,10 @@ label energy_charm_bonus_notify:
 
 label energy_overflow_event:
     $ stats["energy_overflow_count"] = stats.get("energy_overflow_count", 0) + 1
+
+    python:
+        _overflow_count = stats.get("energy_overflow_count", 1)
+
     "（...やばい。なんかムラムラする）"
     "（集中できない。落ち着け落ち着け）"
 
@@ -436,24 +446,59 @@ label energy_overflow_event:
             $ energy_full_days = 0
             $ energy_charm_bonus = 0
             $ change_charm(-10)
-            himo "...またエナっちまった"
-            himo "一人でエナるの、ほんと虚しいな..."
+
+            # v1.9: 暴発テキストのバリエーション
+            python:
+                _overflow_texts = []
+                _overflow_texts.append(("...またエナっちまった", "一人でエナるの、ほんと虚しいな..."))
+                if _overflow_count >= 2:
+                    _overflow_texts.append(("...最近エナるのが習慣になってきてる", "これはちょっとまずいかもな..."))
+                if misaki["stage"] >= STAGE_CLOSE:
+                    _overflow_texts.append(("...この女優、美咲にちょっと似てるな〜", "...いやいやいや"))
+                if kana_flags["met"]:
+                    _overflow_texts.append(("...カナの自撮り見ながらエナるのは最低だな", "...うん、最低だ"))
+                if _overflow_count >= 3:
+                    _overflow_texts.append(("...エナることでしかストレス発散できない男", "それが俺、ヒモ太郎"))
+                _ot = renpy.random.choice(_overflow_texts)
+
+            himo "[_ot[0]]"
+            himo "[_ot[1]]"
 
         "衝動的に連絡する":
-            "つい、LINEを送ってしまった。"
-            himo "（エナが溜まりすぎて判断力がおかしくなってる...）"
-            "（...なんて送ったんだ俺）"
             $ energy -= 1
             $ energy_full_days = 0
             $ energy_charm_bonus = 0
-            if misaki["trust"] >= kana.get("trust", 0) or not kana_flags["met"]:
+
+            # v1.9: 連絡先テキストのバリエーション
+            python:
+                if kana_flags["met"]:
+                    _contact_target = renpy.random.choice(["misaki", "kana"])
+                else:
+                    _contact_target = "misaki"
+
+                _impulse_texts = {
+                    "misaki": [
+                        ("つい美咲にLINEを送ってしまった。", "...急にどうしたの"),
+                        ("深夜に美咲に電話してしまった。", "...もしもし？どうしたの、こんな時間に"),
+                    ],
+                    "kana": [
+                        ("つい、カナにLINEを送ってしまった。", "は？笑 深夜に何？"),
+                        ("カナのインスタに「いいね」を連打してしまった。", "え、通知やばいんだけど笑"),
+                    ],
+                }
+                _it = renpy.random.choice(_impulse_texts[_contact_target])
+
+            "[_it[0]]"
+            himo "（エナが溜まりすぎて判断力がおかしくなってる...）"
+
+            if _contact_target == "misaki":
                 $ change_trust(-5)
                 $ add_suspicion("overflow_contact")
-                misaki_c "...急にどうしたの"
+                misaki_c "[_it[1]]"
             else:
                 $ change_trust_kana(-5)
                 $ add_suspicion_kana("overflow_contact")
-                kana_c "は？笑"
+                kana_c "[_it[1]]"
 
         "我慢する":
             "（耐えろ...耐えるんだ...）"

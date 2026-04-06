@@ -580,6 +580,10 @@ label evidence_trace_event(discoverer):
                     $ change_trust(-15)
                     $ suspicion["misaki"] = suspicion.get("misaki", 0) + 10
                     $ flags["misaki_tonight"] = False
+                    # v1.9: 泊まりフラグを明示的にクリア
+                    $ flags["misaki_stayed_at_himo"] = False
+                    $ flags["morning_consumed"] = True
+                    $ misaki["met_today"] = True
                     $ start_cold_war("misaki", 1)
                     $ flags["evidence_trace_count"] = flags.get("evidence_trace_count", 0) + 1
                     return
@@ -627,6 +631,10 @@ label evidence_trace_event(discoverer):
                 $ suspicion["misaki"] = 0
                 $ himo_aptitude["honest_moments"] += 2
                 $ flags["misaki_tonight"] = False
+                # v1.9: 泊まりフラグを明示的にクリア
+                $ flags["misaki_stayed_at_himo"] = False
+                $ flags["morning_consumed"] = True
+                $ misaki["met_today"] = True
                 $ start_cold_war("misaki", 1)
 
                 "美咲は最後まで泣かなかった。"
@@ -666,6 +674,10 @@ label evidence_trace_event(discoverer):
                     $ suspicion["kana"] = suspicion.get("kana", 0) + 10
                     $ kana_flags["sns_risk"] = kana_flags.get("sns_risk", 0) + 5
                     $ flags["kana_tonight"] = False
+                    # v1.9: 泊まりフラグを明示的にクリア
+                    $ flags["kana_at_himo_room"] = False
+                    $ flags["kana_himo_room_morning"] = False
+                    $ kana["met_today"] = True
                     $ start_cold_war("kana", 1)
                     $ flags["evidence_trace_count"] = flags.get("evidence_trace_count", 0) + 1
                     return
@@ -718,6 +730,10 @@ label evidence_trace_event(discoverer):
                 $ suspicion["kana"] = 0
                 $ himo_aptitude["honest_moments"] += 2
                 $ flags["kana_tonight"] = False
+                # v1.9: 泊まりフラグを明示的にクリア
+                $ flags["kana_at_himo_room"] = False
+                $ flags["kana_himo_room_morning"] = False
+                $ kana["met_today"] = True
                 $ start_cold_war("kana", 1)
 
                 "カナが静かにドアを閉めた。"
