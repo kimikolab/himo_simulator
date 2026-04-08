@@ -4,7 +4,13 @@
 
 
 label start:
-    call intro_scene
+    menu:
+        "ゲームの始め方を選んでください"
+        "最初から（イントロあり）":
+            call intro_scene
+        "スキップ（本編から開始）":
+            pass
+
     $ misaki_events["M01_done"] = True
     $ flags["day1_date_pending"] = True    # 初日専用デートフラグ
 
