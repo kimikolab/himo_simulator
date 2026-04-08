@@ -117,8 +117,34 @@ label misaki_date_izakaya:
             ])
         misaki_c "[_iz_line]"
 
-    "お酒が入って、美咲の口数が増える。"
-    "美咲が奢ってくれた。"
+    # 訪問回数で飲み方・奢りテキストにバリエーション
+    python:
+        _iz_visit = stats.get("date_locations", {}).get("izakaya", 0)
+
+        _drink_texts = [
+            "お酒が入って、美咲の口数が増える。",
+        ]
+        if _iz_visit >= 3:
+            _drink_texts.append("二杯目あたりから、美咲の顔が赤くなってきた。")
+            _drink_texts.append("美咲がグイグイ飲んでいる。お酒と生きてるタイプだ。")
+        if _iz_visit >= 5:
+            _drink_texts.append("もう何杯目だろう。美咲のペースが上がっている。")
+            _drink_texts.append("今日の美咲は飲むペースが速い。仕事で何かあったのかもしれない。")
+        _dt = renpy.random.choice(_drink_texts)
+
+        _treat_texts = [
+            "美咲が奢ってくれた。",
+        ]
+        if _iz_visit >= 3:
+            _treat_texts.append("会計は美咲がさらっと済ませた。自然にそうなっている。")
+            _treat_texts.append("美咲がカードを出した。「経費で落とす」は冗談だと思うけど。")
+        if _iz_visit >= 5:
+            _treat_texts.append("美咲が伝票を取った。何も言わずに。")
+            _treat_texts.append("「いつも悪いな」「...いいの、楽しいから」")
+        _tt = renpy.random.choice(_treat_texts)
+
+    "[_dt]"
+    "[_tt]"
 
     $ change_trust(5)
     $ change_dependence(5)

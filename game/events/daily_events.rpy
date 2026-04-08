@@ -199,13 +199,47 @@ label check_forced_morning_event:
 label misaki_morning_at_himo_room:
     scene bg_placeholder
 
-    "朝。隣に美咲がいる。"
-    "いつもは美咲の部屋で目が覚めるのに、今日は逆だ。"
+    # テキストバリエーション: 泊まり回数で分岐
+    python:
+        _misaki_himo_stay = misaki_himo_room_visit_count
 
-    misaki_c "...おはよう"
-    himo "おう"
-
-    "美咲がキッチンに立った。"
+    if _misaki_himo_stay <= 1:
+        # 1回目
+        "朝。隣に美咲がいる。"
+        "いつもは美咲の部屋で目が覚めるのに、今日は逆だ。"
+        misaki_c "...おはよう"
+        himo "おう"
+        "美咲がキッチンに立った。"
+    elif _misaki_himo_stay <= 3:
+        # 2〜3回目（プールからランダム）
+        python:
+            _misaki_wake_set = renpy.random.choice(["A", "B"])
+        if _misaki_wake_set == "A":
+            "朝。美咲がまだ寝ている。"
+            "自分の部屋に美咲がいる。その光景に、慣れてきた。"
+            misaki_c "...ん、おはよう"
+            "美咲がキッチンに立った。"
+        else:
+            "美咲の目覚ましが鳴った。"
+            misaki_c "...うそ、ヒモ太郎の部屋だった"
+            himo "おはよ"
+            misaki_c "...おはよう。会社行かなきゃ...あ、今日休みか"
+            "美咲がほっとした顔をして、キッチンに立った。"
+    else:
+        # 4回以上（プールからランダム）
+        python:
+            _misaki_wake_set = renpy.random.choice(["A", "B"])
+        if _misaki_wake_set == "A":
+            "朝。もう驚かない。隣に美咲がいる。"
+            misaki_c "おはよう"
+            himo "おう"
+            "自然にキッチンに向かう美咲。もう自分の家みたいだ。"
+        else:
+            "美咲が先に起きて、窓を開けていた。"
+            misaki_c "...いい天気。"
+            himo "おはよ"
+            misaki_c "コーヒー淹れようか。インスタントだけど"
+            himo "助かる"
 
     # Phase 4 Step 3: 食材による分岐
     # v1.9: 夕食で使った残りで朝食を作れるケース
@@ -990,12 +1024,60 @@ label kana_morning_after_event:
 label kana_himo_room_morning_event:
     scene bg_placeholder
 
-    "自分の部屋で目が覚めた。"
-    "隣でカナが寝ている。"
+    # テキストバリエーション: 泊まり回数で3段階分岐
+    python:
+        _kana_stay = stats.get("kana_stayed_himo_room", 0)
 
-    kana_c "...んん...おはよ"
+    if _kana_stay <= 2:
+        # 1〜2回目: 新鮮
+        "自分の部屋で目が覚めた。"
+        "隣でカナが寝ている。"
+        kana_c "...んん...おはよ"
+        "カナがキッチンに立った。"
+    elif _kana_stay <= 5:
+        # 3〜5回目: 慣れてきた（プールからランダム）
+        python:
+            _kana_wake_set = renpy.random.choice(["A", "B", "C"])
+        if _kana_wake_set == "A":
+            "目が覚めると、隣にカナがいた。"
+            "いつもの寝息に、慣れてきた。"
+            kana_c "...おはよ"
+            "カナが先にキッチンに立っていた。"
+        elif _kana_wake_set == "B":
+            "カナの寝息で目が覚めた。"
+            "毛布を半分取られていた。"
+            kana_c "...あと5分"
+            himo "（俺のセリフだろそれ）"
+            "結局カナが起きて、キッチンに向かった。"
+        else:
+            "朝、カナがベッドから落ちかけていた。"
+            kana_c "ぅぁ...起きた？おはよ"
+            himo "...先に起きてたのか"
+            kana_c "うん...ヒモ太郎の寝顔撮ろうとしてた"
+            himo "やめろ"
+    else:
+        # 6回以上: 日常化（プールからランダム）
+        python:
+            _kana_wake_set = renpy.random.choice(["A", "B", "C"])
+        if _kana_wake_set == "A":
+            "いつの間にか、カナが隣にいるのが普通になった。"
+            kana_c "おはよ〜"
+            himo "おう"
+            "何も言わなくても、朝が始まる。"
+        elif _kana_wake_set == "B":
+            "カナはもう起きていた。"
+            "コーヒーの匂いがする。"
+            kana_c "おはよ、いつもの。"
+            himo "...いつの間にうちにコーヒー常備してたんだ"
+        else:
+            "カナが布団の中からくっついてきた。"
+            kana_c "...寒い"
+            himo "エアコンつけろ"
+            kana_c "ヒモ太郎の方があったかい"
 
-    "カナがキッチンに立った。"
+    # 3回目以降のバリエーションでキッチン描写がないパターン向け
+    if _kana_stay > 2:
+        "カナがキッチンに立った。"
 
     # Phase 4 Step 3: 食材による分岐
     # v1.9: 夕食で使った残りで朝食を作れるケース

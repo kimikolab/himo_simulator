@@ -1796,3 +1796,77 @@ style slider_vbox:
 style slider_slider:
     variant "small"
     xsize 900
+
+
+################################################################################
+## コマンドバトル風エナマッチUIスクリーン
+################################################################################
+
+screen ena_command_menu(commands, mood_current, mood_max, state_text, can_retreat):
+    # commands: [{"key": "gentle_approach", "text": "自然に距離を詰める", "icon": "♠"}, ...]
+    # mood_current: 現在のムードポイント
+    # mood_max: 最大ムードポイント（6）
+    # state_text: 相手の状態テキスト
+    # can_retreat: 撤退コマンドを表示するか
+
+    modal True
+
+    # 背景を少し暗くする
+    add Solid("#00000066")
+
+    # 相手の状態テキスト（左上）
+    frame:
+        xalign 0.05
+        yalign 0.15
+        xsize 500
+        padding (20, 15)
+        background "#1a1a2e99"
+
+        text state_text size 22 color "#ffffff"
+
+    # ムードゲージ（右上）
+    frame:
+        xalign 0.95
+        yalign 0.15
+        padding (20, 15)
+        background "#1a1a2e99"
+
+        hbox:
+            spacing 8
+            text "MOOD" size 18 color "#ff69b4"
+            for i in range(mood_max):
+                if i < mood_current:
+                    text "\u2665" size 22 color "#ff69b4"
+                else:
+                    text "\u2665" size 22 color "#555555"
+
+    # コマンドウィンドウ（下部）
+    frame:
+        xalign 0.5
+        yalign 0.85
+        xsize 700
+        padding (30, 20)
+        background "#0d1b2a99"
+
+        vbox:
+            spacing 12
+
+            # コマンドボタン
+            for cmd in commands:
+                textbutton (cmd["icon"] + "  " + cmd["text"]):
+                    action Return(cmd["key"])
+                    text_size 24
+                    text_color "#ffffff"
+                    text_hover_color "#ff69b4"
+                    xsize 640
+
+            # 区切り線＋撤退コマンド（段階3以降で表示）
+            if can_retreat:
+                null height 5
+                text "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500" size 16 color "#555555"
+                textbutton "\u25c1  今日はこのくらいで":
+                    action Return("retreat")
+                    text_size 22
+                    text_color "#888888"
+                    text_hover_color "#aaaaaa"
+                    xsize 640

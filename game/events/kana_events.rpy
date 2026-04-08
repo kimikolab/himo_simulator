@@ -195,10 +195,50 @@ label kana_visit:
     # カナが在宅 → 既存の訪問処理
     scene bg_placeholder
 
-    "カナの部屋に来た。"
+    # テキストバリエーション: 訪問回数で導入テキスト3段階分岐
+    python:
+        _kana_room_intro_count = stats.get("kana_visit_count", 0)
 
-    if game_date["time"] == "afternoon":
-        "昼間から来られるのは、カナならでは。"
+    if _kana_room_intro_count <= 1:
+        # 1〜2回目: オリジナル
+        "カナの部屋に来た。"
+        if game_date["time"] == "afternoon":
+            "昼間から来られるのは、カナならでは。"
+    elif _kana_room_intro_count <= 4:
+        # 3〜5回目（プールからランダム）
+        python:
+            _kana_room_set = renpy.random.choice(["A", "B", "C"])
+        if _kana_room_set == "A":
+            "カナの部屋に来た。だいぶ見慣れた。"
+            "いつ来ても散らかっている。"
+            if game_date["time"] == "afternoon":
+                "カナが片付けようと思ってたのに、とでも言いたげだ。"
+        elif _kana_room_set == "B":
+            "カナの部屋。いつ来ても散らかっている。"
+            if game_date["time"] == "afternoon":
+                "カナが「片付けようと思ってたのに」と言っているが、"
+                "毎回言ってるな"
+            himo "（毎回言ってるな）"
+        else:
+            "カナのアパートの階段を上る。"
+            "ドアの前に着くと、中からテレビの音が聞こえた。"
+            "おるな"
+    else:
+        # 6回以上（プールからランダム）
+        python:
+            _kana_room_set = renpy.random.choice(["A", "B", "C"])
+        if _kana_room_set == "A":
+            "もはや第二の自宅。カナの部屋。"
+            "鍵は開いている。「いつでも来ていいよ」と言われているし、甘えている。"
+        elif _kana_room_set == "B":
+            "カナの部屋のドアをノックした。"
+            "返事がない。勝手に入った。"
+            "カナがソファで寝落ちていた。"
+            himo "...おい"
+            kana_c "...あ、来た"
+        else:
+            "カナの部屋に着いた。"
+            "玄関にヒモ太郎のサンダルが置いてある。いつの間にか持ち込んだやつだ。"
 
     # v1.5: 訪問回数に応じたセリフ
     python:
