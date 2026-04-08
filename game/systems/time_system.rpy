@@ -510,11 +510,12 @@ label energy_overflow_event:
 
             if _overflow_failed:
                 "...ダメだった。"
-                "翌日に持ち越された。"
+                "（...やっぱり無理だ）"
+                jump energy_overflow_event
             else:
                 "...なんとか耐えた。"
                 "（明日は絶対どうにかしないと）"
-                $ energy_full_days = 4
+                $ energy_full_days = 2
 
     return
 

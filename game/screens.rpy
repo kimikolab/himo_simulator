@@ -1802,71 +1802,105 @@ style slider_slider:
 ## コマンドバトル風エナマッチUIスクリーン
 ################################################################################
 
-screen ena_command_menu(commands, mood_current, mood_max, state_text, can_retreat):
-    # commands: [{"key": "gentle_approach", "text": "自然に距離を詰める", "icon": "♠"}, ...]
-    # mood_current: 現在のムードポイント
-    # mood_max: 最大ムードポイント（6）
-    # state_text: 相手の状態テキスト
-    # can_retreat: 撤退コマンドを表示するか
+screen ena_battle_ui(commands, mood, mood_max, vol_self, vol_self_max, vol_partner, vol_partner_max, state_text, phase, can_infight, can_retreat, partner_name):
 
     modal True
-
-    # 背景を少し暗くする
-    add Solid("#00000066")
+    add Solid("#00000077")
 
     # 相手の状態テキスト（左上）
     frame:
         xalign 0.05
-        yalign 0.15
-        xsize 500
+        yalign 0.12
+        xsize 450
         padding (20, 15)
         background "#1a1a2e99"
-
         text state_text size 22 color "#ffffff"
 
-    # ムードゲージ（右上）
+    # ゲージパネル（右上）
     frame:
         xalign 0.95
-        yalign 0.15
+        yalign 0.12
+        xsize 320
         padding (20, 15)
         background "#1a1a2e99"
 
-        hbox:
-            spacing 8
-            text "MOOD" size 18 color "#ff69b4"
-            for i in range(mood_max):
-                if i < mood_current:
-                    text "\u2665" size 22 color "#ff69b4"
-                else:
-                    text "\u2665" size 22 color "#555555"
+        vbox:
+            spacing 10
+
+            # ムードゲージ（♡表示）
+            hbox:
+                spacing 6
+                text "MOOD" size 16 color "#ff69b4"
+                for i in range(mood_max):
+                    if i < mood:
+                        text "\u2665" size 20 color "#ff69b4"
+                    else:
+                        text "\u2665" size 20 color "#555555"
+
+            # 相手ボルテージ
+            hbox:
+                spacing 6
+                text "[partner_name]" size 16 color "#ff9999"
+                bar:
+                    value vol_partner
+                    range vol_partner_max
+                    xsize 180
+                    left_bar "#ff6699"
+                    right_bar "#333333"
+                    ysize 16
+
+            # 自分ボルテージ
+            hbox:
+                spacing 6
+                text "ヒモ太郎" size 16 color "#66bbff"
+                bar:
+                    value vol_self
+                    range vol_self_max
+                    xsize 180
+                    left_bar _vol_self_color
+                    right_bar "#333333"
+                    ysize 16
 
     # コマンドウィンドウ（下部）
     frame:
         xalign 0.5
-        yalign 0.85
-        xsize 700
+        yalign 0.88
+        xsize 750
         padding (30, 20)
-        background "#0d1b2a99"
+        background "#0d1b2ecc"
 
         vbox:
-            spacing 12
+            spacing 8
+
+            # フェーズ表示
+            if phase == "outfight":
+                text "〈アウトファイト〉" size 18 color "#66bbff"
+            else:
+                text "〈インファイト〉" size 18 color "#ff6699"
 
             # コマンドボタン
             for cmd in commands:
                 textbutton (cmd["icon"] + "  " + cmd["text"]):
                     action Return(cmd["key"])
-                    text_size 24
+                    text_size 22
                     text_color "#ffffff"
                     text_hover_color "#ff69b4"
-                    xsize 640
+                    xsize 700
 
-            # 区切り線＋撤退コマンド（段階3以降で表示）
-            if can_retreat:
-                null height 5
-                text "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500" size 16 color "#555555"
-                textbutton "\u25c1  今日はこのくらいで":
-                    action Return("retreat")
+            # 特殊コマンド
+            if can_infight or can_retreat:
+                text "────────────────────" size 14 color "#555555"
+
+            if can_infight:
+                textbutton "\u25b6  インファイト開始":
+                    action Return("start_infight")
                     text_size 22
+                    text_color "#ffcc00"
+                    text_hover_color "#ffffff"
+
+            if can_retreat:
+                textbutton "\u25c1  やめる（エナタメ）":
+                    action Return("retreat")
+                    text_size 20
                     text_color "#888888"
                     text_hover_color "#aaaaaa"
-                    xsize 640

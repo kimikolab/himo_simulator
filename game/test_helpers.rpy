@@ -79,3 +79,48 @@ init python:
             else:
                 active_days[appt_day] = key
         return ", ".join(errors)
+
+
+# ========================================
+# デバッグ用: エナマッチ単体テスト
+# Shift+O → jump debug_ena_test で起動
+# ========================================
+
+label debug_ena_test:
+    # テスト用パラメータセット
+    $ energy = 3
+    $ energy_max = 3
+    $ energy_full_days = 0
+    $ energy_charm_bonus = 0
+
+    $ misaki["trust"] = 80
+    $ misaki["stage"] = STAGE_DATING
+    $ misaki["dependence"] = 60
+
+    $ kana["trust"] = 80
+    $ kana["stage"] = STAGE_DATING
+    $ kana["dependence"] = 60
+
+    $ game_date["day"] = 15
+
+    menu:
+        "誰とテスト？"
+        "美咲":
+            call ena_battle("misaki")
+        "カナ":
+            call ena_battle("kana")
+        "美咲（低信頼）":
+            $ misaki["trust"] = 30
+            $ misaki["stage"] = STAGE_FRIEND
+            call ena_battle("misaki")
+        "カナ（低信頼）":
+            $ kana["trust"] = 30
+            $ kana["stage"] = STAGE_FRIEND
+            call ena_battle("kana")
+        "カナ（エナ1・依存100）":
+            $ energy = 1
+            $ kana["dependence"] = 100
+            call ena_battle("kana")
+
+    "テスト終了"
+    jump debug_ena_test

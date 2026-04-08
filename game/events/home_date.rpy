@@ -1082,24 +1082,10 @@ label kana_home_D:
     # ラウンド2「重い」
     "カナが不安を口にし始める。"
 
-    python:
-        _pool_r2 = [
-            ("他に女いないよね？", "confrontation", 0, 0, ""),
-            ("私のことどう思ってる？", "feeling", 0, 0, ""),
-            ("LINEの返信遅くない？", "excuse", 0, 0, ""),
-            ("前の彼氏の話", "trust", 10, 1, ""),
-            ("（スマホを置いて向き合う）", "trust", 5, 2, "...ありがとう"),
-        ]
-        renpy.random.shuffle(_pool_r2)
-        _choices_r2 = _pool_r2[:3]
-        _menu_r2 = [(c[0], i) for i, c in enumerate(_choices_r2)]
+    # カナがランダムに1つの話題を切り出す
+    $ _r2_topic = renpy.random.choice(["confrontation", "feeling", "line"])
 
-    $ _r2_pick = renpy.display_menu(_menu_r2)
-
-    python:
-        _r2 = _choices_r2[_r2_pick]
-
-    if _r2[0] == "他に女いないよね？":
+    if _r2_topic == "confrontation":
         kana_c "ねえ、他に女いないよね？"
         menu:
             "いないよ":
@@ -1125,7 +1111,13 @@ label kana_home_D:
                 $ change_trust_kana(8)
                 $ _home_mood += 2
                 $ himo_aptitude["honest_moments"] += 1
-    elif _r2[0] == "私のことどう思ってる？":
+            "スマホを置いて向き合う":
+                "スマホを置いて、カナに向き合った。"
+                kana_c "...はぐらかさないで"
+                "でも、真剣な態度に少しだけ表情がゆるんだ。"
+                $ change_trust_kana(3)
+                $ _home_mood += 1
+    elif _r2_topic == "feeling":
         kana_c "ねえ、私のことどう思ってる？"
         menu:
             "大切に思ってる":
@@ -1142,7 +1134,7 @@ label kana_home_D:
                 kana_c "...そっか"
                 "カナが少し離れた。"
                 $ change_trust_kana(-5)
-    elif _r2[0] == "LINEの返信遅くない？":
+    else:
         kana_c "最近LINEの返信遅くない？"
         menu:
             "ごめん、忙しかった":
@@ -1151,20 +1143,14 @@ label kana_home_D:
             "そうかな？":
                 kana_c "そうだよ。前は3分で返してくれたのに"
                 $ change_trust_kana(-2)
-    elif _r2[0] == "前の彼氏の話":
-        himo "前の彼氏って、どんなやつだった？"
-        kana_c "...聞くの？"
-        himo "うん"
-        kana_c "...普通の人だった。優しくて、ちゃんとしてて"
-        kana_c "でも、つまんなかった"
-        kana_c "ヒモ太郎は...ダメなのに、目が離せない"
-        $ change_trust_kana(10)
-        $ _home_mood += 1
-    elif _r2[0] == "（スマホを置いて向き合う）":
-        "スマホを置いて、カナに向き合った。"
-        kana_c "...ありがとう"
-        $ change_trust_kana(5)
-        $ _home_mood += 2
+            "前の彼氏はマメだった？":
+                kana_c "...聞くの？"
+                himo "うん"
+                kana_c "...普通の人だった。優しくて、ちゃんとしてて"
+                kana_c "でも、つまんなかった"
+                kana_c "ヒモ太郎は...ダメなのに、目が離せない"
+                $ change_trust_kana(10)
+                $ _home_mood += 1
 
     # ラウンド3「爆発 or 安心」
     if _home_mood >= 3:
