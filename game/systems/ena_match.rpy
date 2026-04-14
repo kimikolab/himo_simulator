@@ -40,7 +40,26 @@ init python:
                 "敏感な場所に触れた。カナが枕に顔を埋めた。",
             ],
         },
+        "lick": {
+            "misaki": [
+                "美咲が小さく声を上げた。...効果は抜群だ。",
+                "美咲が体をびくっとさせた。",
+                "美咲が目を見開いた。...少し涙目。",
+            ],
+            "kana": [
+                "カナが「...っ」と息を詰めた。効果は抜群だ。",
+                "カナが枕に顔を埋めた。声を殺している。",
+                "カナの体が跳ねた。「...反則」",
+            ],
+        },
     }
+
+    # 地雷コマンド: さむいギャグ
+    ena_bad_joke_texts = [
+        "渾身のギャグを放った。...静寂。",
+        "「布団が吹っ飛んだ」...相手の目が死んでいる。",
+        "自信満々でボケた。空気が凍った。",
+    ]
 
     # === ボルテージバトル: 相手の技プール（Phase A: 低信頼のみ） ===
 
@@ -48,7 +67,7 @@ init python:
     ena_misaki_skills = [
         {
             "name": "うるんだ瞳",
-            "vol_self": 2,
+            "vol_self": 1,
             "texts": [
                 "美咲が上目遣いでじっと見ている...",
                 "美咲の瞳が潤んでいる。無意識なのが一番効く。",
@@ -57,7 +76,7 @@ init python:
         },
         {
             "name": "沈黙",
-            "vol_self": 2,
+            "vol_self": 1,
             "texts": [
                 "美咲は何も言わない。ただ、じっと見つめている。",
                 "美咲が黙っている。その沈黙が、逆に効く。",
@@ -75,19 +94,50 @@ init python:
         },
     ]
 
-    # カナの技（低信頼: 挑発的・攻撃的）
-    ena_kana_skills = [
+    # 美咲のインファイト技
+    ena_misaki_skills_infight = [
         {
-            "name": "口撃",
-            "vol_self": 3,
+            "name": "しがみつく",
+            "vol_self": 1,
             "texts": [
-                "カナの口撃！ヒモ太郎は声を殺した...！",
-                "カナの口撃！...慣れた手つきだ。容赦ない。",
-                "カナの口撃！「動かないで」...これはきつい。",
+                "美咲が腕を掴んだ。離さないように。",
+                "美咲がしがみついてきた。必死な感じが伝わる。",
+                "美咲の手が背中に回った。爪が少し食い込む。",
             ],
         },
         {
-            "name": "まとわりつき",
+            "name": "吐息",
+            "vol_self": 1,
+            "texts": [
+                "美咲の熱い吐息が首筋にかかった。",
+                "美咲の呼吸が荒くなっている。耳元で聞こえる。",
+                "「...っ」美咲が息を詰めた。",
+            ],
+        },
+        {
+            "name": "こらえる",
+            "vol_self": 1,
+            "texts": [
+                "美咲のこらえる！声を出すのを必死に堪えている。",
+                "美咲のこらえる！唇を噛んで耐えている。その姿が効く。",
+                "美咲のこらえる！「...っ」漏れそうな声を飲み込んだ。",
+            ],
+        },
+    ]
+
+    # カナの技（低信頼: 挑発的・攻撃的）
+    ena_kana_skills = [
+        {
+            "name": "したでなめる",
+            "vol_self": 3,
+            "texts": [
+                "カナのしたでなめる！ヒモ太郎は声を殺した...！",
+                "カナのしたでなめる！...容赦のない舌がヒモ太郎を襲う！",
+                "カナのしたでなめる！「動かないで」...これはきつい。",
+            ],
+        },
+        {
+            "name": "まとわりつく",
             "vol_self": 2,
             "texts": [
                 "カナが離れようとしない。",
@@ -102,6 +152,37 @@ init python:
                 "カナが甘えた声を出した。",
                 "カナが腕にしがみついてきた。",
                 "「ねえ...」カナが小さく呼んだ。",
+            ],
+        },
+    ]
+
+    # カナのインファイト技
+    ena_kana_skills_infight = [
+        {
+            "name": "しめつける",
+            "vol_self": 3,
+            "texts": [
+                "カナのしめつける！...これはきつい...！",
+                "カナが腰を動かした。締め付けが強い...！",
+                "「...逃がさない」カナの締め付けが容赦ない。",
+            ],
+        },
+        {
+            "name": "しがみつく",
+            "vol_self": 2,
+            "texts": [
+                "カナがしがみついてきた。爪が食い込む。",
+                "カナが背中に腕を回した。離す気がない。",
+                "カナの体が密着している。隙間がない。",
+            ],
+        },
+        {
+            "name": "あえぎ声",
+            "vol_self": 2,
+            "texts": [
+                "カナの声が漏れた。...これは効く。",
+                "カナが声を抑えきれなくなっている。",
+                "「...あ」小さな声。それだけで十分だった。",
             ],
         },
     ]
@@ -267,15 +348,21 @@ label ena_battle(target):
                 # アウトファイトコマンド
                 _cmd_pool = [
                     {"key": "stare", "text": "見つめる", "icon": "\u2665"},
-                    {"key": "joke", "text": "おふざけ", "icon": "\u2660"},
+                    {"key": "joke", "text": "なごませる", "icon": "\u2660"},
                     {"key": "massage_upper", "text": "マッサージ(上半身)", "icon": "\u2663"},
-                    {"key": "wait", "text": "ようすみ", "icon": "\u2666"},
+                    {"key": "wait", "text": "がまん", "icon": "\u2666"},
                 ]
                 # Stage3以上で解放
                 _stage = misaki["stage"] if target == "misaki" else kana["stage"]
                 if _stage >= STAGE_CLOSE:
                     _cmd_pool.append({"key": "kiss", "text": "キス", "icon": "\u2665"})
                     _cmd_pool.append({"key": "massage_lower", "text": "マッサージ(下半身)", "icon": "\u2663"})
+                    _cmd_pool.append({"key": "lick", "text": "したでなめる", "icon": "\u2663"})
+                # 地雷コマンド（16日目以降、確率混入）
+                if game_date["day"] >= 16:
+                    _trap_rate = 0.20 + (game_date["day"] - 16) * 0.02
+                    if renpy.random.random() < _trap_rate:
+                        _cmd_pool.append({"key": "bad_joke", "text": "さむいギャグ", "icon": "\u2660"})
                 _commands = _cmd_pool
             else:
                 # インファイトコマンド
@@ -344,39 +431,68 @@ label ena_battle(target):
             $ log_action("ENA_INFIGHT_START", target + " energy=" + str(energy))
             jump .battle_loop
 
-        # === コマンド効果適用 ===
+        # === コマンド効果適用（キャラ別に分離） ===
         python:
-            _cmd_effects = {
+            _cmd_effects_kana = {
                 "stare":         {"mood": 1, "vp": 0, "vs": 0},
                 "joke":          {"mood": 1, "vp": 0, "vs": 0},
                 "kiss":          {"mood": 2, "vp": 1, "vs": 1},
                 "massage_upper": {"mood": 1, "vp": 2, "vs": 1},
                 "massage_lower": {"mood": 1, "vp": 3, "vs": 2},
+                "lick":          {"mood": 1, "vp": 3, "vs": 1},
                 "wait":          {"mood": 0, "vp": 0, "vs": -1},
+                "bad_joke":      {"mood": -2, "vp": -1, "vs": -1},
                 "normal":        {"mood": 0, "vp": 2, "vs": 1},
                 "rush":          {"mood": 0, "vp": 3, "vs": 3},
                 "slow":          {"mood": 0, "vp": 1, "vs": -1},
                 "return_out":    {"mood": 0, "vp": -1, "vs": -2},
             }
-            _eff = _cmd_effects[_result]
-            _mood = min(6, _mood + _eff["mood"])
+            _cmd_effects_misaki = {
+                "stare":         {"mood": 1, "vp": 1, "vs": 0},
+                "joke":          {"mood": 1, "vp": 0, "vs": 0},
+                "kiss":          {"mood": 2, "vp": 2, "vs": 1},
+                "massage_upper": {"mood": 1, "vp": 3, "vs": 1},
+                "massage_lower": {"mood": 1, "vp": 4, "vs": 2},
+                "lick":          {"mood": 1, "vp": 4, "vs": 1},
+                "wait":          {"mood": 0, "vp": 0, "vs": -1},
+                "bad_joke":      {"mood": -2, "vp": -1, "vs": -1},
+                "normal":        {"mood": 0, "vp": 3, "vs": 1},
+                "rush":          {"mood": 0, "vp": 4, "vs": 3},
+                "slow":          {"mood": 0, "vp": 2, "vs": -1},
+                "return_out":    {"mood": 0, "vp": -1, "vs": -2},
+            }
+            if target == "misaki":
+                _eff = _cmd_effects_misaki[_result]
+            else:
+                _eff = _cmd_effects_kana[_result]
+            _mood = max(0, min(6, _mood + _eff["mood"]))
             _vol_partner = max(0, _vol_partner + _eff["vp"])
             _vol_self = max(0, _vol_self + _eff["vs"])
 
             if _result == "return_out":
                 _phase = "outfight"
 
-        # コマンドテキスト表示（マッサージ系はターゲット別プールから選択）
+        # コマンドテキスト表示（マッサージ系・舐め系はターゲット別プール、地雷は専用プール）
         python:
             if _result in ena_massage_texts:
                 _cmd_text = renpy.random.choice(ena_massage_texts[_result][target])
+            elif _result == "bad_joke":
+                _cmd_text = renpy.random.choice(ena_bad_joke_texts)
             else:
                 _cmd_text = ena_command_texts.get(_result, "...")
         "[_cmd_text]"
 
         # === 相手のカウンター技 ===
         python:
-            _skill = renpy.random.choice(_skill_pool)
+            # フェーズ別に技プールを切り替え
+            if _phase == "infight":
+                if target == "misaki":
+                    _active_pool = ena_misaki_skills_infight
+                else:
+                    _active_pool = ena_kana_skills_infight
+            else:
+                _active_pool = _skill_pool
+            _skill = renpy.random.choice(_active_pool)
             _vol_self = min(15, _vol_self + _skill["vol_self"])
             _skill_text = renpy.random.choice(_skill["texts"])
             _skill_name = _skill["name"]
@@ -387,28 +503,90 @@ label ena_battle(target):
 
         # === ゲージ上限チェック（スパーク→リリースの順で判定） ===
 
-        # スパークチェック（先に判定することで同時到達時にシンクロ可能）
-        if _vol_partner >= 10:
-            "――スパーク！"
-            "[_partner_name]のボルテージがオーバーフローに達した！"
-            $ _spark_count += 1
-            $ log_action("ENA_SPARK", target + " count=" + str(_spark_count))
+        # 美咲の「こらえる」自動発動判定（スパーク前にチェック）
+        # _vol_self >= 12 のときはユニゾンを狙わせるためスキップ
+        if _vol_partner >= 10 and target == "misaki" and _vol_self < 12:
+            python:
+                _endure_rate = 0
+                if misaki["trust"] >= 80:
+                    _endure_rate = 50
+                elif misaki["trust"] >= 50:
+                    _endure_rate = 25
+                _endure_triggered = False
+                _endure_reset = 0
+                if _endure_rate > 0 and renpy.random.randint(1, 100) <= _endure_rate:
+                    _endure_triggered = True
+                    _endure_reset = 7 if misaki["trust"] >= 80 else 8
+
+            $ log_action("ENA_ENDURE", "misaki rate=" + str(_endure_rate) + " triggered=" + str(_endure_triggered) + " vol_reset=" + str(_endure_reset))
+
+            if _endure_triggered:
+                "美咲のこらえる！"
+                "声を出すのを必死に堪えている...！"
+                $ _vol_partner = _endure_reset
+                jump .battle_loop
+
+        # スパークチェック（先に判定）
+        python:
+            _spark_this_turn = False
+            if _vol_partner >= 10:
+                _spark_count += 1
+                _spark_this_turn = True
 
         # リリースチェック
-        if _vol_self >= 15:
-            $ _released = True
-            # フェーズ問わずエナ消費
-            if energy > 0:
-                $ energy -= 1
-                $ energy_full_days = 0
-                $ energy_charm_bonus = 0
+        python:
+            _release_this_turn = False
+            if _vol_self >= 15:
+                _released = True
+                _release_this_turn = True
+                # フェーズ問わずエナ消費
+                if energy > 0:
+                    energy -= 1
+                    energy_full_days = 0
+                    energy_charm_bonus = 0
+
+        # === 演出分岐 ===
+        if _spark_this_turn and _release_this_turn:
+            # ユニゾン！（同時到達）
+            "――――"
+            "――ユニゾン！！"
+            "同じ瞬間だった。"
+
+            if target == "misaki":
+                python:
+                    _sync_texts = [
+                        "美咲が声を殺した。...同時に、ヒモ太郎も限界を超えた。",
+                        "息が重なった。体が重なった。...全てが重なった。",
+                        "美咲の手がシーツを掴んだ。同じ瞬間、ヒモ太郎も――",
+                    ]
+                    _st = renpy.random.choice(_sync_texts)
+                "[_st]"
+            else:
+                python:
+                    _sync_texts = [
+                        "カナが叫んだ。...同時に、ヒモ太郎も堪えきれなかった。",
+                        "カナの体が跳ねた。同じ瞬間――全部、持っていかれた。",
+                        "「...一緒に」カナがそう言った気がした。",
+                    ]
+                    _st = renpy.random.choice(_sync_texts)
+                "[_st]"
+
+            $ log_action("ENA_UNISON", target + " sparks=" + str(_spark_count) + " vol_self=" + str(_vol_self))
+            jump .battle_end
+
+        elif _release_this_turn:
+            # リリースのみ（通常）
             "――リリース！"
             "ヒモ太郎は耐えきれなかった...！"
             $ log_action("ENA_RELEASE", "vol_self=" + str(_vol_self) + " energy=" + str(energy))
             jump .battle_end
 
-        # スパークのみ（リリースなし）→ Phase Aではスパーク1回で終了判定へ
-        if _spark_count >= 1:
+        elif _spark_this_turn:
+            # スパークのみ（通常）
+            "――スパーク！"
+            "[_partner_name]のボルテージがリミットに達した！"
+            $ log_action("ENA_SPARK", target + " count=" + str(_spark_count))
+            # Phase A: スパーク1回で終了判定へ
             jump .battle_end
 
         jump .battle_loop
@@ -417,7 +595,7 @@ label ena_battle(target):
     label .battle_end:
         python:
             if _released and _spark_count >= 1:
-                _battle_result = "synchro"
+                _battle_result = "unison"
             elif _released and _spark_count == 0:
                 _battle_result = "too_early"
             elif not _released and _spark_count >= 1:
@@ -428,7 +606,7 @@ label ena_battle(target):
         $ log_action("ENA_RESULT", _battle_result + " sparks=" + str(_spark_count) + " turns=" + str(_turn))
 
         # 結果テキスト
-        if _battle_result == "synchro":
+        if _battle_result == "unison":
             if target == "misaki":
                 "美咲が小さく震えた...同時だった。"
             else:
@@ -457,7 +635,7 @@ label ena_battle(target):
         # パラメータ効果
         python:
             _effects = {
-                "synchro":   {"dep": 15, "trust": 5},
+                "unison":   {"dep": 15, "trust": 5},
                 "too_early": {"dep": 5, "trust": -3},
                 "too_late":  {"dep": 10, "trust": -2},
                 "dud":       {"dep": 3, "trust": -5},
@@ -470,8 +648,8 @@ label ena_battle(target):
                 change_dependence_kana(_e["dep"])
                 change_trust_kana(_e["trust"])
 
-        # エナリンク判定（シンクロ かつ ムード6）
-        if _battle_result == "synchro" and _mood >= 6:
+        # エナリンク判定（ユニゾン かつ ムード6）
+        if _battle_result == "unison" and _mood >= 6:
             $ ena_link_active[target] = 3
             $ stats["ena_link_count"] = stats.get("ena_link_count", 0) + 1
             $ log_action("ENA_LINK_ACTIVE", target + " days=3")
