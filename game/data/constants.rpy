@@ -1,9 +1,6 @@
 # constants.rpy
 # ゲーム内定数
 
-# 背景プレースホルダー（画像ファイルなし）
-define bg_placeholder = Solid("#1a1a2e")
-
 # 時間関連
 define TIMES_OF_DAY = ["morning", "afternoon", "night"]
 define WEEKDAYS = ["日", "月", "火", "水", "木", "金", "土"]

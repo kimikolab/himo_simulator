@@ -638,14 +638,14 @@ label misaki_date_day1:
 
 label misaki_date:
     $ log_action("美咲デート")
-    scene bg_placeholder
+    scene bg_street
 
     "美咲と会った。"
-    show misaki casual normal with dissolve
+    $ show_misaki("normal", dissolve)
     misaki_c "お疲れ様！"
 
     if player["cleanliness"] < 30:
-        show misaki casual worried
+        $ show_misaki("worried")
         misaki_c "...あれ、ヒモ太郎、ちょっと疲れてる？"
 
     if game_date["day"] > 1:
@@ -688,7 +688,7 @@ label misaki_date:
         "美咲を励ます":
             himo "まあでも、頑張ってる美咲かっこいいよ"
 
-            show misaki casual blush
+            $ show_misaki("blush")
             "顔が赤くなった。"
 
             misaki_c "...ありがとう"
@@ -777,13 +777,13 @@ label misaki_date:
     # 連続デートリスク（v2.1: しきい値緩和）
     $ misaki_streak += 1
     if misaki_streak >= 7:
-        show misaki casual serious
+        $ show_misaki("serious")
         misaki_c "ねえ、ヒモ太郎って私のこと好き？"
         himo "...え"
         "なんか、重くなってきた気がする。"
         $ change_dependence(12)
     elif misaki_streak >= 4:
-        show misaki casual worried
+        $ show_misaki("worried")
         "美咲: 「最近毎日会ってるね...」"
         $ change_dependence(8)
 
@@ -893,12 +893,12 @@ label misaki_money_request:
 
 
 label misaki_doubt_event:
-    scene bg_placeholder
+    scene bg_himo_room
 
     "――[game_date['day']]日目――"
     "美咲と会っている時、ふと美咲が真面目な顔になった。"
 
-    show misaki casual serious with dissolve
+    $ show_misaki("serious", dissolve)
 
     misaki_c "...ねえ、ヒモ太郎"
     himo "ん？"
@@ -918,7 +918,7 @@ label misaki_doubt_event:
             himo "...正直に言うと、最初はそうだった"
             misaki_c "...やっぱり"
 
-            show misaki casual sad
+            $ show_misaki("sad")
             "美咲の顔が、少し寂しそうになる。"
 
             himo "でも、今は違う。お前と一緒にいて、色々考えた"
@@ -928,7 +928,7 @@ label misaki_doubt_event:
 
             "美咲は、少し考え込むような顔をした。"
 
-            show misaki casual smile
+            $ show_misaki("smile")
             misaki_c "...ありがとう、正直に言ってくれて"
 
             $ change_trust(10)
@@ -939,7 +939,7 @@ label misaki_doubt_event:
             himo "何言ってんの、そんなわけないじゃん"
             misaki_c "...そうだよね、ごめん"
 
-            show misaki casual neutral
+            $ show_misaki("neutral")
             "でも、美咲の目は笑っていなかった。"
             "なんだか、気まずい空気が流れる。"
 
@@ -960,7 +960,7 @@ label misaki_doubt_event:
             himo "そうそう。助かってるよ、マジで"
             misaki_c "...ならいいんだけど"
 
-            show misaki casual thinking
+            $ show_misaki("thinking")
             "美咲は、あまり納得していない様子だった。"
 
             $ add_suspicion("deflected")
@@ -968,7 +968,7 @@ label misaki_doubt_event:
             $ flags["doubt_event_done"] = True
 
     "その後、少し気まずい空気が流れた。"
-    show misaki casual smile
+    $ show_misaki("smile")
     "でも美咲は、いつもの笑顔に戻った。"
     "...本当に、いつもの笑顔なのだろうか。"
 
@@ -1074,7 +1074,6 @@ label misaki_event_M03:
     if misaki_events["M03_done"]:
         return
 
-    scene bg_placeholder
     "――週末の夜――"
     misaki_c "今日、うちに来る？"
     himo "え、美咲の部屋？"
@@ -1183,11 +1182,10 @@ label misaki_event_M05:
     if misaki_events["M05_done"]:
         return
 
-    scene bg_placeholder
     "――ある夜――"
     "美咲と一緒にいるとき、ふと真剣な顔になった。"
 
-    show misaki casual serious with dissolve
+    $ show_misaki("serious", dissolve)
 
     misaki_c "ねえ、ちょっと聞いてもいい？"
     himo "なに？"
@@ -1209,7 +1207,7 @@ label misaki_event_M05:
             himo "...いいの？"
             misaki_c "いいよ。でも"
 
-            show misaki casual serious
+            $ show_misaki("serious")
             "真剣な目で、こちらを見た。"
 
             misaki_c "ちゃんと、どうするか考えてね。ずっとは...難しいから"
@@ -1235,7 +1233,7 @@ label misaki_event_M05:
                 "ありがとう（流す）":
                     himo "ありがとう、助かる"
                     misaki_c "...うん"
-                    show misaki casual sad
+                    $ show_misaki("sad")
                     "美咲の表情が、少し曇った。"
                     $ change_trust(-3)
                     $ himo_aptitude["easy_choices"] += 1
@@ -1244,7 +1242,7 @@ label misaki_event_M05:
             himo "大丈夫大丈夫、何とかなるっしょ"
             misaki_c "...そっか"
 
-            show misaki casual neutral
+            $ show_misaki("neutral")
             "美咲はそれ以上聞かなかった。"
             "でも、目が笑っていなかった。"
 
@@ -1526,12 +1524,11 @@ label misaki_room_visit:
     "美咲の部屋に来た。"
 
     # v2.3: 曜日による外見描写
+    $ show_misaki("normal", dissolve)
     if is_weekend():
-        show misaki pajama normal with dissolve
         "部屋着の美咲。リラックスした雰囲気。"
         "休日の夜、特別な時間が流れる。"
     else:
-        show misaki casual normal with dissolve
         "スーツを脱いだばかりの美咲。少し疲れた様子。"
         "残業明けでも、笑顔を見せてくれた。"
 
@@ -1617,15 +1614,14 @@ label misaki_sunday_morning_scene:
 
 
 label misaki_confession:
-    scene bg_placeholder
     "――ある夜――"
     "いつものように美咲と一緒にいると、急に真剣な顔になった。"
 
-    show misaki casual serious with dissolve
+    $ show_misaki("serious", dissolve)
 
     misaki_c "ねえ、ヒモ太郎"
     himo "ん？"
-    show misaki casual blush
+    $ show_misaki("blush")
     misaki_c "...好きだよ。ちゃんと伝えたくて"
 
     "少しの沈黙。"
@@ -1637,7 +1633,7 @@ label misaki_confession:
         "俺も好き":
             himo "...俺も好きだよ"
             misaki_c "...よかった"
-            show misaki casual cry
+            $ show_misaki("cry")
             "美咲が、少し泣きそうな顔で笑った。"
             "嬉しいのに、どこかで罪悪感があった。"
             $ change_trust(10)
@@ -1659,9 +1655,9 @@ label misaki_confession:
         "今はそういう気持ちじゃない":
             himo "...ごめん、今はそういう感じじゃなくて"
             misaki_c "...そっか"
-            show misaki casual shock
+            $ show_misaki("shock")
             "美咲の表情が、一瞬固まった。"
-            show misaki casual smile
+            $ show_misaki("smile")
             "でもすぐに、いつもの笑顔に戻った。"
             "'大丈夫、忘れて'"
             "忘れられるわけがなかった。"

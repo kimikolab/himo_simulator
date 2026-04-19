@@ -2,7 +2,6 @@
 # 美咲デート — 場所選択で展開が変わる
 
 label misaki_date_with_location:
-    scene bg_placeholder
 
     "美咲と会うことになった。"
 
@@ -44,7 +43,7 @@ label misaki_date_with_location:
 
 label misaki_date_famires:
     scene bg_famiresu
-    show misaki casual smile with dissolve
+    $ show_misaki("smile", dissolve)
     $ stats["date_locations"] = stats.get("date_locations", {})
     $ stats["date_locations"]["famires"] = stats["date_locations"].get("famires", 0) + 1
     "ファミレスに入った。"
@@ -80,12 +79,13 @@ label misaki_date_famires:
                     himo "（今日はお金の話はやめとこう）"
                 $ reduce_suspicion("misaki", 1, "デート楽しむ")
 
+    hide misaki
     return
 
 
 label misaki_date_izakaya:
     scene bg_izakaya
-    show misaki casual normal with dissolve
+    $ show_misaki("normal", dissolve)
     $ stats["date_locations"] = stats.get("date_locations", {})
     $ stats["date_locations"]["izakaya"] = stats["date_locations"].get("izakaya", 0) + 1
     "居酒屋に入った。"
@@ -148,7 +148,7 @@ label misaki_date_izakaya:
         _tt = renpy.random.choice(_treat_texts)
 
     "[_dt]"
-    show misaki casual happy
+    $ show_misaki("happy")
     "[_tt]"
 
     $ change_trust(5)
@@ -170,6 +170,7 @@ label misaki_date_izakaya:
                     himo "（今日はお金の話はやめとこう）"
                 $ reduce_suspicion("misaki", 1, "デート楽しむ")
 
+    hide misaki
     return
 
 
@@ -241,6 +242,7 @@ label misaki_date_room:
                     himo "（今日はお金の話はやめとこう）"
                 $ reduce_suspicion("misaki", 1, "デート楽しむ")
 
+    hide misaki
     return
 
 
@@ -250,7 +252,7 @@ label misaki_date_room:
 
 label misaki_visit_himo_room:
     scene bg_himo_room
-    show misaki casual normal with dissolve
+    $ show_misaki("normal", dissolve)
 
     # === Phase 4 Step 2.5: 痕跡チェック ===
     $ _evidence_trace_passed = False
@@ -274,16 +276,16 @@ label misaki_visit_himo_room:
 
     # 清潔感チェック
     if player["cleanliness"] >= 60:
-        show misaki casual pleased
+        $ show_misaki("pleased")
         misaki_c "あ、結構きれいにしてるんだね"
         himo "まあな"
         $ change_trust(3)
     elif player["cleanliness"] < 35:
-        show misaki casual shock
+        $ show_misaki("shock")
         misaki_c "...ヒモ太郎、ちょっとこれは..."
         himo "ごめん..."
         $ change_trust(-5)
-        show misaki casual sad
+        $ show_misaki("sad")
         "美咲が少し引いている。"
 
     # Phase 4 Step 3: プレゼントを渡す
@@ -307,21 +309,22 @@ label misaki_visit_himo_room:
     # 探り・ハプニング
     call check_date_incidents("misaki")
 
+    hide misaki
     return
 
 
 label misaki_date_fancy:
     scene bg_restaurant
-    show misaki casual smile with dissolve
+    $ show_misaki("smile", dissolve)
     $ stats["date_locations"] = stats.get("date_locations", {})
     $ stats["date_locations"]["fancy"] = stats["date_locations"].get("fancy", 0) + 1
     "少しいい店に入った。"
     "自分から奢りを申し出た。"
-    show misaki casual surprised
+    $ show_misaki("surprised")
     misaki_c "え、いいの？"
     himo "たまにはな"
 
-    show misaki casual happy
+    $ show_misaki("happy")
     misaki_c "...ありがとう"
     "美咲が嬉しそうに笑った。"
 
@@ -345,4 +348,5 @@ label misaki_date_fancy:
                     himo "（今日はお金の話はやめとこう）"
                 $ reduce_suspicion("misaki", 1, "デート楽しむ")
 
+    hide misaki
     return

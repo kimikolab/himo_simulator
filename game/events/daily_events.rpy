@@ -661,7 +661,7 @@ label convenience_store:
 
 # === Phase 4 Step 3: 街のショップ（旧shopping_event差し替え） ===
 label shopping_event:
-    scene bg_placeholder
+    scene bg_street
     "ショッピングモールに来た。"
 
     label _shopping_menu:
@@ -745,7 +745,7 @@ label check_job_hint:
 
 # Phase 2追加: 週末の買い物
 label weekend_shopping:
-    scene bg_placeholder
+    scene bg_convenience_store
     "スーパーに来た。"
     "週末だから人が多い。"
 

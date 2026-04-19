@@ -399,7 +399,7 @@ label event_low_cleanliness:
 
 # 月次請求イベント
 label monthly_billing:
-    scene bg_placeholder with fade
+    scene bg_himo_room with fade
     "――月が変わった――"
     "スマホに通知が来た。"
     "『家賃引き落とし: ¥50,000』"

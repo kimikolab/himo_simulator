@@ -13,6 +13,26 @@ define kana_c  = Character("カナ",   color="#ffe066")
 
 
 # ========================================
+# 衣装判定・立ち絵表示ヘルパー
+# ========================================
+
+init python:
+    def get_misaki_outfit():
+        """美咲の衣装を場面に応じて返す（デート用）
+        平日は仕事帰りのスーツ(misaki)、週末はカジュアル(misaki casual)"""
+        if is_weekend():
+            return "misaki casual"
+        return "misaki"
+
+    def show_misaki(expression, transition=None):
+        """美咲を現在の衣装で表示する"""
+        outfit = get_misaki_outfit()
+        renpy.show(outfit + " " + expression)
+        if transition:
+            renpy.with_statement(transition)
+
+
+# ========================================
 # 立ち絵画像定義
 # ========================================
 

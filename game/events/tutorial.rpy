@@ -2,7 +2,7 @@
 # チュートリアル
 
 label tutorial:
-    scene bg_placeholder
+    scene black
 
     "【チュートリアル】"
 

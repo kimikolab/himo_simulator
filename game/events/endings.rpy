@@ -8,7 +8,7 @@ label day7_ending:
     jump ending_30days
 
 label ending_30days:
-    scene bg_placeholder with fade
+    scene bg_himo_room with fade
     "――30日目、夜――"
     "スマホに通知が来た。"
     "『家賃引き落とし: ¥[MONTHLY_RENT:,]』"
@@ -58,7 +58,7 @@ label ending_balance_30days:
     $ log_action("GOOD END")
     $ export_debug_log()
     $ export_dialogue_log()
-    scene bg_placeholder with fade
+    scene bg_himo_room with fade
 
     centered "{size=40}エンディング: 新しい関係{/size}"
 
@@ -90,7 +90,7 @@ label ending_himou_30days:
     $ log_action("GRAY END")
     $ export_debug_log()
     $ export_dialogue_log()
-    scene bg_placeholder with fade
+    scene bg_himo_room with fade
 
     centered "{size=40}エンディング: ヒモへの道{/size}"
 
@@ -120,7 +120,7 @@ label ending_unstable_30days:
     $ log_action("NORMAL END")
     $ export_debug_log()
     $ export_dialogue_log()
-    scene bg_placeholder with fade
+    scene bg_himo_room with fade
 
     centered "{size=40}エンディング: 不安定な日々{/size}"
 
@@ -146,7 +146,7 @@ label ending_demo:
     $ log_action("demo END")
     $ export_debug_log()
     $ export_dialogue_log()
-    scene bg_placeholder with fade
+    scene bg_himo_room with fade
 
     centered "{size=40}エンディング: 始まりの予感{/size}"
 
@@ -171,7 +171,7 @@ label ending_demo:
     "心当たりはない。"
     "でも、なぜか気になった。"
 
-    scene bg_placeholder with fade
+    scene black with fade
 
     "俺のヒモ生活は、まだ始まったばかりだった――"
 
@@ -215,7 +215,7 @@ label ending_bankruptcy_misaki_rescue:
     $ export_debug_log()
     $ export_dialogue_log()
 
-    scene bg_placeholder with fade
+    scene bg_himo_room with fade
     centered "{size=40}エンディング: 居候{/size}"
 
     "家賃が払えなかった。"
@@ -262,7 +262,7 @@ label ending_bankruptcy_kana_rescue:
     $ export_debug_log()
     $ export_dialogue_log()
 
-    scene bg_placeholder with fade
+    scene bg_himo_room with fade
     centered "{size=40}エンディング: ヒモの完成{/size}"
 
     "家賃が払えなかった。"
@@ -310,7 +310,7 @@ label ending_bankruptcy:
     $ export_debug_log()
     $ export_dialogue_log()
 
-    scene bg_placeholder with fade
+    scene bg_himo_room with fade
     centered "{size=40}エンディング: 破滅{/size}"
 
     "家賃が払えなかった。"
@@ -335,7 +335,7 @@ label ending_bankruptcy:
 # ========================================
 
 label show_himo_aptitude_result:
-    scene bg_placeholder
+    scene black
 
     python:
         total_choices = (

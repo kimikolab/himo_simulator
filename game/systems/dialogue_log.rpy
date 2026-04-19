@@ -57,6 +57,64 @@ init python:
         dialogue_log_entries.append(entry)
 
 
+    # --- 背景・立ち絵の変化をセリフログに挿入 ---
+
+    _dlg_last_bg = [None]
+    _dlg_last_sprites = [None, None]  # [misaki, kana]
+
+    def _dialogue_scene_logger():
+        """背景変化を dialogue_log_entries に挿入する"""
+        if not DEBUG_MODE:
+            return
+        try:
+            tags = renpy.get_showing_tags(layer="master")
+        except Exception:
+            return
+        current_bg = None
+        for tag in tags:
+            if tag.startswith("bg_") or tag.startswith("cg_"):
+                current_bg = tag
+                break
+        if current_bg != _dlg_last_bg[0]:
+            _dlg_last_bg[0] = current_bg
+            if current_bg:
+                dialogue_log_entries.append({
+                    "day": game_date["day"],
+                    "time": game_date["time"],
+                    "tag": "SCENE",
+                    "text": current_bg,
+                })
+
+    def _dialogue_sprite_logger():
+        """立ち絵の変化を dialogue_log_entries に挿入する"""
+        if not DEBUG_MODE:
+            return
+        try:
+            tags = renpy.get_showing_tags(layer="master")
+        except Exception:
+            return
+        for i, chara in enumerate(["misaki", "kana"]):
+            if chara in tags:
+                attrs = renpy.get_attributes(chara)
+                current = chara + " " + " ".join(attrs) if attrs else chara
+            else:
+                current = None
+            if current != _dlg_last_sprites[i]:
+                if current is None:
+                    text = chara + " hide"
+                else:
+                    text = current
+                dialogue_log_entries.append({
+                    "day": game_date["day"],
+                    "time": game_date["time"],
+                    "tag": "SPRITE",
+                    "text": text,
+                })
+                _dlg_last_sprites[i] = current
+
+    config.start_interact_callbacks.append(_dialogue_scene_logger)
+    config.start_interact_callbacks.append(_dialogue_sprite_logger)
+
     # v1.4: 根本修正 — config.all_character_callbacks に移行
     # history_callbacks は Ren'Py 内部で複数回呼ばれるケースがあるため、
     # all_character_callbacks の begin イベントのみ捕捉する方式に変更。

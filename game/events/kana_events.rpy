@@ -519,7 +519,7 @@ label kana_date_request:
 label kana_date:
     $ kana_dates_count += 1
     $ log_action("カナデート", "累計" + str(kana_dates_count) + "回")
-    scene bg_placeholder
+    scene bg_street
     show kana happy with dissolve
 
     "カナと会った。"
@@ -582,7 +582,6 @@ label kana_date:
 # ========================================
 
 label k02_insta_story:
-    scene bg_placeholder
 
     "スマホを見ていると、カナのインスタのストーリーが上がっていた。"
     "今いる場所の写真。"
@@ -624,7 +623,6 @@ label k02_insta_story:
 # ========================================
 
 label k03_money_talk:
-    scene bg_placeholder
     show kana normal with dissolve
 
     "カナと話していると、突然こんなことを言い出した。"
@@ -684,7 +682,6 @@ label k03_money_talk:
 # ========================================
 
 label kana_oshi_event(route):
-    scene bg_placeholder
     show kana happy with dissolve
 
     if route == "A":
@@ -730,7 +727,6 @@ label kana_oshi_event(route):
 # ========================================
 
 label k05_do_you_like_me:
-    scene bg_placeholder
     show kana serious with dissolve
 
     "カナとの時間が増えてきた頃。"
@@ -789,7 +785,6 @@ label k05_do_you_like_me:
 # ========================================
 
 label demo_end_scene:
-    scene bg_placeholder
     show kana normal with dissolve
 
     "しばらくして、カナがまた口を開いた。"
@@ -818,7 +813,7 @@ label demo_end_scene:
     "ないはずなのに、なぜか嫌な予感がした。"
 
     hide kana
-    scene bg_placeholder with fade
+    scene black with fade
 
     "暗転。"
 
@@ -909,7 +904,8 @@ label kana_stay_offer:
 
 
 label kana_stay_event:
-    show kana pajama happy
+    scene bg_kana_room
+    show kana pajama happy with dissolve
     "カナの部屋に泊まることにした。"
 
     $ stats["kana_stayed_over"] = stats.get("kana_stayed_over", 0) + 1
@@ -985,7 +981,7 @@ label kana_stay_decline:
 # ========================================
 
 label kana_doubt_event:
-    scene bg_placeholder
+    scene bg_himo_room
     show kana serious with dissolve
 
     "カナと過ごしている時、急にカナが黙り込んだ。"

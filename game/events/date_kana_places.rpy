@@ -2,7 +2,6 @@
 # カナデート — 場所選択で展開が変わる
 
 label kana_date_with_location:
-    scene bg_placeholder
 
     "カナと会うことになった。"
 
@@ -91,6 +90,7 @@ label kana_date_cafe:
     $ change_stamina(15)   # カフェの軽食（差し引き+5）
     $ kana_flags["sns_risk"] = kana_flags.get("sns_risk", 0) + 2
 
+    hide kana
     return
 
 
@@ -112,6 +112,7 @@ label kana_date_karaoke:
     $ change_stamina(-15)
     $ change_stamina(10)   # 軽食（差し引き-5。はしゃいだので消耗の方が大きい）
 
+    hide kana
     return
 
 
@@ -169,6 +170,7 @@ label kana_date_campus:
         $ flags["kana_friend_info_obtained"] = True
         "カナの過去を知った。今後の会話で地雷を避けやすくなるかもしれない。"
 
+    hide kana
     return
 
 
@@ -198,4 +200,5 @@ label kana_date_himo_room:
     $ change_stamina(-5)
     $ himo_aptitude["intimacy_exp"] = himo_aptitude.get("intimacy_exp", 0) + 1
 
+    hide kana
     return

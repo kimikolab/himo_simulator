@@ -2,7 +2,7 @@
 # イントロシーン
 
 label intro_scene:
-    scene bg_placeholder with fade
+    scene black with fade
 
     centered "{size=40}ヒモ男シミュレーター{/size}"
 

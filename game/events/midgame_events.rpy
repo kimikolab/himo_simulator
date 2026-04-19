@@ -228,6 +228,7 @@ label midgame_kana_urgent:
 # === イベント⑤: ダブルブッキング危機 ===
 
 label midgame_double_booking:
+    scene bg_himo_room
     "昼、立て続けにLINEが来た。"
 
     misaki_c "今夜会える？ちょっと話したいことがあって"
@@ -290,12 +291,12 @@ label midgame_double_booking:
 # === イベント⑥: 目撃情報 → 対面修羅場 ===
 
 label midgame_sighting_confrontation:
-    scene bg_placeholder
+    scene bg_street
 
     # 直近のデート相手で分岐
     if daily_flags.get("date_with", None) == "kana":
         # 美咲から追及される
-        show misaki casual serious with dissolve
+        $ show_misaki("serious", dissolve)
         misaki_c "ねえ、聞いていい？"
         misaki_c "友達がさ、駅前で女の子と歩いてるの見たって"
         misaki_c "あれ、ヒモ太郎？"
@@ -365,12 +366,12 @@ label midgame_kana_raid:
 # === イベント⑧: 美咲の直球質問 ver.2 ===
 
 label midgame_misaki_direct:
-    scene bg_placeholder
+    scene bg_izakaya
 
     "美咲と2人きりの夜。"
     "いつもと違う空気。"
 
-    show misaki casual serious with dissolve
+    $ show_misaki("serious", dissolve)
     misaki_c "...ヒモ太郎"
     himo "ん？"
     misaki_c "ちゃんと聞きたいことがある"
@@ -389,28 +390,28 @@ label midgame_misaki_direct:
     # Phase 4 v1.3: 正直ルート専用分岐
     if result == "honest":
         "長い沈黙が続いた。"
-        show misaki casual sad
+        $ show_misaki("sad")
         misaki_c "...正直に言ってくれたのは、ありがたい"
         misaki_c "でも...どうすればいいか、分からない"
         "美咲は静かに下を向いていた。"
         # 信頼低下は lie_puzzle 内で処理済み
 
     elif result == "busted":
-        show misaki casual angry
+        $ show_misaki("angry")
         misaki_c "...もういい"
         misaki_c "分かってた。薄々"
-        show misaki casual cry
+        $ show_misaki("cry")
         "美咲は静かに泣いていた。"
         $ change_trust(-25)
         $ change_dependence(-10)
     elif result == "suspicious":
-        show misaki casual worried
+        $ show_misaki("worried")
         misaki_c "...信じたいけど"
         "美咲は何かを飲み込んだような顔をした。"
         $ change_trust(-10)
     elif result == "safe":
         # safe は「嘘で乗り切った」場合のみ
-        show misaki casual shy
+        $ show_misaki("shy")
         misaki_c "...ごめん、疑って"
         himo "いいって。ちゃんと話してくれてありがとう"
         $ change_trust(5)
@@ -424,7 +425,7 @@ label midgame_misaki_direct:
 # （misaki_money_request から呼び出される。修正11で組み込み）
 
 label midgame_money_suspicion:
-    show misaki casual serious
+    $ show_misaki("serious")
     misaki_c "...ねえ、本当にお金ないの？"
     misaki_c "最近ちょっと余裕ありそうに見えるけど"
 
@@ -494,10 +495,10 @@ label evidence_trace_event(discoverer):
     # v1.6: 2回目以降の痕跡イベント専用テキスト
     if flags.get("evidence_trace_count", 0) >= 1:
         if discoverer == "misaki":
-            show misaki casual serious with dissolve
+            $ show_misaki("serious", dissolve)
             "美咲が部屋を見回している。"
 
-            show misaki casual angry
+            $ show_misaki("angry")
             misaki_c "...また？"
 
             "美咲の声は静かだが、怒りを通り越している。"
@@ -511,7 +512,7 @@ label evidence_trace_event(discoverer):
             menu:
                 "待って":
                     himo "待って、美咲"
-                    show misaki casual sad
+                    $ show_misaki("sad")
                     misaki_c "...何？"
                     "振り返った美咲の目は、もう何も期待していなかった。"
                     misaki_c "もう、いいよ"
@@ -570,7 +571,7 @@ label evidence_trace_event(discoverer):
 
     # === 1回目の痕跡イベント（既存テキスト） ===
     if discoverer == "misaki":
-        show misaki casual serious with dissolve
+        $ show_misaki("serious", dissolve)
         "美咲が部屋を見回している。"
 
         python:
@@ -583,7 +584,7 @@ label evidence_trace_event(discoverer):
 
         misaki_c "[_line]"
         "[_desc]"
-        show misaki casual angry
+        $ show_misaki("angry")
         "美咲の目が鋭くなった。"
         misaki_c "...誰か来たの？ この部屋に"
 
@@ -597,7 +598,7 @@ label evidence_trace_event(discoverer):
                     _lp_result = lie_puzzle.get("result", "safe")
 
                 if _lp_result in ["busted", "suspicious"]:
-                    show misaki casual angry
+                    $ show_misaki("angry")
                     misaki_c "...もういい"
                     misaki_c "帰る"
                     hide misaki
@@ -624,11 +625,11 @@ label evidence_trace_event(discoverer):
                 himo "...ごめん。正直に言う"
                 himo "他に会ってる人がいる"
 
-                show misaki casual shock
+                $ show_misaki("shock")
                 "美咲の手が止まった。"
 
                 misaki_c "..."
-                show misaki casual sad
+                $ show_misaki("sad")
                 misaki_c "...そう"
 
                 "美咲の声は静かだった。怒りですらなかった。"
@@ -641,7 +642,7 @@ label evidence_trace_event(discoverer):
                 misaki_c "私、ずっと気づかないフリしてた"
                 misaki_c "気づいたら...怖くて"
 
-                show misaki casual cry
+                $ show_misaki("cry")
                 "美咲の手が小さく震えている。"
 
                 misaki_c "...ねえ、私じゃダメだったの？"
@@ -853,7 +854,7 @@ label cold_war_contact(target):
 # ========================================
 
 label apology_event(target):
-    scene bg_placeholder
+    scene bg_street
     $ stats["apology_" + target + "_count"] = stats.get("apology_" + target + "_count", 0) + 1
 
     if target == "misaki":
@@ -877,7 +878,7 @@ label apology_event(target):
             return
 
         "ドアが開いた。"
-        show misaki casual angry with dissolve
+        $ show_misaki("angry", dissolve)
         misaki_c "...なに"
 
         "美咲の目は冷たい。"
@@ -943,7 +944,7 @@ label apology_honest:
         "長い沈黙。"
 
         if cold_war["misaki_level"] == 1:
-            show misaki casual sad
+            $ show_misaki("sad")
             misaki_c "...分かった"
             misaki_c "でも、次はないから"
             "美咲は許してくれた。"
@@ -954,7 +955,7 @@ label apology_honest:
 
         else:
             # レベル2: 一度では許されない。もう1回来る必要がある
-            show misaki casual serious
+            $ show_misaki("serious")
             misaki_c "...正直に言ってくれたのは分かる"
             misaki_c "でも、すぐには無理"
             misaki_c "...少し時間ちょうだい"
@@ -1001,7 +1002,7 @@ label apology_gift:
 
     if _apology_target == "misaki":
         himo "これ...好きだって言ってたやつ"
-        show misaki casual serious
+        $ show_misaki("serious")
         misaki_c "..."
         misaki_c "...物で解決しようとしてる？"
         himo "違う。ごめんって気持ちを形にしたかっただけ"
@@ -1009,7 +1010,7 @@ label apology_gift:
         "美咲がプレゼントを受け取った。"
 
         if cold_war["misaki_level"] == 1:
-            show misaki casual sad
+            $ show_misaki("sad")
             misaki_c "...ありがと。でも、もうしないでね"
             $ end_cold_war("misaki")
             $ change_trust(-1)
@@ -1048,7 +1049,7 @@ label apology_dodge:
     # ごまかし → 嘘パズル
     if _apology_target == "misaki":
         himo "いや、あれは本当に友達で..."
-        show misaki casual angry
+        $ show_misaki("angry")
         misaki_c "...まだそれ言うの？"
 
         call run_lie_puzzle("apology_dodge", "misaki")
