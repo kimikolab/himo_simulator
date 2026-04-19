@@ -43,6 +43,8 @@ label misaki_date_with_location:
 
 
 label misaki_date_famires:
+    scene bg_famiresu
+    show misaki casual smile with dissolve
     $ stats["date_locations"] = stats.get("date_locations", {})
     $ stats["date_locations"]["famires"] = stats["date_locations"].get("famires", 0) + 1
     "ファミレスに入った。"
@@ -82,6 +84,8 @@ label misaki_date_famires:
 
 
 label misaki_date_izakaya:
+    scene bg_izakaya
+    show misaki casual normal with dissolve
     $ stats["date_locations"] = stats.get("date_locations", {})
     $ stats["date_locations"]["izakaya"] = stats["date_locations"].get("izakaya", 0) + 1
     "居酒屋に入った。"
@@ -144,6 +148,7 @@ label misaki_date_izakaya:
         _tt = renpy.random.choice(_treat_texts)
 
     "[_dt]"
+    show misaki casual happy
     "[_tt]"
 
     $ change_trust(5)
@@ -169,6 +174,8 @@ label misaki_date_izakaya:
 
 
 label misaki_date_room:
+    scene bg_misaki_room
+    show misaki casual normal with dissolve
     $ stats["date_locations"] = stats.get("date_locations", {})
     $ stats["date_locations"]["misaki_room"] = stats["date_locations"].get("misaki_room", 0) + 1
     $ misaki_room_visit_count += 1
@@ -242,7 +249,8 @@ label misaki_date_room:
 # ========================================
 
 label misaki_visit_himo_room:
-    scene bg_placeholder
+    scene bg_himo_room
+    show misaki casual normal with dissolve
 
     # === Phase 4 Step 2.5: 痕跡チェック ===
     $ _evidence_trace_passed = False
@@ -266,13 +274,16 @@ label misaki_visit_himo_room:
 
     # 清潔感チェック
     if player["cleanliness"] >= 60:
+        show misaki casual pleased
         misaki_c "あ、結構きれいにしてるんだね"
         himo "まあな"
         $ change_trust(3)
     elif player["cleanliness"] < 35:
+        show misaki casual shock
         misaki_c "...ヒモ太郎、ちょっとこれは..."
         himo "ごめん..."
         $ change_trust(-5)
+        show misaki casual sad
         "美咲が少し引いている。"
 
     # Phase 4 Step 3: プレゼントを渡す
@@ -300,13 +311,17 @@ label misaki_visit_himo_room:
 
 
 label misaki_date_fancy:
+    scene bg_restaurant
+    show misaki casual smile with dissolve
     $ stats["date_locations"] = stats.get("date_locations", {})
     $ stats["date_locations"]["fancy"] = stats["date_locations"].get("fancy", 0) + 1
     "少しいい店に入った。"
     "自分から奢りを申し出た。"
+    show misaki casual surprised
     misaki_c "え、いいの？"
     himo "たまにはな"
 
+    show misaki casual happy
     misaki_c "...ありがとう"
     "美咲が嬉しそうに笑った。"
 

@@ -122,19 +122,24 @@ label kana_initiative_event:
 
 label k01_nanpa_success:
     $ log_action("カナ出会い K-01")
-    scene bg_placeholder
+    scene bg_street
+    show kana happy with dissolve
 
     kana_c "え、なに？ナンパ？"
     himo "まあ...そんな感じです"
+    show kana laugh
     kana_c "あはは、正直じゃん"
 
     "屈託のない笑顔だった。"
     "なんか、美咲とは全然違うタイプだな。"
 
+    show kana smile
     kana_c "カナ。桜井カナ。大学3年"
     himo "ヒモ太郎。25歳"
+    show kana wink
     kana_c "無職？笑"
     himo "...まあ"
+    show kana happy
     kana_c "いいじゃん、自由で"
 
     "連絡先を交換した。"
@@ -193,7 +198,8 @@ label kana_visit:
         return
 
     # カナが在宅 → 既存の訪問処理
-    scene bg_placeholder
+    scene bg_kana_room
+    show kana normal with dissolve
 
     # テキストバリエーション: 訪問回数で導入テキスト3段階分岐
     python:
@@ -233,8 +239,10 @@ label kana_visit:
         elif _kana_room_set == "B":
             "カナの部屋のドアをノックした。"
             "返事がない。勝手に入った。"
+            show kana sleepy
             "カナがソファで寝落ちていた。"
             himo "...おい"
+            show kana happy
             kana_c "...あ、来た"
         else:
             "カナの部屋に着いた。"
@@ -246,6 +254,7 @@ label kana_visit:
         stats["kana_visit_count"] = _kana_visit_count + 1
 
     if _kana_visit_count == 0:
+        show kana excited
         kana_c "来た来た！暇だったんだよね〜"
     elif _kana_visit_count <= 3:
         python:
@@ -274,6 +283,7 @@ label kana_visit:
 
     # --- 食事（独立チェック）---
     if not daily_flags["ate_today"]:
+        show kana smile
         kana_c "ごはん食べた？なんか作るよ"
         menu:
             "食べていく":
@@ -336,23 +346,27 @@ label kana_daytime_touch:
         ]
         _tt = renpy.random.choice(_touch_texts)
 
+    show kana blush
     kana_c "[_tt[0]]"
     "[_tt[1]]"
 
     if energy <= 0:
         menu:
             "そろそろ帰るわ":
+                show kana pouty
                 kana_c "え〜...もうちょっといてよ"
                 $ change_trust_kana(-2)
                 himo "（不満そう...）"
 
             "嘘でごまかす":
                 himo "ちょっと体調悪くて..."
+                show kana sad
                 kana_c "大丈夫？無理しないでね"
                 $ change_trust_kana(-1)
     else:
         menu:
             "もうちょっといる":
+                show kana happy
                 "しばらくカナとイチャイチャした。"
                 $ energy -= 1
                 $ energy_full_days = 0
@@ -362,6 +376,7 @@ label kana_daytime_touch:
                 himo "（エナ使っちゃったな...）"
 
             "そろそろ帰るわ":
+                show kana pouty
                 kana_c "え〜、つまんない"
                 $ change_trust_kana(-2)
 
@@ -505,6 +520,7 @@ label kana_date:
     $ kana_dates_count += 1
     $ log_action("カナデート", "累計" + str(kana_dates_count) + "回")
     scene bg_placeholder
+    show kana happy with dissolve
 
     "カナと会った。"
     kana_c "ヒモ太郎〜！"
@@ -523,6 +539,7 @@ label kana_date:
         "何を話す？"
 
         "カナの話を聞く":
+            show kana excited
             kana_c "最近さ、TikTokにハマってて〜"
             himo "へー"
             kana_c "フォロワー増えてきた！"
@@ -532,6 +549,7 @@ label kana_date:
             $ change_dependence_kana(3)
 
         "一緒にいるだけ":
+            show kana smile
             "特に何も話さなかった。"
             "でも、それでいい空気だった。"
             $ change_trust_kana(3)
@@ -539,6 +557,7 @@ label kana_date:
 
         "自分の話をする":
             himo "最近暇でさ〜"
+            show kana pleased
             kana_c "いいじゃん、一緒に暇しよ"
             "カナはこういうのを責めない。"
             $ change_trust_kana(4)
@@ -606,12 +625,15 @@ label k02_insta_story:
 
 label k03_money_talk:
     scene bg_placeholder
+    show kana normal with dissolve
 
     "カナと話していると、突然こんなことを言い出した。"
 
+    show kana pouty
     kana_c "ねえ、今月マジで金ないんだけど"
     himo "え"
     kana_c "仕送り使い果たしてさ〜、バイトも先月サボりすぎて"
+    show kana laugh
     kana_c "笑えるよね"
 
     "笑えない。"
@@ -622,6 +644,7 @@ label k03_money_talk:
             himo "それは大変だな"
             kana_c "でしょ〜。ヒモ太郎も金ないんだっけ？"
             himo "俺も大概だよ"
+            show kana happy
             kana_c "じゃあ二人で貧乏同盟だ！"
             "なんか、妙な連帯感が生まれた。"
             $ change_trust_kana(8)
@@ -629,8 +652,10 @@ label k03_money_talk:
 
         "少し渡す（1000円）" if can_afford(1000):
             himo "ちょっとだけど"
+            show kana surprised
             kana_c "え、いいの？！"
             himo "まあ、俺も余裕ないけど"
+            show kana happy
             kana_c "ありがと〜！好きだわヒモ太郎"
             $ change_money(-1000)
             $ change_trust_kana(15)
@@ -638,9 +663,11 @@ label k03_money_talk:
 
         "俺も金ない（正直に言う）":
             himo "俺も同じ状況だよ"
+            show kana shock
             kana_c "え、マジで？！"
             kana_c "じゃあどうやって生きてんの？"
             himo "...なんとかなってる"
+            show kana laugh
             kana_c "謎すぎる。でもなんかウケる"
             $ change_trust_kana(10)
             $ himo_aptitude["honest_moments"] += 1
@@ -658,21 +685,26 @@ label k03_money_talk:
 
 label kana_oshi_event(route):
     scene bg_placeholder
+    show kana happy with dissolve
 
     if route == "A":
         "何度も会ううちに、カナとの時間が当たり前になってきた。"
+        show kana smile
         kana_c "ヒモ太郎って、なんか特別だよね"
         himo "そうか？"
+        show kana pleased
         kana_c "うん。推しって感じ"
         himo "推し..."
         "なんか変な感じだけど、悪くない。"
 
     elif route == "B":
+        show kana excited
         "カナのインスタのストーリーに、俺の後ろ姿が映っていた。"
         "'今日も会ってる人'"
         "コメントが100件以上ついていた。"
         kana_c "フォロワーに紹介しちゃった。ヒモ太郎のこと、推しって言っといたから"
         himo "え"
+        show kana neutral
         kana_c "ダメだった？"
         himo "...まあ、いいけど"
 
@@ -684,6 +716,7 @@ label kana_oshi_event(route):
 
     elif route == "C":
         "気づけば、カナのことをよく考えるようになっていた。"
+        show kana blush
         kana_c "なんか、最近ヒモ太郎のこと推しって思ってる"
         himo "は？"
         kana_c "褒めてるんだけど"
@@ -698,6 +731,7 @@ label kana_oshi_event(route):
 
 label k05_do_you_like_me:
     scene bg_placeholder
+    show kana serious with dissolve
 
     "カナとの時間が増えてきた頃。"
     "ふと、カナが真顔になった。"
@@ -715,6 +749,7 @@ label k05_do_you_like_me:
             himo "好きだよ"
             kana_c "...ほんと？"
             himo "ほんと"
+            show kana happy
             kana_c "へへ、よかった"
             "なんか、あっさりしてるけど、それがカナらしかった。"
             $ change_trust_kana(10)
@@ -723,6 +758,7 @@ label k05_do_you_like_me:
 
         "まあ、嫌いじゃない":
             himo "嫌いじゃないよ"
+            show kana laugh
             kana_c "なにそれ笑"
             kana_c "まあいいか"
             "カナは深く追及しなかった。"
@@ -732,6 +768,7 @@ label k05_do_you_like_me:
 
         "正直に言えない":
             himo "...難しい質問だな"
+            show kana wink
             kana_c "なにそれ、ウケる"
             kana_c "まあ、逃げてるってことは嫌いじゃないってことにしとく"
             $ change_trust_kana(3)
@@ -753,21 +790,25 @@ label k05_do_you_like_me:
 
 label demo_end_scene:
     scene bg_placeholder
+    show kana normal with dissolve
 
     "しばらくして、カナがまた口を開いた。"
 
+    show kana serious
     kana_c "...ねえ、ほんとに私だけ？"
 
     himo "......"
 
     "なんて答えればいい。"
 
+    show kana neutral
     kana_c "まあいいけど。"
     kana_c "あ、そういえばさ"
     kana_c "麗子さんって人、ヒモ太郎のこと知ってるって言ってたよ？"
 
     himo "麗子？誰だそれ"
 
+    show kana normal
     kana_c "私も知らない。なんか大人っぽい感じの人。"
     kana_c "ヒモ太郎のこと、「面白い」って言ってたって聞いたけど"
 
@@ -776,6 +817,7 @@ label demo_end_scene:
     "心当たりが、ない。"
     "ないはずなのに、なぜか嫌な予感がした。"
 
+    hide kana
     scene bg_placeholder with fade
 
     "暗転。"
@@ -846,11 +888,14 @@ label kana_stay_offer:
     # === 以下、カナの部屋での泊まり（既存）===
     # 依存度で誘い方が変わる
     if kana["dependence"] >= 50:
+        show kana pleased
         kana_c "今日泊まってくよね？"
         # 依存高: 半強制的
     elif kana["dependence"] >= 30:
+        show kana happy
         kana_c "泊まってく？"
     else:
+        show kana blush
         kana_c "もし良かったら...泊まってく？"
 
     menu:
@@ -864,6 +909,7 @@ label kana_stay_offer:
 
 
 label kana_stay_event:
+    show kana pajama happy
     "カナの部屋に泊まることにした。"
 
     $ stats["kana_stayed_over"] = stats.get("kana_stayed_over", 0) + 1
@@ -885,6 +931,7 @@ label kana_stay_event:
     # === Phase 4 Step 3: えなマッチ ===
     call ena_check("kana")
 
+    show kana pajama smile
     kana_c "...えへへ"
     "カナが幸せそうに笑った。"
 
@@ -912,6 +959,7 @@ label kana_stay_event:
 label kana_stay_decline:
     # 帰る場合。依存度で反応が変わる
     if kana["dependence"] >= 60:
+        show kana cry
         kana_c "...なんで？"
         "カナの声が少し震えている。"
         $ change_trust_kana(-5)
@@ -921,9 +969,11 @@ label kana_stay_decline:
         if not daily_flags.get("kana_mood_resolved", False):
             call gokiragen_qte_start
     elif kana["dependence"] >= 30:
+        show kana pouty
         kana_c "え〜、帰るの？"
         $ change_trust_kana(-3)
     else:
+        show kana neutral
         kana_c "そっか〜"
         $ change_trust_kana(-1)
 
@@ -936,6 +986,7 @@ label kana_stay_decline:
 
 label kana_doubt_event:
     scene bg_placeholder
+    show kana serious with dissolve
 
     "カナと過ごしている時、急にカナが黙り込んだ。"
 
@@ -949,6 +1000,7 @@ label kana_doubt_event:
     kana_c "ご飯も作ったし、泊めてあげたし"
     kana_c "でもヒモ太郎は...私のこと大事にしてくれてる？"
 
+    show kana cry
     "カナの目が潤んでいる。"
 
     kana_c "前の彼氏もそうだった"
@@ -961,6 +1013,7 @@ label kana_doubt_event:
 
         "正直に認める":
             himo "...正直に言うと、甘えすぎてた"
+            show kana angry
             kana_c "...最低"
 
             "カナが泣き出した。"
@@ -971,6 +1024,7 @@ label kana_doubt_event:
 
             "長い沈黙。"
 
+            show kana sad
             kana_c "...正直に言ってくれたから、許す"
             kana_c "でも次やったら、もう知らないから"
 
@@ -985,12 +1039,15 @@ label kana_doubt_event:
 
         "逆ギレする":
             himo "はあ？ 俺が何したってんだよ"
+            show kana shock
             kana_c "..."
 
             "カナが黙った。目に涙が溜まっている。"
 
+            show kana cry
             kana_c "...最低"
 
+            show kana angry
             "カナがスマホを取り出した。"
 
             $ change_trust_kana(-25)
@@ -1011,10 +1068,13 @@ label kana_stay_at_himo_room:
     "夜も更けてきた。"
 
     if kana["dependence"] >= 50:
+        show kana pleased
         kana_c "ねえ、今日泊まっていい？ ...っていうか泊まるけど"
     elif kana["dependence"] >= 30:
+        show kana happy
         kana_c "今日泊まっていい？"
     else:
+        show kana blush
         kana_c "...帰るの遅くなっちゃったし、泊まっていい？"
 
     menu:
@@ -1039,11 +1099,13 @@ label kana_stay_at_himo_room_event:
         # === v1.3追加: 嘘パズル成功でも空気は変わっている ===
         "..."
         "気まずい沈黙が流れた。"
+        show kana sad
         kana_c "..."
 
         menu:
             "「...泊まってく？」":
                 himo "...泊まってけよ。こんな時間だし"
+                show kana neutral
                 kana_c "...うん"
                 "カナは小さくうなずいた。"
                 "さっきまでの空気とは違う。"
@@ -1066,6 +1128,7 @@ label kana_stay_at_himo_room_event:
 
             "「...帰るか？」":
                 himo "...送ろうか"
+                show kana serious
                 kana_c "...いい。一人で帰れる"
                 "カナが静かに出ていった。"
                 $ change_trust_kana(-3)
@@ -1073,6 +1136,7 @@ label kana_stay_at_himo_room_event:
 
     # === 以下、痕跡チェックなしの通常フロー ===
     himo "いいよ、泊まってけ"
+    show kana excited
     kana_c "やった！"
 
     "カナがヒモ太郎の部屋に泊まることになった。"
@@ -1102,6 +1166,7 @@ label kana_stay_at_himo_room_event:
     # === Phase 4 Step 3: えなマッチ ===
     call ena_check("kana")
 
+    show kana pajama smile
     kana_c "...ヒモ太郎の部屋、狭いけど落ち着く"
 
     # 翌朝演出用フラグ
@@ -1114,6 +1179,7 @@ label kana_stay_at_himo_decline:
     himo "今日はちょっと..."
 
     if kana["dependence"] >= 60:
+        show kana cry
         kana_c "...なんで？ 嫌なの？"
         "カナの声が震えている。"
         $ change_trust_kana(-5)
@@ -1122,9 +1188,11 @@ label kana_stay_at_himo_decline:
         if not daily_flags.get("kana_mood_resolved", False):
             call gokiragen_qte_start
     elif kana["dependence"] >= 30:
+        show kana pouty
         kana_c "え〜...分かった"
         $ change_trust_kana(-3)
     else:
+        show kana neutral
         kana_c "そっか、じゃあ帰るね"
         $ change_trust_kana(-1)
 

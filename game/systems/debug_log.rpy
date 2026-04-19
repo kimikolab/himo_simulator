@@ -6,6 +6,57 @@ init python:
     debug_log_entries = []
     _last_logged_day = None
     _last_logged_time = None
+    _last_logged_bg = [None]  # mutable container for closure
+
+    def _scene_change_logger():
+        """インタラクション開始時に master レイヤーの bg/cg タグを監視し、
+        変化したら SCENE ログを残す。"""
+        if not DEBUG_MODE:
+            return
+        try:
+            tags = renpy.get_showing_tags(layer="master")
+        except Exception:
+            return
+        current_bg = None
+        for tag in tags:
+            if tag.startswith("bg_") or tag.startswith("cg_"):
+                current_bg = tag
+                break
+        if current_bg != _last_logged_bg[0]:
+            _last_logged_bg[0] = current_bg
+            if current_bg:
+                log_action("SCENE", current_bg)
+
+    config.start_interact_callbacks.append(_scene_change_logger)
+
+    _last_logged_sprites = [None, None]  # [misaki, kana]
+
+    def _sprite_change_logger():
+        """立ち絵の表示・切替・非表示を監視してログを残す"""
+        if not DEBUG_MODE:
+            return
+        try:
+            tags = renpy.get_showing_tags(layer="master")
+        except Exception:
+            return
+
+        for i, chara in enumerate(["misaki", "kana"]):
+            if chara in tags:
+                attrs = renpy.get_attributes(chara)
+                current = chara + " " + " ".join(attrs) if attrs else chara
+            else:
+                current = None
+
+            if current != _last_logged_sprites[i]:
+                if current is None:
+                    log_action("SPRITE", chara + " hide")
+                elif _last_logged_sprites[i] is None:
+                    log_action("SPRITE", current + " (show)")
+                else:
+                    log_action("SPRITE", current)
+                _last_logged_sprites[i] = current
+
+    config.start_interact_callbacks.append(_sprite_change_logger)
 
     def get_turn_header():
         """現在のターンヘッダー文字列を返す"""

@@ -197,11 +197,13 @@ label check_forced_morning_event:
 
 # v1.6追加: 美咲がヒモ太郎の部屋に泊まった翌朝
 label misaki_morning_at_himo_room:
-    scene bg_placeholder
+    scene bg_himo_room
 
     # テキストバリエーション: 泊まり回数で分岐
     python:
         _misaki_himo_stay = misaki_himo_room_visit_count
+
+    show misaki pajama sleepy with dissolve
 
     if _misaki_himo_stay <= 1:
         # 1回目
@@ -209,6 +211,7 @@ label misaki_morning_at_himo_room:
         "いつもは美咲の部屋で目が覚めるのに、今日は逆だ。"
         misaki_c "...おはよう"
         himo "おう"
+        show misaki pajama smile
         "美咲がキッチンに立った。"
     elif _misaki_himo_stay <= 3:
         # 2〜3回目（プールからランダム）
@@ -217,12 +220,15 @@ label misaki_morning_at_himo_room:
         if _misaki_wake_set == "A":
             "朝。美咲がまだ寝ている。"
             "自分の部屋に美咲がいる。その光景に、慣れてきた。"
+            show misaki pajama smile
             misaki_c "...ん、おはよう"
             "美咲がキッチンに立った。"
         else:
             "美咲の目覚ましが鳴った。"
+            show misaki pajama surprised
             misaki_c "...うそ、ヒモ太郎の部屋だった"
             himo "おはよ"
+            show misaki pajama smile
             misaki_c "...おはよう。会社行かなきゃ...あ、今日休みか"
             "美咲がほっとした顔をして、キッチンに立った。"
     else:
@@ -231,11 +237,13 @@ label misaki_morning_at_himo_room:
             _misaki_wake_set = renpy.random.choice(["A", "B"])
         if _misaki_wake_set == "A":
             "朝。もう驚かない。隣に美咲がいる。"
+            show misaki pajama smile
             misaki_c "おはよう"
             himo "おう"
             "自然にキッチンに向かう美咲。もう自分の家みたいだ。"
         else:
             "美咲が先に起きて、窓を開けていた。"
+            show misaki pajama smile
             misaki_c "...いい天気。"
             himo "おはよ"
             misaki_c "コーヒー淹れようか。インスタントだけど"
@@ -252,8 +260,10 @@ label misaki_morning_at_himo_room:
         $ inventory["groceries"] = 0
         $ daily_flags["ate_today"] = True
     elif not daily_flags.get("groceries_used_dinner", False) and inventory.get("groceries", 0) == 2:
+        show misaki pajama surprised
         misaki_c "...これ、私のために買ってたの？"
         himo "まあ、一応"
+        show misaki pajama happy
         misaki_c "...ありがとう"
         $ change_trust(5)
         $ inventory["groceries"] = 0
@@ -264,12 +274,14 @@ label misaki_morning_at_himo_room:
         $ inventory["groceries"] = 0
         $ daily_flags["ate_today"] = True
     else:
+        show misaki pajama sad
         misaki_c "何もないね...卵くらいない？"
         himo "コンビニ行くか"
         misaki_c "...もう"
         "結局、2人でコンビニに行って朝食を買った。"
         $ daily_flags["ate_today"] = True
 
+    show misaki pajama happy
     misaki_c "たまにはこういうのもいいね"
     himo "...そうだな"
 
@@ -282,15 +294,17 @@ label misaki_morning_at_himo_room:
 
 
 label misaki_sunday_morning_icha:
-    scene bg_placeholder
+    scene bg_misaki_room
 
     "日曜の朝。美咲の部屋。"
     "カーテン越しに柔らかい光が差し込んでいた。"
 
+    show misaki pajama sleepy with dissolve
     misaki_c "...おはよう"
     himo "おう、おはよ"
 
     "美咲がくっついてきた。"
+    show misaki pajama happy
     misaki_c "今日、どこか行く？"
     himo "どうしよっか"
 
@@ -309,7 +323,7 @@ label misaki_sunday_morning_icha:
 
 
 label event_oversleep:
-    scene bg_placeholder
+    scene bg_himo_room
 
     "――朝――"
     "体が重い。"
@@ -327,7 +341,7 @@ label event_oversleep:
 
 
 label morning_phone_misaki:
-    scene bg_placeholder
+    scene bg_himo_room
 
     "朝から美咲の電話が鳴った。"
 
@@ -357,7 +371,7 @@ label morning_phone_misaki:
 
 
 label morning_phone_kana:
-    scene bg_placeholder
+    scene bg_himo_room
 
     "朝から着信。カナだ。"
 
@@ -437,11 +451,12 @@ label event_nanpa_unlock:
 
 
 label event_kana_encounter:
-    scene bg_placeholder
+    scene bg_street
 
     "街を歩いていると、見覚えのある顔が目に入った。"
     "カナだ。"
 
+    show kana happy with dissolve
     kana_c "あ、ヒモ太郎！なにしてんの？"
     himo "散歩"
     kana_c "暇人じゃん。一緒にいていい？"
@@ -452,6 +467,7 @@ label event_kana_encounter:
     $ reset_contact_kana()
 
     # カナの恩恵（食事）
+    show kana smile
     kana_c "お腹減った。なんか食べよ"
     "近くのカフェに入った。"
     "カナがおごってくれた。"
@@ -461,6 +477,7 @@ label event_kana_encounter:
     $ change_dependence_kana(4)
     $ daily_flags["ate_today"] = True
 
+    hide kana
     "思わぬ形でカナと過ごすことになった。"
     "（昼の時間が消費された）"
 
@@ -468,7 +485,7 @@ label event_kana_encounter:
 
 
 label afternoon_street:
-    scene bg_placeholder
+    scene bg_street
 
     # Phase 4追加: パチンコの誘惑チェック
     if (player["money"] >= 15000
@@ -531,7 +548,7 @@ label afternoon_street:
 
 label nanpa_event:
     $ log_action("ナンパ")
-    scene bg_placeholder
+    scene bg_street
 
     "繁華街をぶらぶらしていた。"
 
@@ -583,6 +600,7 @@ label nanpa_event:
 
 # === Phase 4 Step 3: コンビニ ===
 label convenience_store:
+    scene bg_convenience_store
     "コンビニに入った。"
 
     python:
@@ -840,7 +858,7 @@ label random_expense_event:
 
 label pachinko_event:
     $ log_action("パチンコ")
-    scene bg_placeholder
+    scene bg_pachinko
 
     "繁華街のパチンコ店に入った。"
     "平日昼間でも、それなりに人がいる。"
@@ -950,11 +968,12 @@ label pachinko_event:
 # ========================================
 
 label kana_morning_after_event:
-    scene bg_placeholder
+    scene bg_kana_room
 
     "カナの部屋で目が覚めた。"
     "隣でカナがまだ寝ている。"
 
+    show kana pajama sleepy with dissolve
     kana_c "...んん"
     kana_c "おはよ..."
 
@@ -967,7 +986,9 @@ label kana_morning_after_event:
 
     if _stay_count <= 2:
         # 1〜2回目: 初々しい
+        show kana pajama smile
         "カナが朝ごはんを作ってくれた。"
+        show kana pajama blush
         kana_c "...昨日、ありがとう"
         kana_c "また泊まりに来てね"
         himo "（泊まるたびに『期待』されてる気がする...）"
@@ -978,16 +999,20 @@ label kana_morning_after_event:
             _km_idx = renpy.random.randint(0, 2)
 
         if _km_idx == 0:
+            show kana pajama smile
             kana_c "朝ごはん、目玉焼きとウインナーでいい？"
             himo "最高"
             kana_c "簡単なやつしか作れないけど"
         elif _km_idx == 1:
+            show kana pajama excited
             kana_c "ねー、起きてー"
             "カナがスマホで写真を撮ろうとしている。"
             himo "やめろ"
+            show kana pajama pouty
             kana_c "寝顔撮りたかったのに〜"
         else:
             "カナは先に起きて、何かの動画を見ていた。"
+            show kana pajama smile
             kana_c "あ、起きた。コーヒー淹れたよ"
             himo "...気が利くな"
         himo "（もう何回目だ、ここ泊まるの）"
@@ -999,6 +1024,7 @@ label kana_morning_after_event:
 
         if _km_idx == 0:
             "もはや何も言わずに朝食が出てくる。"
+            show kana pajama normal
             kana_c "いつもの"
             himo "いつもって何だよ"
             kana_c "目玉焼きとウインナー"
@@ -1008,6 +1034,7 @@ label kana_morning_after_event:
             "「パン焼いて食べてね。バター冷蔵庫の奥」"
         else:
             "カナが半分寝ぼけながらくっついてきた。"
+            show kana pajama sleepy
             kana_c "...あと5分"
             himo "俺のセリフだろそれ"
 
@@ -1022,17 +1049,20 @@ label kana_morning_after_event:
 # ========================================
 
 label kana_himo_room_morning_event:
-    scene bg_placeholder
+    scene bg_himo_room
 
     # テキストバリエーション: 泊まり回数で3段階分岐
     python:
         _kana_stay = stats.get("kana_stayed_himo_room", 0)
+
+    show kana pajama sleepy with dissolve
 
     if _kana_stay <= 2:
         # 1〜2回目: 新鮮
         "自分の部屋で目が覚めた。"
         "隣でカナが寝ている。"
         kana_c "...んん...おはよ"
+        show kana pajama smile
         "カナがキッチンに立った。"
     elif _kana_stay <= 5:
         # 3〜5回目: 慣れてきた（プールからランダム）
@@ -1041,6 +1071,7 @@ label kana_himo_room_morning_event:
         if _kana_wake_set == "A":
             "目が覚めると、隣にカナがいた。"
             "いつもの寝息に、慣れてきた。"
+            show kana pajama smile
             kana_c "...おはよ"
             "カナが先にキッチンに立っていた。"
         elif _kana_wake_set == "B":
@@ -1048,11 +1079,14 @@ label kana_himo_room_morning_event:
             "毛布を半分取られていた。"
             kana_c "...あと5分"
             himo "（俺のセリフだろそれ）"
+            show kana pajama smile
             "結局カナが起きて、キッチンに向かった。"
         else:
             "朝、カナがベッドから落ちかけていた。"
+            show kana pajama smile
             kana_c "ぅぁ...起きた？おはよ"
             himo "...先に起きてたのか"
+            show kana pajama excited
             kana_c "うん...ヒモ太郎の寝顔撮ろうとしてた"
             himo "やめろ"
     else:
@@ -1061,18 +1095,21 @@ label kana_himo_room_morning_event:
             _kana_wake_set = renpy.random.choice(["A", "B", "C"])
         if _kana_wake_set == "A":
             "いつの間にか、カナが隣にいるのが普通になった。"
+            show kana pajama smile
             kana_c "おはよ〜"
             himo "おう"
             "何も言わなくても、朝が始まる。"
         elif _kana_wake_set == "B":
             "カナはもう起きていた。"
             "コーヒーの匂いがする。"
+            show kana pajama normal
             kana_c "おはよ、いつもの。"
             himo "...いつの間にうちにコーヒー常備してたんだ"
         else:
             "カナが布団の中からくっついてきた。"
             kana_c "...寒い"
             himo "エアコンつけろ"
+            show kana pajama happy
             kana_c "ヒモ太郎の方があったかい"
 
     # 3回目以降のバリエーションでキッチン描写がないパターン向け
@@ -1082,6 +1119,7 @@ label kana_himo_room_morning_event:
     # Phase 4 Step 3: 食材による分岐
     # v1.9: 夕食で使った残りで朝食を作れるケース
     if daily_flags.get("groceries_used_dinner", False) and inventory.get("groceries", 0) > 0:
+        show kana pajama happy
         if inventory["groceries"] == 2:
             kana_c "昨日のベーコンまだあるじゃん！朝ごはん作る！"
         else:
@@ -1091,6 +1129,7 @@ label kana_himo_room_morning_event:
         $ daily_flags["ate_today"] = True
         $ change_stamina(12)
     elif not daily_flags.get("groceries_used_dinner", False) and inventory.get("groceries", 0) == 2:
+        show kana pajama excited
         kana_c "え、ベーコンある！パンケーキ作れる！"
         himo "（買っといてよかった）"
         $ change_trust_kana(5)
@@ -1098,6 +1137,7 @@ label kana_himo_room_morning_event:
         $ daily_flags["ate_today"] = True
         $ change_stamina(15)
     elif not daily_flags.get("groceries_used_dinner", False) and inventory.get("groceries", 0) == 1:
+        show kana pajama smile
         kana_c "あ、卵あるじゃん。目玉焼き作るね"
         himo "（ちゃんと用意しといた甲斐があったな）"
         $ change_trust_kana(2)
@@ -1105,8 +1145,10 @@ label kana_himo_room_morning_event:
         $ daily_flags["ate_today"] = True
         $ change_stamina(12)
     else:
+        show kana pajama sad
         kana_c "冷蔵庫...何もないじゃん"
         himo "...すまん"
+        show kana pajama smile
         kana_c "しょうがないな〜。コンビニ行ってくるね"
         "カナがコンビニで朝ごはんを買ってきてくれた。"
         $ daily_flags["ate_today"] = True
@@ -1118,6 +1160,7 @@ label kana_himo_room_morning_event:
         _stay_count = stats.get("kana_stayed_over", 0)
 
     if _stay_count <= 2:
+        show kana pajama normal
         kana_c "ヒモ太郎の部屋、もうちょっと片付けなよ"
         himo "...はい"
         himo "（泊まるたびに『期待』されてる気がする...）"
@@ -1127,12 +1170,15 @@ label kana_himo_room_morning_event:
             _kh_idx = renpy.random.randint(0, 2)
 
         if _kh_idx == 0:
+            show kana pajama serious
             kana_c "ヒモ太郎の部屋、前より散らかってない？"
             himo "...気のせいだろ"
         elif _kh_idx == 1:
+            show kana pajama pouty
             kana_c "次来るまでに掃除しといてよね？"
             himo "善処します"
         else:
+            show kana pajama smile
             kana_c "ここに置きっぱなしのヘアゴム、回収するね"
             himo "（生活感出てきたな...）"
         himo "（もう何回目だ、ここ泊まるの）"
@@ -1142,12 +1188,14 @@ label kana_himo_room_morning_event:
             _kh_idx = renpy.random.randint(0, 2)
 
         if _kh_idx == 0:
+            show kana pajama happy
             kana_c "おはよ。...もうここ半分私の部屋だね"
             himo "勝手に住み着くなよ"
         elif _kh_idx == 1:
             "カナはまだ寝ている。枕を抱きしめたまま動かない。"
             himo "（...起こすのもなんだし、放置するか）"
         else:
+            show kana pajama normal
             kana_c "歯ブラシ、私の分も買っといて"
             himo "...マジで住む気か"
 
@@ -1182,7 +1230,9 @@ label give_bouquet(target):
 
     if _gb_target == "misaki":
         himo "これ"
+        show misaki surprised
         misaki_c "...花？ 私に？"
+        show misaki happy
         misaki_c "...ありがとう"
         if cold_war.get("misaki_active", False):
             $ change_trust(8)
@@ -1191,7 +1241,9 @@ label give_bouquet(target):
             $ change_trust(5)
     else:
         himo "はい、これ"
+        show kana surprised
         kana_c "え！花！？ インスタ載せていい！？"
+        show kana excited
         $ change_trust_kana(5)
 
     return
@@ -1204,14 +1256,18 @@ label give_accessory(target):
 
     if _ga_target == "misaki":
         himo "これ、美咲に"
+        show misaki surprised
         misaki_c "え...私に？"
         "美咲が目を丸くした。"
+        show misaki happy
         misaki_c "...ありがとう。大事にする"
         $ change_trust(10)
         $ change_dependence(5)
     else:
         himo "これ、カナに"
+        show kana surprised
         kana_c "やばい！かわいい！！"
+        show kana excited
         kana_c "インスタ載せていい！？"
         $ change_trust_kana(10)
         $ change_dependence_kana(5)
@@ -1223,7 +1279,9 @@ label give_kana_goods:
     $ inventory["kana_goods"] = False
     $ stats["presents_given"] = stats.get("presents_given", 0) + 1
 
+    show kana shock
     kana_c "え！これ限定の！どこで見つけたの！？"
+    show kana excited
     kana_c "ヒモ太郎、センスいいかも..."
     $ change_trust_kana(8)
     $ flags["kana_gokiragen_skip"] = True

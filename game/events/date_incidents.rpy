@@ -83,8 +83,10 @@ label date_probe(target):
     "ふと、相手が真面目な顔になった。"
 
     if target == "misaki":
+        show misaki casual serious
         misaki_c "[probe_text]"
     else:
+        show kana serious
         kana_c "[probe_text]"
 
     # 探りの種類別対応
@@ -130,14 +132,17 @@ label date_probe(target):
                         call run_lie_puzzle("other_woman", "misaki")
                     else:
                         "「美咲」という名前が画面に表示された。"
+                        show kana serious
                         kana_c "...美咲って誰？"
                         call run_lie_puzzle("other_woman", "kana")
                 else:
                     "特に怪しいものはなかった。"
                     if target == "misaki":
+                        show misaki casual shy
                         misaki_c "...ごめん、疑って"
                         $ change_trust(3)
                     else:
+                        show kana normal
                         kana_c "ふーん、つまんない笑"
 
             "断る":
@@ -152,6 +157,7 @@ label date_probe(target):
     elif probe_key == "schedule":
         menu:
             "空いてるよ":
+                show misaki casual happy
                 misaki_c "じゃあ約束ね！"
                 # Phase 4 v1.3: 具体的な日付を記録
                 python:
@@ -170,6 +176,7 @@ label date_probe(target):
     elif probe_key == "insta":
         menu:
             "いいよ":
+                show kana happy
                 kana_c "やった！"
                 "ツーショットを撮られた。"
                 $ kana_flags["sns_risk"] = kana_flags.get("sns_risk", 0) + 3
@@ -189,6 +196,7 @@ label date_probe(target):
                 $ suspicion["misaki"] = min(suspicion["misaki"] + 1, SUSPICION_MAX)
 
             "美咲に会えるからな":
+                show misaki casual blush
                 misaki_c "...もう、急にそういうこと言う"
                 $ change_trust(5)
                 $ change_dependence(3)
@@ -215,6 +223,7 @@ label date_landmine(target):
     # 地雷選択肢を通常会話に紛れ込ませる
     if mine_key == "quit_job":
         "美咲が仕事の愚痴を言い始めた。"
+        show misaki casual sad
         misaki_c "今日も残業で...もう疲れた"
 
         menu:
@@ -225,6 +234,7 @@ label date_landmine(target):
 
             "仕事辞めちゃえば？":
                 misaki_c "..."
+                show misaki casual angry
                 "美咲の表情が固まった。"
                 misaki_c "...そんな簡単に言わないで"
                 misaki_c "仕事は私のアイデンティティなの"
@@ -232,6 +242,7 @@ label date_landmine(target):
                 "（地雷だった...）"
 
             "俺がいるから大丈夫だって":
+                show misaki casual smile
                 misaki_c "...ふふ、何の役にも立たないくせに"
                 himo "ひどい！"
                 misaki_c "冗談。...でもありがとう"
@@ -250,10 +261,12 @@ label date_landmine(target):
 
             "俺のこと養ってよ":
                 if misaki["stage"] <= STAGE_FRIEND:
+                    show misaki casual neutral
                     misaki_c "はは、冗談きついね"
                     $ change_trust(-2)
                 else:
                     misaki_c "..."
+                    show misaki casual serious
                     misaki_c "それ、冗談？"
                     himo "あ、いや..."
                     misaki_c "...冗談だよね"
@@ -267,10 +280,12 @@ label date_landmine(target):
         menu:
             "気にしすぎじゃない？":
                 if kana["dependence"] >= 40:
+                    show kana smile
                     kana_c "...うん、そうかも"
                     kana_c "ヒモ太郎がいるからいいか"
                     $ change_trust_kana(5)
                 else:
+                    show kana angry
                     kana_c "は？分かんないくせに"
                     $ change_trust_kana(-10)
                     "（地雷だった...）"
@@ -292,6 +307,7 @@ label date_landmine(target):
                 $ change_trust_kana(2)
 
             "男もいたの？":
+                show kana angry
                 kana_c "...は？"
                 kana_c "何？嫉妬？"
 
@@ -351,6 +367,7 @@ label date_happening(target):
                     name_visible = renpy.random.random() < 0.40
                 if name_visible:
                     if target == "misaki":
+                        show misaki casual serious
                         misaki_c "...カナって誰？"
                         call run_lie_puzzle("other_woman", "misaki")
                         # Phase 4 v1.2: 嘘パズル後のリアクション
@@ -373,6 +390,7 @@ label date_happening(target):
         "デート中、向こうから見覚えのある顔が歩いてきた。"
         if target == "misaki":
             "美咲の同僚だ。"
+            show misaki casual surprised
             misaki_c "あ、田中さん"
 
             menu:
@@ -388,6 +406,7 @@ label date_happening(target):
                     $ suspicion["misaki"] = min(suspicion["misaki"] + 1, SUSPICION_MAX)
         else:
             "カナの友達だ。"
+            show kana excited
             kana_c "あ〜！まりちゃ〜ん！"
             "嬉しそうに紹介してくる。"
             kana_c "彼氏！"
@@ -396,6 +415,7 @@ label date_happening(target):
 
     elif happening_key == "insta_shot":
         "突然、カナがスマホを向けてきた。"
+        show kana happy
         kana_c "はい撮るよ〜！"
 
         menu:
@@ -407,6 +427,7 @@ label date_happening(target):
 
             "顔を隠す":
                 himo "やめろ〜"
+                show kana pouty
                 kana_c "え〜、なんで〜！"
                 $ change_trust_kana(-2)
                 $ suspicion["kana"] = min(suspicion["kana"] + 1, SUSPICION_MAX)
@@ -414,6 +435,7 @@ label date_happening(target):
     elif happening_key == "receipt":
         "ポケットからレシートが落ちた。"
         "美咲が拾った。"
+        show misaki casual serious
         misaki_c "これ...カフェのレシート？"
         misaki_c "2人分のコーヒーって書いてあるけど"
 

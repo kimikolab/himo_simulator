@@ -36,7 +36,7 @@ label main_loop:
         call ending_30days
         return
 
-    scene bg_placeholder
+    scene bg_himo_room
     show screen status_bar
     show screen debug_overlay
 
@@ -97,6 +97,8 @@ label morning_actions:
     # 強制イベントが発生してターンが消費された場合は通常行動をスキップ
     if flags.get("morning_consumed", False):
         $ flags["morning_consumed"] = False
+        hide misaki
+        hide kana
         return
 
     # Phase 4追加: SNS受動通知
@@ -108,10 +110,16 @@ label morning_actions:
 
     # v1.4修正: Trueの場合のみターン消費。"notify"はターン消費せず通常メニューへ
     if midgame_fired == True:
+        hide misaki
+        hide kana
         return
 
     # v1.4: notify型イベントはここで先に処理（ターンは消費しない）
     call process_pending_events
+
+    # 突発イベント後の立ち絵をクリア
+    hide misaki
+    hide kana
 
     "――朝、10時――"
 
@@ -194,6 +202,8 @@ label afternoon_actions:
 
     # v1.4修正: Trueの場合のみターン消費
     if midgame_fired == True:
+        hide misaki
+        hide kana
         return
 
     # v1.4: notify型イベントはここで先に処理
@@ -202,7 +212,13 @@ label afternoon_actions:
     # afternoon_consumed チェック（カナ急な呼び出し等で消費された場合）
     if flags.get("afternoon_consumed", False):
         $ flags["afternoon_consumed"] = False
+        hide misaki
+        hide kana
         return
+
+    # 突発イベント後の立ち絵をクリア
+    hide misaki
+    hide kana
 
     "――昼、14時――"
 
@@ -297,6 +313,10 @@ label afternoon_actions:
 
 
 label night_actions:
+    # 前ターンの立ち絵をクリア
+    hide misaki
+    hide kana
+
     "――夜、21時――"
 
     # ★初日専用デート（最優先）
@@ -309,6 +329,7 @@ label night_actions:
     if flags.get("confession_pending", False) and not flags.get("confession_done", False):
         $ flags["confession_pending"] = False
         call misaki_confession
+        hide misaki
 
     # v1.5修正: 約束がある夜の処理
 

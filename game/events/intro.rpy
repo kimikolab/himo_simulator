@@ -6,7 +6,7 @@ label intro_scene:
 
     centered "{size=40}ヒモ男シミュレーター{/size}"
 
-    scene bg_placeholder
+    scene bg_himo_room
 
     "俺の名前はヒモ太郎。25歳。"
     "一人暮らし。無職。貯金ほぼゼロ。"

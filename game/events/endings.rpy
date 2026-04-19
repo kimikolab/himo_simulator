@@ -65,14 +65,17 @@ label ending_balance_30days:
     "30日目。"
     "気がついたら、ひと月が経っていた。"
 
+    show misaki casual smile with dissolve
     misaki_c "ヒモ太郎、最近ちょっと変わったよね"
     himo "え、そうか？"
     misaki_c "なんか...ちゃんと向き合ってくれる感じがして"
     himo "...そりゃまあ"
 
+    show misaki casual happy
     "自分でもよくわからないけど、何かが変わった気がした。"
     "ヒモのままかもしれない。でも、美咲との関係は本物だと思う。"
 
+    hide misaki
     centered "{size=30}GOOD END{/size}"
     "「少し、前に進めた気がした」"
 
@@ -94,6 +97,7 @@ label ending_himou_30days:
     "30日目。"
     "振り返ると、美咲に頼りっぱなしのひと月だった。"
 
+    show misaki casual sad with dissolve
     misaki_c "ねえ、ヒモ太郎って...私がいないとダメだよね？"
     himo "...そうかもな"
     misaki_c "...そっか"
@@ -101,6 +105,7 @@ label ending_himou_30days:
     "美咲の顔には、愛情と、あと何か複雑な感情があった。"
     "この関係が、どこへ向かうのかわからない。"
 
+    hide misaki
     centered "{size=30}GRAY END{/size}"
     "「楽な道は、終わらない」"
 
@@ -152,6 +157,7 @@ label ending_demo:
 
     "ある日、カナがふと言った。"
 
+    show kana normal with dissolve
     kana_c "...ねえ、ほんとに私だけ？"
     himo "......"
     kana_c "まあいいけど。あ、そういえばさ"
@@ -160,6 +166,7 @@ label ending_demo:
     kana_c "私も知らない。なんか大人っぽい感じの人"
     kana_c "ヒモ太郎のこと、『面白い』って言ってたって聞いたけど"
 
+    hide kana
     "麗子――？"
     "心当たりはない。"
     "でも、なぜか気になった。"
@@ -230,6 +237,7 @@ label ending_bankruptcy_misaki_rescue:
 
     "こうして、俺は美咲の部屋に転がり込んだ。"
     "..."
+    show misaki casual sad with dissolve
     "美咲は優しかった。"
     "でも、対等な関係はもう崩れていた。"
 
@@ -237,6 +245,7 @@ label ending_bankruptcy_misaki_rescue:
     himo "..."
     "答えられなかった。"
 
+    hide misaki
     centered "{size=30}GRAY END — 居候{/size}"
     centered "『助けてもらえた。でも、これは本当に救いなのか。』"
 
@@ -269,6 +278,7 @@ label ending_bankruptcy_kana_rescue:
     "カナはあっさり言った。"
     "21歳の大学生に養われる25歳。"
 
+    show kana smile with dissolve
     himo "...いいの？"
     kana_c "いいよ。ヒモ太郎がいると楽しいし"
 
@@ -277,11 +287,13 @@ label ending_bankruptcy_kana_rescue:
     "狭いワンルームに二人。"
     "依存関係が、完全に逆転した。"
 
+    show kana yandere
     kana_c "ヒモ太郎は私のものだからね"
     himo "..."
     "助かった。"
     "でも、自由は消えた。"
 
+    hide kana
     centered "{size=30}GRAY END — ヒモの完成{/size}"
     centered "『カナに飼われている。それが、俺の選んだ道。』"
 

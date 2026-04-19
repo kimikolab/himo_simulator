@@ -52,6 +52,8 @@ label kana_date_with_location:
 
 
 label kana_date_cafe:
+    scene bg_cafe
+    show kana happy with dissolve
     $ stats["date_locations"] = stats.get("date_locations", {})
     $ stats["date_locations"]["cafe"] = stats["date_locations"].get("cafe", 0) + 1
     $ kana_date_location_count["cafe"] = kana_date_location_count.get("cafe", 0) + 1
@@ -93,6 +95,8 @@ label kana_date_cafe:
 
 
 label kana_date_karaoke:
+    scene bg_karaoke
+    show kana excited with dissolve
     $ stats["date_locations"] = stats.get("date_locations", {})
     $ stats["date_locations"]["karaoke"] = stats["date_locations"].get("karaoke", 0) + 1
     "カラオケに行った。"
@@ -112,6 +116,8 @@ label kana_date_karaoke:
 
 
 label kana_date_campus:
+    scene bg_campus
+    show kana university happy with dissolve
     $ stats["date_locations"] = stats.get("date_locations", {})
     $ stats["date_locations"]["campus"] = stats["date_locations"].get("campus", 0) + 1
     $ kana_date_location_count["university"] = kana_date_location_count.get("university", 0) + 1
@@ -167,6 +173,8 @@ label kana_date_campus:
 
 
 label kana_date_himo_room:
+    scene bg_himo_room
+    show kana normal with dissolve
     $ stats["date_locations"] = stats.get("date_locations", {})
     $ stats["date_locations"]["himo_room"] = stats["date_locations"].get("himo_room", 0) + 1
     # v1.2追加: カナ用のhimo_roomカウンタも更新
@@ -175,9 +183,11 @@ label kana_date_himo_room:
 
     # 清潔感チェック
     if player["cleanliness"] >= 50:
+        show kana pleased
         kana_c "意外と綺麗にしてるじゃん"
         $ change_trust_kana(3)
     elif player["cleanliness"] < 30:
+        show kana angry
         kana_c "...汚い"
         $ change_trust_kana(-3)
 
