@@ -332,6 +332,9 @@ label ena_battle(target):
 
     $ log_action("ENA_BATTLE_START", target + " energy=" + str(energy) + " mood_init=" + str(_mood))
 
+    # BGM: エナマッチ突入（アウトファイト）
+    call bgm_switch_to_outfight
+
     # 導入テキスト
     "夜も更けてきた。二人きりの空間。"
 
@@ -425,6 +428,8 @@ label ena_battle(target):
 
         if _result == "start_infight":
             $ _phase = "infight"
+            # BGM: インファイトに切替（キャラ別）
+            call bgm_switch_to_infight(target)
             "――空気が変わった。"
             "もう戻れない領域に踏み込んだ。"
             # エナ消費はリリース時のみ（方法A）
@@ -471,6 +476,10 @@ label ena_battle(target):
 
             if _result == "return_out":
                 _phase = "outfight"
+
+        # BGM: アウトファイトに戻った場合
+        if _result == "return_out":
+            call bgm_switch_to_outfight
 
         # コマンドテキスト表示（マッサージ系・舐め系はターゲット別プール、地雷は専用プール）
         python:
@@ -661,4 +670,26 @@ label ena_battle(target):
                 "カナが満足そうに腕を絡めてきた。"
                 "（しばらく、カナの機嫌は良さそうだ）"
 
+        # BGM: エナマッチ終了 → 日常に戻す
+        stop music fadeout 1.0
+        play music bgm_daily fadein 1.0
+
         return
+
+
+# ========================================
+# BGM切替共通label（エナマッチ用）
+# ========================================
+
+label bgm_switch_to_outfight:
+    stop music fadeout 0.5
+    play music bgm_enamatch_out fadein 0.5
+    return
+
+label bgm_switch_to_infight(target="misaki"):
+    stop music fadeout 0.5
+    if target == "kana":
+        play music bgm_enamatch_in_kana fadein 0.5
+    else:
+        play music bgm_enamatch_in fadein 0.5
+    return

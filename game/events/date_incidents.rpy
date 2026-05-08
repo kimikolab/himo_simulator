@@ -61,6 +61,10 @@ label check_date_incidents(target):
 # === 探り ===
 
 label date_probe(target):
+    # BGM: 緊張系に切替
+    stop music fadeout 0.5
+    play music bgm_date_tense fadein 0.5
+
     python:
         if target == "misaki":
             probes = [
@@ -105,6 +109,9 @@ label date_probe(target):
                 kana_c "最近なんか楽しそうじゃん"
             himo "そう？"
             $ suspicion[target] = min(suspicion[target] + 1, SUSPICION_MAX)
+            # BGM: デートBGMに戻す
+            stop music fadeout 0.5
+            play music bgm_date_good fadein 0.5
             return
 
         # 前日にもう片方とデートしてたら嘘パズル発動
@@ -201,12 +208,20 @@ label date_probe(target):
                 $ change_trust(5)
                 $ change_dependence(3)
 
+    # BGM: デートBGMに戻す
+    stop music fadeout 0.5
+    play music bgm_date_good fadein 0.5
+
     return
 
 
 # === 地雷 ===
 
 label date_landmine(target):
+    # BGM: 緊張系に切替
+    stop music fadeout 0.5
+    play music bgm_date_tense fadein 0.5
+
     python:
         if target == "misaki":
             mines = [
@@ -318,6 +333,10 @@ label date_landmine(target):
                 $ change_trust_kana(-10)
                 $ change_dependence_kana(5)
                 "（怒らせてしまった）"
+
+    # BGM: デートBGMに戻す
+    stop music fadeout 0.5
+    play music bgm_date_good fadein 0.5
 
     return
 

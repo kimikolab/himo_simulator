@@ -2,6 +2,8 @@
 # 美咲デート — 場所選択で展開が変わる
 
 label misaki_date_with_location:
+    # BGM: デート開始
+    play music bgm_date_good fadein 1.0
 
     "美咲と会うことになった。"
 
@@ -37,6 +39,10 @@ label misaki_date_with_location:
         $ flags["misaki_tonight"] = False
     # 探り・地雷・ハプニングの判定
     call check_date_incidents("misaki")
+
+    # BGM: デート終了 → 日常に戻す
+    stop music fadeout 1.0
+    play music bgm_daily fadein 1.0
 
     return
 

@@ -363,6 +363,8 @@ label misaki_meet_planned:
 
 label misaki_date_day1:
     $ log_action("美咲デート（初日）")
+    # BGM: デート開始
+    play music bgm_date_good fadein 1.0
     scene bg_station
 
     "待ち合わせの駅前に着いた。"
@@ -632,6 +634,10 @@ label misaki_date_day1:
 
     if not flags["first_date"]:
         $ flags["first_date"] = True
+
+    # BGM: デート終了 → 日常に戻す
+    stop music fadeout 1.0
+    play music bgm_daily fadein 1.0
 
     return
 

@@ -58,7 +58,9 @@ label ending_balance_30days:
     $ log_action("GOOD END")
     $ export_debug_log()
     $ export_dialogue_log()
+    stop music fadeout 2.0
     scene bg_himo_room with fade
+    play music bgm_ending_good fadein 2.0
 
     centered "{size=40}エンディング: 新しい関係{/size}"
 
@@ -90,7 +92,9 @@ label ending_himou_30days:
     $ log_action("GRAY END")
     $ export_debug_log()
     $ export_dialogue_log()
+    stop music fadeout 2.0
     scene bg_himo_room with fade
+    play music bgm_ending_gray fadein 2.0
 
     centered "{size=40}エンディング: ヒモへの道{/size}"
 
@@ -120,7 +124,9 @@ label ending_unstable_30days:
     $ log_action("NORMAL END")
     $ export_debug_log()
     $ export_dialogue_log()
+    stop music fadeout 2.0
     scene bg_himo_room with fade
+    play music bgm_ending_gray fadein 2.0
 
     centered "{size=40}エンディング: 不安定な日々{/size}"
 
@@ -146,7 +152,9 @@ label ending_demo:
     $ log_action("demo END")
     $ export_debug_log()
     $ export_dialogue_log()
+    stop music fadeout 2.0
     scene bg_himo_room with fade
+    play music bgm_demo_end fadein 2.0
 
     centered "{size=40}エンディング: 始まりの予感{/size}"
 
@@ -214,8 +222,10 @@ label ending_bankruptcy_misaki_rescue:
     $ log_action("BANKRUPTCY_MISAKI_RESCUE END")
     $ export_debug_log()
     $ export_dialogue_log()
+    stop music fadeout 2.0
 
     scene bg_himo_room with fade
+    play music bgm_ending_gray fadein 2.0
     centered "{size=40}エンディング: 居候{/size}"
 
     "家賃が払えなかった。"
@@ -261,8 +271,10 @@ label ending_bankruptcy_kana_rescue:
     $ log_action("BANKRUPTCY_KANA_RESCUE END")
     $ export_debug_log()
     $ export_dialogue_log()
+    stop music fadeout 2.0
 
     scene bg_himo_room with fade
+    play music bgm_ending_gray fadein 2.0
     centered "{size=40}エンディング: ヒモの完成{/size}"
 
     "家賃が払えなかった。"
@@ -309,8 +321,10 @@ label ending_bankruptcy:
     $ log_action("BAD END 破産")
     $ export_debug_log()
     $ export_dialogue_log()
+    stop music fadeout 2.0
 
     scene bg_himo_room with fade
+    play music bgm_ending_bad fadein 2.0
     centered "{size=40}エンディング: 破滅{/size}"
 
     "家賃が払えなかった。"

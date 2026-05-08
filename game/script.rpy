@@ -18,6 +18,10 @@ label start:
         call tutorial
         $ flags["tutorial_done"] = True
 
+    # BGM: イントロ終了 → 日常BGMに切替
+    stop music fadeout 1.0
+    play music bgm_daily fadein 1.0
+
     jump main_loop
 
 

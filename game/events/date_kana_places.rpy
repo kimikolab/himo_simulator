@@ -2,6 +2,8 @@
 # カナデート — 場所選択で展開が変わる
 
 label kana_date_with_location:
+    # BGM: デート開始
+    play music bgm_date_good fadein 1.0
 
     "カナと会うことになった。"
 
@@ -46,6 +48,10 @@ label kana_date_with_location:
     # === ステップ2追加: 夜デートの場合、泊まり判定 ===
     if game_date["time"] == "night" and kana["trust"] >= 30:
         call kana_stay_offer
+
+    # BGM: デート終了 → 日常に戻す
+    stop music fadeout 1.0
+    play music bgm_daily fadein 1.0
 
     return
 
